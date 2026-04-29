@@ -20,11 +20,10 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nupf.models.ipv6_addr import Ipv6Addr
-from nupf.models.transport_protocol import TransportProtocol
 try:
     from typing import Self
 except ImportError:
@@ -37,7 +36,7 @@ class NatMapping(BaseModel):
     ipv4_addr: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a IPv4 address formatted in the 'dotted decimal' notation as defined in RFC 1166. ", alias="ipv4Addr")
     ipv6_addr: Optional[Ipv6Addr] = Field(default=None, alias="ipv6Addr")
     port_number: Annotated[int, Field(le=65535, strict=True, ge=0)] = Field(description="Integer where the allowed values correspond to the value range of an unsigned 16-bit integer. ", alias="portNumber")
-    transport_protocol: Optional[TransportProtocol] = Field(default=None, alias="transportProtocol")
+    transport_protocol: Optional[StrictStr] = Field(default=None, description="Possible values are: - UDP: User Datagram Protocol. - TCP: Transmission Control Protocol.  ", alias="transportProtocol")
     remote_port_number: Optional[Annotated[int, Field(le=65535, strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 16-bit integer. ", alias="remotePortNumber")
     __properties: ClassVar[List[str]] = ["ipv4Addr", "ipv6Addr", "portNumber", "transportProtocol", "remotePortNumber"]
 
@@ -91,9 +90,6 @@ class NatMapping(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of ipv6_addr
         if self.ipv6_addr:
             _dict['ipv6Addr'] = self.ipv6_addr.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of transport_protocol
-        if self.transport_protocol:
-            _dict['transportProtocol'] = self.transport_protocol.to_dict()
         return _dict
 
     @classmethod
@@ -109,7 +105,7 @@ class NatMapping(BaseModel):
             "ipv4Addr": obj.get("ipv4Addr"),
             "ipv6Addr": Ipv6Addr.from_dict(obj.get("ipv6Addr")) if obj.get("ipv6Addr") is not None else None,
             "portNumber": obj.get("portNumber"),
-            "transportProtocol": TransportProtocol.from_dict(obj.get("transportProtocol")) if obj.get("transportProtocol") is not None else None,
+            "transportProtocol": obj.get("transportProtocol"),
             "remotePortNumber": obj.get("remotePortNumber")
         })
         return _obj

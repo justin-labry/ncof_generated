@@ -20,10 +20,8 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt
-from typing import Any, ClassVar, Dict, List, Optional, Union
-from nncof.models.exception_id import ExceptionId
-from nncof.models.exception_trend import ExceptionTrend
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 try:
     from typing import Self
 except ImportError:
@@ -33,9 +31,9 @@ class Exception(BaseModel):
     """
     Represents the Exception information.
     """ # noqa: E501
-    excep_id: ExceptionId = Field(alias="excepId")
+    excep_id: StrictStr = Field(description="Describes the Exception Id.   Possible values are: - UNEXPECTED_UE_LOCATION: Unexpected UE location. - UNEXPECTED_LONG_LIVE_FLOW: Unexpected long-live rate flows. - UNEXPECTED_LARGE_RATE_FLOW: Unexpected large rate flows. - UNEXPECTED_WAKEUP: Unexpected wakeup. - SUSPICION_OF_DDOS_ATTACK: Suspicion of DDoS attack. - WRONG_DESTINATION_ADDRESS: Wrong destination address. - TOO_FREQUENT_SERVICE_ACCESS: Too frequent Service Access. - UNEXPECTED_RADIO_LINK_FAILURES: Unexpected radio link failures. - PING_PONG_ACROSS_CELLS: Ping-ponging across neighbouring cells. ", alias="excepId")
     excep_level: Optional[StrictInt] = Field(default=None, alias="excepLevel")
-    excep_trend: Optional[ExceptionTrend] = Field(default=None, alias="excepTrend")
+    excep_trend: Optional[StrictStr] = Field(default=None, description="Represents the Exception Trend.   Possible values are: - UP: Up trend of the exception level. - DOWN: Down trend of the exception level. - UNKNOW: Unknown trend of the exception level. - STABLE: Stable trend of the exception level. ", alias="excepTrend")
     __properties: ClassVar[List[str]] = ["excepId", "excepLevel", "excepTrend"]
 
     model_config = {
@@ -75,12 +73,6 @@ class Exception(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of excep_id
-        if self.excep_id:
-            _dict['excepId'] = self.excep_id.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of excep_trend
-        if self.excep_trend:
-            _dict['excepTrend'] = self.excep_trend.to_dict()
         return _dict
 
     @classmethod
@@ -93,9 +85,9 @@ class Exception(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "excepId": ExceptionId.from_dict(obj.get("excepId")) if obj.get("excepId") is not None else None,
+            "excepId": obj.get("excepId"),
             "excepLevel": obj.get("excepLevel"),
-            "excepTrend": ExceptionTrend.from_dict(obj.get("excepTrend")) if obj.get("excepTrend") is not None else None
+            "excepTrend": obj.get("excepTrend")
         })
         return _obj
 

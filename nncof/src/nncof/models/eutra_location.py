@@ -22,7 +22,7 @@ import json
 
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.ecgi import Ecgi
 from nncof.models.global_ran_node_id import GlobalRanNodeId
@@ -117,16 +117,6 @@ class EutraLocation(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of global_enb_id
         if self.global_enb_id:
             _dict['globalENbId'] = self.global_enb_id.to_dict()
-        # set to None if global_ngenb_id (nullable) is None
-        # and model_fields_set contains the field
-        if self.global_ngenb_id is None and "global_ngenb_id" in self.model_fields_set:
-            _dict['globalNgenbId'] = None
-
-        # set to None if global_enb_id (nullable) is None
-        # and model_fields_set contains the field
-        if self.global_enb_id is None and "global_enb_id" in self.model_fields_set:
-            _dict['globalENbId'] = None
-
         return _dict
 
     @classmethod

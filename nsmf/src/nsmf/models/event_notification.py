@@ -22,14 +22,12 @@ import json
 
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nsmf.models.access_type import AccessType
 from nsmf.models.communication_failure import CommunicationFailure
 from nsmf.models.data_volume_information import DataVolumeInformation
 from nsmf.models.ddd_traffic_descriptor import DddTrafficDescriptor
-from nsmf.models.dl_data_delivery_status import DlDataDeliveryStatus
-from nsmf.models.dnai_change_type import DnaiChangeType
 from nsmf.models.eth_flow_description import EthFlowDescription
 from nsmf.models.ip_addr import IpAddr
 from nsmf.models.ip_addr_usage_info import IpAddrUsageInfo
@@ -37,17 +35,12 @@ from nsmf.models.ipv6_addr import Ipv6Addr
 from nsmf.models.ipv6_prefix import Ipv6Prefix
 from nsmf.models.nf_signalling_info import NfSignallingInfo
 from nsmf.models.pdu_session_information import PduSessionInformation
-from nsmf.models.pdu_session_type import PduSessionType
 from nsmf.models.plmn_id_nid import PlmnIdNid
 from nsmf.models.qos_para import QosPara
-from nsmf.models.rat_type import RatType
 from nsmf.models.route_to_location import RouteToLocation
-from nsmf.models.satellite_backhaul_category import SatelliteBackhaulCategory
 from nsmf.models.sm_nas_from_smf import SmNasFromSmf
 from nsmf.models.sm_nas_from_ue import SmNasFromUe
-from nsmf.models.smf_event import SmfEvent
 from nsmf.models.snssai import Snssai
-from nsmf.models.ssc_mode import SscMode
 from nsmf.models.state_transition_info import StateTransitionInfo
 from nsmf.models.time_window import TimeWindow
 from nsmf.models.traff_route_req_outcome import TraffRouteReqOutcome
@@ -63,8 +56,8 @@ class EventNotification(BaseModel):
     """
     Represents a notification related to a single event that occurred.
     """ # noqa: E501
-    event: SmfEvent
-    reference_id: Optional[Annotated[int, Field(le=-1, strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 64-bit integer. ", alias="referenceId")
+    event: StrictStr = Field(description="Represents the types of events that can be subscribed.   Possible values are: - AC_TY_CH: Access Type Change. - UP_PATH_CH: UP Path Change. - PDU_SES_REL: PDU Session Release. - PLMN_CH: PLMN Change. - UE_IP_CH: UE IP address change. - RAT_TY_CH: RAT Type Change. - DDDS: Downlink data delivery status. - COMM_FAIL: Communication Failure. - PDU_SES_EST: PDU Session Establishment. - QFI_ALLOC: QFI allocation. - QOS_MON: QoS Monitoring. - SMCC_EXP: SM congestion control experience for PDU Session. - DISPERSION: Session Management transaction dispersion. - RED_TRANS_EXP: Redundant transmission experience for PDU Session. - WLAN_INFO: WLAN information on PDU session for which Access Type is NON_3GPP_ACCESS and   RAT Type is TRUSTED_WLAN. - UPF_INFO: The UPF information, including the UPF ID/address/FQDN information. - UP_STATUS_INFO: The User Plane status information. - UPF_EVENT: UPF event subscribed via SMF. - SATB_CH: Satellite backhaul category change. - TRAFFIC_CORRELATION: Indicates that the SMF provides 5GC determined traffic correlation   information for a set of UEs identified by Traffic Correlation ID. - TRAFF_ROUTE_REQ_OUTCOME: Indicates the report of the installation outcome of the requested   traffic routing requirements. - SIM_CONN_FAIL: Indicates that the simultaneous connectivity over the source and the target   PDU Session Anchor failed to be established during a PDU Session Anchor change. - QFI_DEALLOCATION: QFI deallocation. - QOS_FLOW_CHANGE: QoS flow change. - ENERGY_USAGE_DATA: Indicates that the SMF event is the user-plane energy consumption   information. - SIGNALLING_INFO: Indicates the report of Service Signalling characteristics. ")
+    reference_id: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 64-bit integer. ", alias="referenceId")
     time_stamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="timeStamp")
     supi: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a Supi that shall contain either an IMSI, a network specific identifier, a Global Cable Identifier (GCI) or a Global Line Identifier (GLI) as specified in clause  2.2A of 3GPP TS 23.003. It shall be formatted as follows  - for an IMSI \"imsi-<imsi>\", where <imsi> shall be formatted according to clause 2.2    of 3GPP TS 23.003 that describes an IMSI.  - for a network specific identifier \"nai-<nai>, where <nai> shall be formatted    according to clause 28.7.2 of 3GPP TS 23.003 that describes an NAI.  - for a GCI \"gci-<gci>\", where <gci> shall be formatted according to clause 28.15.2    of 3GPP TS 23.003.  - for a GLI \"gli-<gli>\", where <gli> shall be formatted according to clause 28.16.2 of    3GPP TS 23.003.To enable that the value is used as part of an URI, the string shall    only contain characters allowed according to the \"lower-with-hyphen\" naming convention    defined in 3GPP TS 29.501. ")
     gpsi: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a Gpsi shall contain either an External Id or an MSISDN.  It shall be formatted as follows -External Identifier= \"extid-'extid', where 'extid'  shall be formatted according to clause 19.7.2 of 3GPP TS 23.003 that describes an  External Identifier.  ")
@@ -72,7 +65,7 @@ class EventNotification(BaseModel):
     transac_infos: Optional[Annotated[List[TransactionInfo], Field(min_length=1)]] = Field(default=None, description="Transaction Information.", alias="transacInfos")
     source_dnai: Optional[StrictStr] = Field(default=None, description="DNAI (Data network access identifier), see clause 5.6.7 of 3GPP TS 23.501.", alias="sourceDnai")
     target_dnai: Optional[StrictStr] = Field(default=None, description="DNAI (Data network access identifier), see clause 5.6.7 of 3GPP TS 23.501.", alias="targetDnai")
-    dnai_chg_type: Optional[DnaiChangeType] = Field(default=None, alias="dnaiChgType")
+    dnai_chg_type: Optional[StrictStr] = Field(default=None, description="Possible values are: - EARLY: Early notification of UP path reconfiguration. - EARLY_LATE: Early and late notification of UP path reconfiguration. This value shall   only be present in the subscription to the DNAI change event. - LATE: Late notification of UP path reconfiguration.  ", alias="dnaiChgType")
     traff_route_req_outcome: Optional[TraffRouteReqOutcome] = Field(default=None, alias="traffRouteReqOutcome")
     candidate_dnais: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, description="The candidate DNAI(s) for the PDU Session.", alias="candidateDnais")
     cand_dnais_prio_ind: Optional[StrictBool] = Field(default=None, description="If provided and set to true, it indicates that the candidate DNAIs provided in the candidateDnais attribute are in descending priority order, i.e., the lower the array index the higher the priority of the respective DNAI. If omitted, the default value is false. ", alias="candDnaisPrioInd")
@@ -93,16 +86,16 @@ class EventNotification(BaseModel):
     acc_type: Optional[AccessType] = Field(default=None, alias="accType")
     pdu_acc_types: Optional[Annotated[List[AccessType], Field(min_length=1)]] = Field(default=None, alias="pduAccTypes")
     pdu_se_id: Optional[Annotated[int, Field(le=255, strict=True, ge=0)]] = Field(default=None, description="Unsigned integer identifying a PDU session, within the range 0 to 255, as specified in  clause 11.2.3.1b, bits 1 to 8, of 3GPP TS 24.007. If the PDU Session ID is allocated by the  Core Network for UEs not supporting N1 mode, reserved range 64 to 95 is used. PDU Session ID  within the reserved range is only visible in the Core Network.  ", alias="pduSeId")
-    rat_type: Optional[RatType] = Field(default=None, alias="ratType")
-    ddd_status: Optional[DlDataDeliveryStatus] = Field(default=None, alias="dddStatus")
+    rat_type: Optional[StrictStr] = Field(default=None, description="Indicates the radio access used.", alias="ratType")
+    ddd_status: Optional[StrictStr] = Field(default=None, description="Possible values are: - BUFFERED: The first downlink data is buffered with extended buffering matching the   source of the downlink traffic. - TRANSMITTED: The first downlink data matching the source of the downlink traffic is   transmitted after previous buffering or discarding of corresponding packet(s) because   the UE of the PDU Session becomes ACTIVE, and buffered data can be delivered to UE. - DISCARDED: The first downlink data matching the source of the downlink traffic is   discarded because the Extended Buffering time, as determined by the SMF, expires or   the amount of downlink data to be buffered is exceeded. ", alias="dddStatus")
     ddd_tra_descriptor: Optional[DddTrafficDescriptor] = Field(default=None, alias="dddTraDescriptor")
     max_wait_time: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="maxWaitTime")
     comm_failure: Optional[CommunicationFailure] = Field(default=None, alias="commFailure")
     ipv4_addr: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a IPv4 address formatted in the 'dotted decimal' notation as defined in RFC 1166. ", alias="ipv4Addr")
     ipv6_prefixes: Optional[Annotated[List[Ipv6Prefix], Field(min_length=1)]] = Field(default=None, alias="ipv6Prefixes")
     ipv6_addrs: Optional[Annotated[List[Ipv6Addr], Field(min_length=1)]] = Field(default=None, alias="ipv6Addrs")
-    pdu_sess_type: Optional[PduSessionType] = Field(default=None, alias="pduSessType")
-    ssc_mode: Optional[SscMode] = Field(default=None, alias="sscMode")
+    pdu_sess_type: Optional[StrictStr] = Field(default=None, description="PduSessionType indicates the type of a PDU session. It shall comply with the provisions defined in table 5.4.3.3-1.  ", alias="pduSessType")
+    ssc_mode: Optional[StrictStr] = Field(default=None, description="represents the service and session continuity mode It shall comply with the provisions defined in table 5.4.3.6-1.  ", alias="sscMode")
     qfi: Optional[Annotated[int, Field(le=63, strict=True, ge=0)]] = Field(default=None, description="Unsigned integer identifying a QoS flow, within the range 0 to 63.")
     app_id: Optional[StrictStr] = Field(default=None, description="String providing an application identifier.", alias="appId")
     eth_flow_descs: Optional[Annotated[List[EthFlowDescription], Field(min_length=1)]] = Field(default=None, description="Descriptor(s) for non-IP traffic. It allows the encoding of multiple UL and/or DL flows. Each entry of the array describes a single Ethernet flow. ", alias="ethFlowDescs")
@@ -129,7 +122,7 @@ class EventNotification(BaseModel):
     pdu_sess_infos: Optional[Annotated[List[PduSessionInformation], Field(min_length=1)]] = Field(default=None, alias="pduSessInfos")
     upf_info: Optional[UpfInformation] = Field(default=None, alias="upfInfo")
     pdmf: Optional[StrictBool] = Field(default=None, description="Represents the packet delay measurement failure indicator. Default value is false if omitted. ")
-    sat_backhaul_cat: Optional[SatelliteBackhaulCategory] = Field(default=None, alias="satBackhaulCat")
+    sat_backhaul_cat: Optional[StrictStr] = Field(default=None, description="Indicates the satellite backhaul used.", alias="satBackhaulCat")
     supported_features: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="A string used to indicate the features supported by an API that is used as defined in clause  6.6 in 3GPP TS 29.500. The string shall contain a bitmask indicating supported features in  hexadecimal representation Each character in the string shall take a value of \"0\" to \"9\",  \"a\" to \"f\" or \"A\" to \"F\" and shall represent the support of 4 features as described in  table 5.2.2-3. The most significant character representing the highest-numbered features shall  appear first in the string, and the character representing features 1 to 4 shall appear last  in the string. The list of features and their numbering (starting with 1) are defined  separately for each API. If the string contains a lower number of characters than there are  defined features for an API, all features that would be represented by characters that are not  present in the string are not supported. ", alias="supportedFeatures")
     target_af_id: Optional[StrictStr] = Field(default=None, description="Identifier of the Application Function responsible for the target DNAI.", alias="targetAfId")
     var_5qi: Optional[Annotated[int, Field(le=255, strict=True, ge=0)]] = Field(default=None, description="Unsigned integer representing a 5G QoS Identifier (see clause 5.7.2.1 of 3GPP TS 23.501, within the range 0 to 255. ", alias="5qi")
@@ -288,9 +281,6 @@ class EventNotification(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of event
-        if self.event:
-            _dict['event'] = self.event.to_dict()
         # override the default output from pydantic by calling `to_dict()` of ue_ip_addr
         if self.ue_ip_addr:
             _dict['ueIpAddr'] = self.ue_ip_addr.to_dict()
@@ -301,9 +291,6 @@ class EventNotification(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['transacInfos'] = _items
-        # override the default output from pydantic by calling `to_dict()` of dnai_chg_type
-        if self.dnai_chg_type:
-            _dict['dnaiChgType'] = self.dnai_chg_type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of traff_route_req_outcome
         if self.traff_route_req_outcome:
             _dict['traffRouteReqOutcome'] = self.traff_route_req_outcome.to_dict()
@@ -331,12 +318,6 @@ class EventNotification(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of plmn_id
         if self.plmn_id:
             _dict['plmnId'] = self.plmn_id.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of rat_type
-        if self.rat_type:
-            _dict['ratType'] = self.rat_type.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of ddd_status
-        if self.ddd_status:
-            _dict['dddStatus'] = self.ddd_status.to_dict()
         # override the default output from pydantic by calling `to_dict()` of ddd_tra_descriptor
         if self.ddd_tra_descriptor:
             _dict['dddTraDescriptor'] = self.ddd_tra_descriptor.to_dict()
@@ -357,12 +338,6 @@ class EventNotification(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['ipv6Addrs'] = _items
-        # override the default output from pydantic by calling `to_dict()` of pdu_sess_type
-        if self.pdu_sess_type:
-            _dict['pduSessType'] = self.pdu_sess_type.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of ssc_mode
-        if self.ssc_mode:
-            _dict['sscMode'] = self.ssc_mode.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in eth_flow_descs (list)
         _items = []
         if self.eth_flow_descs:
@@ -399,9 +374,6 @@ class EventNotification(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of upf_info
         if self.upf_info:
             _dict['upfInfo'] = self.upf_info.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of sat_backhaul_cat
-        if self.sat_backhaul_cat:
-            _dict['satBackhaulCat'] = self.sat_backhaul_cat.to_dict()
         # override the default output from pydantic by calling `to_dict()` of qos_para
         if self.qos_para:
             _dict['qosPara'] = self.qos_para.to_dict()
@@ -425,11 +397,6 @@ class EventNotification(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of nf_signal_info
         if self.nf_signal_info:
             _dict['nfSignalInfo'] = self.nf_signal_info.to_dict()
-        # set to None if ue_ip_addr (nullable) is None
-        # and model_fields_set contains the field
-        if self.ue_ip_addr is None and "ue_ip_addr" in self.model_fields_set:
-            _dict['ueIpAddr'] = None
-
         # set to None if traf_corre_info (nullable) is None
         # and model_fields_set contains the field
         if self.traf_corre_info is None and "traf_corre_info" in self.model_fields_set:
@@ -457,7 +424,7 @@ class EventNotification(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "event": SmfEvent.from_dict(obj.get("event")) if obj.get("event") is not None else None,
+            "event": obj.get("event"),
             "referenceId": obj.get("referenceId"),
             "timeStamp": obj.get("timeStamp"),
             "supi": obj.get("supi"),
@@ -466,7 +433,7 @@ class EventNotification(BaseModel):
             "transacInfos": [TransactionInfo.from_dict(_item) for _item in obj.get("transacInfos")] if obj.get("transacInfos") is not None else None,
             "sourceDnai": obj.get("sourceDnai"),
             "targetDnai": obj.get("targetDnai"),
-            "dnaiChgType": DnaiChangeType.from_dict(obj.get("dnaiChgType")) if obj.get("dnaiChgType") is not None else None,
+            "dnaiChgType": obj.get("dnaiChgType"),
             "traffRouteReqOutcome": TraffRouteReqOutcome.from_dict(obj.get("traffRouteReqOutcome")) if obj.get("traffRouteReqOutcome") is not None else None,
             "candidateDnais": obj.get("candidateDnais"),
             "candDnaisPrioInd": obj.get("candDnaisPrioInd"),
@@ -487,16 +454,16 @@ class EventNotification(BaseModel):
             "accType": obj.get("accType"),
             "pduAccTypes": obj.get("pduAccTypes"),
             "pduSeId": obj.get("pduSeId"),
-            "ratType": RatType.from_dict(obj.get("ratType")) if obj.get("ratType") is not None else None,
-            "dddStatus": DlDataDeliveryStatus.from_dict(obj.get("dddStatus")) if obj.get("dddStatus") is not None else None,
+            "ratType": obj.get("ratType"),
+            "dddStatus": obj.get("dddStatus"),
             "dddTraDescriptor": DddTrafficDescriptor.from_dict(obj.get("dddTraDescriptor")) if obj.get("dddTraDescriptor") is not None else None,
             "maxWaitTime": obj.get("maxWaitTime"),
             "commFailure": CommunicationFailure.from_dict(obj.get("commFailure")) if obj.get("commFailure") is not None else None,
             "ipv4Addr": obj.get("ipv4Addr"),
             "ipv6Prefixes": [Ipv6Prefix.from_dict(_item) for _item in obj.get("ipv6Prefixes")] if obj.get("ipv6Prefixes") is not None else None,
             "ipv6Addrs": [Ipv6Addr.from_dict(_item) for _item in obj.get("ipv6Addrs")] if obj.get("ipv6Addrs") is not None else None,
-            "pduSessType": PduSessionType.from_dict(obj.get("pduSessType")) if obj.get("pduSessType") is not None else None,
-            "sscMode": SscMode.from_dict(obj.get("sscMode")) if obj.get("sscMode") is not None else None,
+            "pduSessType": obj.get("pduSessType"),
+            "sscMode": obj.get("sscMode"),
             "qfi": obj.get("qfi"),
             "appId": obj.get("appId"),
             "ethFlowDescs": [EthFlowDescription.from_dict(_item) for _item in obj.get("ethFlowDescs")] if obj.get("ethFlowDescs") is not None else None,
@@ -523,7 +490,7 @@ class EventNotification(BaseModel):
             "pduSessInfos": [PduSessionInformation.from_dict(_item) for _item in obj.get("pduSessInfos")] if obj.get("pduSessInfos") is not None else None,
             "upfInfo": UpfInformation.from_dict(obj.get("upfInfo")) if obj.get("upfInfo") is not None else None,
             "pdmf": obj.get("pdmf"),
-            "satBackhaulCat": SatelliteBackhaulCategory.from_dict(obj.get("satBackhaulCat")) if obj.get("satBackhaulCat") is not None else None,
+            "satBackhaulCat": obj.get("satBackhaulCat"),
             "supportedFeatures": obj.get("supportedFeatures"),
             "targetAfId": obj.get("targetAfId"),
             "5qi": obj.get("5qi"),

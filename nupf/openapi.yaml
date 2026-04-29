@@ -652,11 +652,11 @@ components:
           - headerValueAfter: headerValueAfter
             headerInfo: headerInfo
             headerValueBefore: headerValueBefore
-            headerAction: DETECT
+            headerAction: headerAction
           - headerValueAfter: headerValueAfter
             headerInfo: headerInfo
             headerValueBefore: headerValueBefore
-            headerAction: DETECT
+            headerAction: headerAction
           skippedReportInfo:
           - null
           - null
@@ -672,10 +672,10 @@ components:
           - volumeMeasurement:
               totalVolume: totalVolume
               dlVolume: dlVolume
-              dlNbOfPackets: 2147483647
-              ulNbOfPackets: 2147483647
+              dlNbOfPackets: 0
+              ulNbOfPackets: 0
               ulVolume: ulVolume
-              totalNbOfPackets: 2147483647
+              totalNbOfPackets: 0
             appId: appId
             throughputMeasurement:
               dlThroughput: dlThroughput
@@ -697,13 +697,13 @@ components:
               - null
               domainInfoList:
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
             flowInfo:
               flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -723,7 +723,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -744,10 +744,10 @@ components:
           - volumeMeasurement:
               totalVolume: totalVolume
               dlVolume: dlVolume
-              dlNbOfPackets: 2147483647
-              ulNbOfPackets: 2147483647
+              dlNbOfPackets: 0
+              ulNbOfPackets: 0
               ulVolume: ulVolume
-              totalNbOfPackets: 2147483647
+              totalNbOfPackets: 0
             appId: appId
             throughputMeasurement:
               dlThroughput: dlThroughput
@@ -769,13 +769,13 @@ components:
               - null
               domainInfoList:
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
             flowInfo:
               flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -795,7 +795,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -814,13 +814,13 @@ components:
                 ssrcId: 343953088
                 rtpSdesHdrExtId: 0
           ueIpv6Prefix: 2001:db8:abcd:12::0/64
-          ratType: null
-          eventType: null
+          ratType: ratType
+          eventType: eventType
           supi: supi
           gpsi: gpsi
           timeStamp: 2000-01-23T04:56:07.000+00:00
           ueIpv4Addr: 198.51.100.1
-          terminationCause: N4_SESSION_RELEASE
+          terminationCause: terminationCause
           startTime: 2000-01-23T04:56:07.000+00:00
           qosMonitoringMeasurement:
             _dlMinPacketDelay: 2147483647
@@ -846,12 +846,12 @@ components:
             natMappingList:
             - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
               remotePortNumber: 44421
-              transportProtocol: UDP
+              transportProtocol: transportProtocol
               ipv4Addr: 198.51.100.1
               portNumber: 18901
             - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
               remotePortNumber: 44421
-              transportProtocol: UDP
+              transportProtocol: transportProtocol
               ipv4Addr: 198.51.100.1
               portNumber: 18901
         - snssai:
@@ -863,11 +863,11 @@ components:
           - headerValueAfter: headerValueAfter
             headerInfo: headerInfo
             headerValueBefore: headerValueBefore
-            headerAction: DETECT
+            headerAction: headerAction
           - headerValueAfter: headerValueAfter
             headerInfo: headerInfo
             headerValueBefore: headerValueBefore
-            headerAction: DETECT
+            headerAction: headerAction
           skippedReportInfo:
           - null
           - null
@@ -883,10 +883,10 @@ components:
           - volumeMeasurement:
               totalVolume: totalVolume
               dlVolume: dlVolume
-              dlNbOfPackets: 2147483647
-              ulNbOfPackets: 2147483647
+              dlNbOfPackets: 0
+              ulNbOfPackets: 0
               ulVolume: ulVolume
-              totalNbOfPackets: 2147483647
+              totalNbOfPackets: 0
             appId: appId
             throughputMeasurement:
               dlThroughput: dlThroughput
@@ -908,13 +908,13 @@ components:
               - null
               domainInfoList:
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
             flowInfo:
               flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -934,7 +934,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -955,10 +955,10 @@ components:
           - volumeMeasurement:
               totalVolume: totalVolume
               dlVolume: dlVolume
-              dlNbOfPackets: 2147483647
-              ulNbOfPackets: 2147483647
+              dlNbOfPackets: 0
+              ulNbOfPackets: 0
               ulVolume: ulVolume
-              totalNbOfPackets: 2147483647
+              totalNbOfPackets: 0
             appId: appId
             throughputMeasurement:
               dlThroughput: dlThroughput
@@ -980,13 +980,13 @@ components:
               - null
               domainInfoList:
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
             flowInfo:
               flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -1006,7 +1006,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -1025,13 +1025,13 @@ components:
                 ssrcId: 343953088
                 rtpSdesHdrExtId: 0
           ueIpv6Prefix: 2001:db8:abcd:12::0/64
-          ratType: null
-          eventType: null
+          ratType: ratType
+          eventType: eventType
           supi: supi
           gpsi: gpsi
           timeStamp: 2000-01-23T04:56:07.000+00:00
           ueIpv4Addr: 198.51.100.1
-          terminationCause: N4_SESSION_RELEASE
+          terminationCause: terminationCause
           startTime: 2000-01-23T04:56:07.000+00:00
           qosMonitoringMeasurement:
             _dlMinPacketDelay: 2147483647
@@ -1057,12 +1057,12 @@ components:
             natMappingList:
             - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
               remotePortNumber: 44421
-              transportProtocol: UDP
+              transportProtocol: transportProtocol
               ipv4Addr: 198.51.100.1
               portNumber: 18901
             - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
               remotePortNumber: 44421
-              transportProtocol: UDP
+              transportProtocol: transportProtocol
               ipv4Addr: 198.51.100.1
               portNumber: 18901
         achievedSampRatio: 8
@@ -1104,11 +1104,11 @@ components:
         - headerValueAfter: headerValueAfter
           headerInfo: headerInfo
           headerValueBefore: headerValueBefore
-          headerAction: DETECT
+          headerAction: headerAction
         - headerValueAfter: headerValueAfter
           headerInfo: headerInfo
           headerValueBefore: headerValueBefore
-          headerAction: DETECT
+          headerAction: headerAction
         skippedReportInfo:
         - null
         - null
@@ -1124,10 +1124,10 @@ components:
         - volumeMeasurement:
             totalVolume: totalVolume
             dlVolume: dlVolume
-            dlNbOfPackets: 2147483647
-            ulNbOfPackets: 2147483647
+            dlNbOfPackets: 0
+            ulNbOfPackets: 0
             ulVolume: ulVolume
-            totalNbOfPackets: 2147483647
+            totalNbOfPackets: 0
           appId: appId
           throughputMeasurement:
             dlThroughput: dlThroughput
@@ -1149,13 +1149,13 @@ components:
             - null
             domainInfoList:
             - domainName: domainName
-              domainNameProtocol: DNS_QNAME
+              domainNameProtocol: domainNameProtocol
             - domainName: domainName
-              domainNameProtocol: DNS_QNAME
+              domainNameProtocol: domainNameProtocol
           flowInfo:
             flowLabel: flowLabel
             packFiltId: packFiltId
-            flowDirection: null
+            flowDirection: flowDirection
             packetFilterUsage: true
             tosTrafficClass: tosTrafficClass
             mpxMediaDlInfos:
@@ -1175,7 +1175,7 @@ components:
               destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1196,10 +1196,10 @@ components:
         - volumeMeasurement:
             totalVolume: totalVolume
             dlVolume: dlVolume
-            dlNbOfPackets: 2147483647
-            ulNbOfPackets: 2147483647
+            dlNbOfPackets: 0
+            ulNbOfPackets: 0
             ulVolume: ulVolume
-            totalNbOfPackets: 2147483647
+            totalNbOfPackets: 0
           appId: appId
           throughputMeasurement:
             dlThroughput: dlThroughput
@@ -1221,13 +1221,13 @@ components:
             - null
             domainInfoList:
             - domainName: domainName
-              domainNameProtocol: DNS_QNAME
+              domainNameProtocol: domainNameProtocol
             - domainName: domainName
-              domainNameProtocol: DNS_QNAME
+              domainNameProtocol: domainNameProtocol
           flowInfo:
             flowLabel: flowLabel
             packFiltId: packFiltId
-            flowDirection: null
+            flowDirection: flowDirection
             packetFilterUsage: true
             tosTrafficClass: tosTrafficClass
             mpxMediaDlInfos:
@@ -1247,7 +1247,7 @@ components:
               destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1266,13 +1266,13 @@ components:
               ssrcId: 343953088
               rtpSdesHdrExtId: 0
         ueIpv6Prefix: 2001:db8:abcd:12::0/64
-        ratType: null
-        eventType: null
+        ratType: ratType
+        eventType: eventType
         supi: supi
         gpsi: gpsi
         timeStamp: 2000-01-23T04:56:07.000+00:00
         ueIpv4Addr: 198.51.100.1
-        terminationCause: N4_SESSION_RELEASE
+        terminationCause: terminationCause
         startTime: 2000-01-23T04:56:07.000+00:00
         qosMonitoringMeasurement:
           _dlMinPacketDelay: 2147483647
@@ -1298,18 +1298,20 @@ components:
           natMappingList:
           - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
             remotePortNumber: 44421
-            transportProtocol: UDP
+            transportProtocol: transportProtocol
             ipv4Addr: 198.51.100.1
             portNumber: 18901
           - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
             remotePortNumber: 44421
-            transportProtocol: UDP
+            transportProtocol: transportProtocol
             ipv4Addr: 198.51.100.1
             portNumber: 18901
       nullable: true
       properties:
         eventType:
-          $ref: '#/components/schemas/EventType'
+          description: Event Type
+          title: EventType
+          type: string
         ueIpv4Addr:
           description: |
             String identifying a IPv4 address formatted in the 'dotted decimal' notation as defined in RFC 1166.
@@ -1369,7 +1371,9 @@ components:
           title: DateTime
           type: string
         ratType:
-          $ref: '#/components/schemas/RatType'
+          description: Indicates the radio access used.
+          title: RatType
+          type: string
         qosMonitoringMeasurement:
           $ref: '#/components/schemas/QosMonitoringMeasurement'
         tscMngtInfo:
@@ -1389,7 +1393,9 @@ components:
           title: handlingOfPayloadHeadersInfo
           type: array
         terminationCause:
-          $ref: '#/components/schemas/TerminationCause'
+          description: the reason to terminate the subscription
+          title: TerminationCause
+          type: string
         skippedReportInfo:
           items:
             $ref: '#/components/schemas/SkipReportingCondition'
@@ -1405,11 +1411,11 @@ components:
       description: UPF Event Subscription
       example:
         eventReportingMode:
-          notifFlag: ACTIVATE
+          notifFlag: notifFlag
           partitioningCriteria:
-          - TAC
-          - TAC
-          trigger: ONE_TIME
+          - null
+          - null
+          trigger: trigger
           expiry: 2000-01-23T04:56:07.000+00:00
           mutingExcInstructions: ""
           subTerminationReportInd: true
@@ -1430,7 +1436,7 @@ components:
               recurMonth:
               - null
               - null
-              recurType: DAILY
+              recurType: recurType
               recurDate:
               - null
               - null
@@ -1447,7 +1453,7 @@ components:
               recurMonth:
               - null
               - null
-              recurType: DAILY
+              recurType: recurType
               recurDate:
               - null
               - null
@@ -1459,8 +1465,8 @@ components:
               - null
               - null
             skipReportCond:
-            - SKIP_NULL_REPORT
-            - SKIP_NULL_REPORT
+            - null
+            - null
             thresholdCond:
               thresholdThroughput:
                 dlThroughput: dlThroughput
@@ -1470,17 +1476,17 @@ components:
               thresholdTrafficVolume:
                 totalVolume: totalVolume
                 dlVolume: dlVolume
-                dlNbOfPackets: 2147483647
-                ulNbOfPackets: 2147483647
+                dlNbOfPackets: 0
+                ulNbOfPackets: 0
                 ulVolume: ulVolume
-                totalNbOfPackets: 2147483647
+                totalNbOfPackets: 0
           remotePortNumber: 15087
-          remainingDataReports: DISCARD
+          remainingDataReports: remainingDataReports
           ipDomain: ipDomain
           trafficFilters:
           - flowLabel: flowLabel
             packFiltId: packFiltId
-            flowDirection: null
+            flowDirection: flowDirection
             packetFilterUsage: true
             tosTrafficClass: tosTrafficClass
             mpxMediaDlInfos:
@@ -1500,7 +1506,7 @@ components:
               destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1520,7 +1526,7 @@ components:
               rtpSdesHdrExtId: 0
           - flowLabel: flowLabel
             packFiltId: packFiltId
-            flowDirection: null
+            flowDirection: flowDirection
             packetFilterUsage: true
             tosTrafficClass: tosTrafficClass
             mpxMediaDlInfos:
@@ -1540,7 +1546,7 @@ components:
               destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1559,23 +1565,23 @@ components:
               ssrcId: 343953088
               rtpSdesHdrExtId: 0
           ratTypeList:
-          - NR
-          - NR
-          type: QOS_MONITORING
+          - null
+          - null
+          type: type
           remoteIpv4Addr: 198.51.100.1
           immediateFlag: false
-          granularityOfMeasurement: PER_APPLICATION
+          granularityOfMeasurement: granularityOfMeasurement
           inclRatType: true
           remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
           appIds:
           - null
           - null
           measurementTypes:
-          - VOLUME_MEASUREMENT
-          - VOLUME_MEASUREMENT
+          - null
+          - null
           reportingSuggestionInfo:
             reportingTimeInfo: 5
-            reportingUrgency: DELAY_TOLERANT
+            reportingUrgency: reportingUrgency
         - skipReportingInstruction:
             validityTimes:
             - recurTimeWindow:
@@ -1584,7 +1590,7 @@ components:
               recurMonth:
               - null
               - null
-              recurType: DAILY
+              recurType: recurType
               recurDate:
               - null
               - null
@@ -1601,7 +1607,7 @@ components:
               recurMonth:
               - null
               - null
-              recurType: DAILY
+              recurType: recurType
               recurDate:
               - null
               - null
@@ -1613,8 +1619,8 @@ components:
               - null
               - null
             skipReportCond:
-            - SKIP_NULL_REPORT
-            - SKIP_NULL_REPORT
+            - null
+            - null
             thresholdCond:
               thresholdThroughput:
                 dlThroughput: dlThroughput
@@ -1624,17 +1630,17 @@ components:
               thresholdTrafficVolume:
                 totalVolume: totalVolume
                 dlVolume: dlVolume
-                dlNbOfPackets: 2147483647
-                ulNbOfPackets: 2147483647
+                dlNbOfPackets: 0
+                ulNbOfPackets: 0
                 ulVolume: ulVolume
-                totalNbOfPackets: 2147483647
+                totalNbOfPackets: 0
           remotePortNumber: 15087
-          remainingDataReports: DISCARD
+          remainingDataReports: remainingDataReports
           ipDomain: ipDomain
           trafficFilters:
           - flowLabel: flowLabel
             packFiltId: packFiltId
-            flowDirection: null
+            flowDirection: flowDirection
             packetFilterUsage: true
             tosTrafficClass: tosTrafficClass
             mpxMediaDlInfos:
@@ -1654,7 +1660,7 @@ components:
               destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1674,7 +1680,7 @@ components:
               rtpSdesHdrExtId: 0
           - flowLabel: flowLabel
             packFiltId: packFiltId
-            flowDirection: null
+            flowDirection: flowDirection
             packetFilterUsage: true
             tosTrafficClass: tosTrafficClass
             mpxMediaDlInfos:
@@ -1694,7 +1700,7 @@ components:
               destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1713,23 +1719,23 @@ components:
               ssrcId: 343953088
               rtpSdesHdrExtId: 0
           ratTypeList:
-          - NR
-          - NR
-          type: QOS_MONITORING
+          - null
+          - null
+          type: type
           remoteIpv4Addr: 198.51.100.1
           immediateFlag: false
-          granularityOfMeasurement: PER_APPLICATION
+          granularityOfMeasurement: granularityOfMeasurement
           inclRatType: true
           remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
           appIds:
           - null
           - null
           measurementTypes:
-          - VOLUME_MEASUREMENT
-          - VOLUME_MEASUREMENT
+          - null
+          - null
           reportingSuggestionInfo:
             reportingTimeInfo: 5
-            reportingUrgency: DELAY_TOLERANT
+            reportingUrgency: reportingUrgency
         dnn: dnn
         bundlingAllowed: true
         bundleId: 639699262
@@ -1821,11 +1827,11 @@ components:
     UpfEventMode:
       description: UPF Event Mode
       example:
-        notifFlag: ACTIVATE
+        notifFlag: notifFlag
         partitioningCriteria:
-        - TAC
-        - TAC
-        trigger: ONE_TIME
+        - null
+        - null
+        trigger: trigger
         expiry: 2000-01-23T04:56:07.000+00:00
         mutingExcInstructions: ""
         subTerminationReportInd: true
@@ -1835,7 +1841,9 @@ components:
         mutingNotSettings: ""
       properties:
         trigger:
-          $ref: '#/components/schemas/UpfEventTrigger'
+          description: Upf Event Trigger
+          title: UpfEventTrigger
+          type: string
         maxReports:
           title: maxReports
           type: integer
@@ -1862,7 +1870,13 @@ components:
           title: partitioningCriteria
           type: array
         notifFlag:
-          $ref: '#/components/schemas/NotificationFlag'
+          description: "Possible values are:\n- ACTIVATE: The event notification is\
+            \ activated.\n- DEACTIVATE: The event notification is deactivated and\
+            \ shall be muted. The available\n   event(s) shall be stored.\n- RETRIEVAL:\
+            \ The event notification shall be sent to the NF service consumer(s),\n\
+            \  after that, is muted again. \n"
+          title: NotificationFlag
+          type: string
         mutingExcInstructions:
           allOf:
           - $ref: '#/components/schemas/MutingExceptionInstructions'
@@ -1891,7 +1905,7 @@ components:
             recurMonth:
             - null
             - null
-            recurType: DAILY
+            recurType: recurType
             recurDate:
             - null
             - null
@@ -1908,7 +1922,7 @@ components:
             recurMonth:
             - null
             - null
-            recurType: DAILY
+            recurType: recurType
             recurDate:
             - null
             - null
@@ -1920,8 +1934,8 @@ components:
             - null
             - null
           skipReportCond:
-          - SKIP_NULL_REPORT
-          - SKIP_NULL_REPORT
+          - null
+          - null
           thresholdCond:
             thresholdThroughput:
               dlThroughput: dlThroughput
@@ -1931,17 +1945,17 @@ components:
             thresholdTrafficVolume:
               totalVolume: totalVolume
               dlVolume: dlVolume
-              dlNbOfPackets: 2147483647
-              ulNbOfPackets: 2147483647
+              dlNbOfPackets: 0
+              ulNbOfPackets: 0
               ulVolume: ulVolume
-              totalNbOfPackets: 2147483647
+              totalNbOfPackets: 0
         remotePortNumber: 15087
-        remainingDataReports: DISCARD
+        remainingDataReports: remainingDataReports
         ipDomain: ipDomain
         trafficFilters:
         - flowLabel: flowLabel
           packFiltId: packFiltId
-          flowDirection: null
+          flowDirection: flowDirection
           packetFilterUsage: true
           tosTrafficClass: tosTrafficClass
           mpxMediaDlInfos:
@@ -1961,7 +1975,7 @@ components:
             destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -1981,7 +1995,7 @@ components:
             rtpSdesHdrExtId: 0
         - flowLabel: flowLabel
           packFiltId: packFiltId
-          flowDirection: null
+          flowDirection: flowDirection
           packetFilterUsage: true
           tosTrafficClass: tosTrafficClass
           mpxMediaDlInfos:
@@ -2001,7 +2015,7 @@ components:
             destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -2020,26 +2034,28 @@ components:
             ssrcId: 343953088
             rtpSdesHdrExtId: 0
         ratTypeList:
-        - NR
-        - NR
-        type: QOS_MONITORING
+        - null
+        - null
+        type: type
         remoteIpv4Addr: 198.51.100.1
         immediateFlag: false
-        granularityOfMeasurement: PER_APPLICATION
+        granularityOfMeasurement: granularityOfMeasurement
         inclRatType: true
         remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
         appIds:
         - null
         - null
         measurementTypes:
-        - VOLUME_MEASUREMENT
-        - VOLUME_MEASUREMENT
+        - null
+        - null
         reportingSuggestionInfo:
           reportingTimeInfo: 5
-          reportingUrgency: DELAY_TOLERANT
+          reportingUrgency: reportingUrgency
       properties:
         type:
-          $ref: '#/components/schemas/EventType'
+          description: Event Type
+          title: EventType
+          type: string
         immediateFlag:
           default: false
           title: immediateFlag
@@ -2063,7 +2079,9 @@ components:
           title: trafficFilters
           type: array
         granularityOfMeasurement:
-          $ref: '#/components/schemas/GranularityOfMeasurement'
+          description: Granularity Of Measurement
+          title: GranularityOfMeasurement
+          type: string
         reportingSuggestionInfo:
           $ref: '#/components/schemas/ReportingSuggestionInformation'
         remoteIpv4Addr:
@@ -2086,7 +2104,10 @@ components:
           title: ipDomain
           type: string
         remainingDataReports:
-          $ref: '#/components/schemas/RemainingDataReports'
+          description: indication on how to handle the data collected by the source
+            UPF
+          title: RemainingDataReports
+          type: string
         skipReportingInstruction:
           $ref: '#/components/schemas/SkipReportingInstruction'
         inclRatType:
@@ -2108,11 +2129,11 @@ components:
         supportedFeatures: supportedFeatures
         subscription:
           eventReportingMode:
-            notifFlag: ACTIVATE
+            notifFlag: notifFlag
             partitioningCriteria:
-            - TAC
-            - TAC
-            trigger: ONE_TIME
+            - null
+            - null
+            trigger: trigger
             expiry: 2000-01-23T04:56:07.000+00:00
             mutingExcInstructions: ""
             subTerminationReportInd: true
@@ -2133,7 +2154,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -2150,7 +2171,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -2162,8 +2183,8 @@ components:
                 - null
                 - null
               skipReportCond:
-              - SKIP_NULL_REPORT
-              - SKIP_NULL_REPORT
+              - null
+              - null
               thresholdCond:
                 thresholdThroughput:
                   dlThroughput: dlThroughput
@@ -2173,17 +2194,17 @@ components:
                 thresholdTrafficVolume:
                   totalVolume: totalVolume
                   dlVolume: dlVolume
-                  dlNbOfPackets: 2147483647
-                  ulNbOfPackets: 2147483647
+                  dlNbOfPackets: 0
+                  ulNbOfPackets: 0
                   ulVolume: ulVolume
-                  totalNbOfPackets: 2147483647
+                  totalNbOfPackets: 0
             remotePortNumber: 15087
-            remainingDataReports: DISCARD
+            remainingDataReports: remainingDataReports
             ipDomain: ipDomain
             trafficFilters:
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -2203,7 +2224,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -2223,7 +2244,7 @@ components:
                 rtpSdesHdrExtId: 0
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -2243,7 +2264,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -2262,23 +2283,23 @@ components:
                 ssrcId: 343953088
                 rtpSdesHdrExtId: 0
             ratTypeList:
-            - NR
-            - NR
-            type: QOS_MONITORING
+            - null
+            - null
+            type: type
             remoteIpv4Addr: 198.51.100.1
             immediateFlag: false
-            granularityOfMeasurement: PER_APPLICATION
+            granularityOfMeasurement: granularityOfMeasurement
             inclRatType: true
             remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
             appIds:
             - null
             - null
             measurementTypes:
-            - VOLUME_MEASUREMENT
-            - VOLUME_MEASUREMENT
+            - null
+            - null
             reportingSuggestionInfo:
               reportingTimeInfo: 5
-              reportingUrgency: DELAY_TOLERANT
+              reportingUrgency: reportingUrgency
           - skipReportingInstruction:
               validityTimes:
               - recurTimeWindow:
@@ -2287,7 +2308,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -2304,7 +2325,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -2316,8 +2337,8 @@ components:
                 - null
                 - null
               skipReportCond:
-              - SKIP_NULL_REPORT
-              - SKIP_NULL_REPORT
+              - null
+              - null
               thresholdCond:
                 thresholdThroughput:
                   dlThroughput: dlThroughput
@@ -2327,17 +2348,17 @@ components:
                 thresholdTrafficVolume:
                   totalVolume: totalVolume
                   dlVolume: dlVolume
-                  dlNbOfPackets: 2147483647
-                  ulNbOfPackets: 2147483647
+                  dlNbOfPackets: 0
+                  ulNbOfPackets: 0
                   ulVolume: ulVolume
-                  totalNbOfPackets: 2147483647
+                  totalNbOfPackets: 0
             remotePortNumber: 15087
-            remainingDataReports: DISCARD
+            remainingDataReports: remainingDataReports
             ipDomain: ipDomain
             trafficFilters:
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -2357,7 +2378,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -2377,7 +2398,7 @@ components:
                 rtpSdesHdrExtId: 0
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -2397,7 +2418,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -2416,23 +2437,23 @@ components:
                 ssrcId: 343953088
                 rtpSdesHdrExtId: 0
             ratTypeList:
-            - NR
-            - NR
-            type: QOS_MONITORING
+            - null
+            - null
+            type: type
             remoteIpv4Addr: 198.51.100.1
             immediateFlag: false
-            granularityOfMeasurement: PER_APPLICATION
+            granularityOfMeasurement: granularityOfMeasurement
             inclRatType: true
             remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
             appIds:
             - null
             - null
             measurementTypes:
-            - VOLUME_MEASUREMENT
-            - VOLUME_MEASUREMENT
+            - null
+            - null
             reportingSuggestionInfo:
               reportingTimeInfo: 5
-              reportingUrgency: DELAY_TOLERANT
+              reportingUrgency: reportingUrgency
           dnn: dnn
           bundlingAllowed: true
           bundleId: 639699262
@@ -2472,11 +2493,11 @@ components:
           - headerValueAfter: headerValueAfter
             headerInfo: headerInfo
             headerValueBefore: headerValueBefore
-            headerAction: DETECT
+            headerAction: headerAction
           - headerValueAfter: headerValueAfter
             headerInfo: headerInfo
             headerValueBefore: headerValueBefore
-            headerAction: DETECT
+            headerAction: headerAction
           skippedReportInfo:
           - null
           - null
@@ -2492,10 +2513,10 @@ components:
           - volumeMeasurement:
               totalVolume: totalVolume
               dlVolume: dlVolume
-              dlNbOfPackets: 2147483647
-              ulNbOfPackets: 2147483647
+              dlNbOfPackets: 0
+              ulNbOfPackets: 0
               ulVolume: ulVolume
-              totalNbOfPackets: 2147483647
+              totalNbOfPackets: 0
             appId: appId
             throughputMeasurement:
               dlThroughput: dlThroughput
@@ -2517,13 +2538,13 @@ components:
               - null
               domainInfoList:
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
             flowInfo:
               flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -2543,7 +2564,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -2564,10 +2585,10 @@ components:
           - volumeMeasurement:
               totalVolume: totalVolume
               dlVolume: dlVolume
-              dlNbOfPackets: 2147483647
-              ulNbOfPackets: 2147483647
+              dlNbOfPackets: 0
+              ulNbOfPackets: 0
               ulVolume: ulVolume
-              totalNbOfPackets: 2147483647
+              totalNbOfPackets: 0
             appId: appId
             throughputMeasurement:
               dlThroughput: dlThroughput
@@ -2589,13 +2610,13 @@ components:
               - null
               domainInfoList:
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
             flowInfo:
               flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -2615,7 +2636,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -2634,13 +2655,13 @@ components:
                 ssrcId: 343953088
                 rtpSdesHdrExtId: 0
           ueIpv6Prefix: 2001:db8:abcd:12::0/64
-          ratType: null
-          eventType: null
+          ratType: ratType
+          eventType: eventType
           supi: supi
           gpsi: gpsi
           timeStamp: 2000-01-23T04:56:07.000+00:00
           ueIpv4Addr: 198.51.100.1
-          terminationCause: N4_SESSION_RELEASE
+          terminationCause: terminationCause
           startTime: 2000-01-23T04:56:07.000+00:00
           qosMonitoringMeasurement:
             _dlMinPacketDelay: 2147483647
@@ -2666,12 +2687,12 @@ components:
             natMappingList:
             - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
               remotePortNumber: 44421
-              transportProtocol: UDP
+              transportProtocol: transportProtocol
               ipv4Addr: 198.51.100.1
               portNumber: 18901
             - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
               remotePortNumber: 44421
-              transportProtocol: UDP
+              transportProtocol: transportProtocol
               ipv4Addr: 198.51.100.1
               portNumber: 18901
         - snssai:
@@ -2683,11 +2704,11 @@ components:
           - headerValueAfter: headerValueAfter
             headerInfo: headerInfo
             headerValueBefore: headerValueBefore
-            headerAction: DETECT
+            headerAction: headerAction
           - headerValueAfter: headerValueAfter
             headerInfo: headerInfo
             headerValueBefore: headerValueBefore
-            headerAction: DETECT
+            headerAction: headerAction
           skippedReportInfo:
           - null
           - null
@@ -2703,10 +2724,10 @@ components:
           - volumeMeasurement:
               totalVolume: totalVolume
               dlVolume: dlVolume
-              dlNbOfPackets: 2147483647
-              ulNbOfPackets: 2147483647
+              dlNbOfPackets: 0
+              ulNbOfPackets: 0
               ulVolume: ulVolume
-              totalNbOfPackets: 2147483647
+              totalNbOfPackets: 0
             appId: appId
             throughputMeasurement:
               dlThroughput: dlThroughput
@@ -2728,13 +2749,13 @@ components:
               - null
               domainInfoList:
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
             flowInfo:
               flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -2754,7 +2775,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -2775,10 +2796,10 @@ components:
           - volumeMeasurement:
               totalVolume: totalVolume
               dlVolume: dlVolume
-              dlNbOfPackets: 2147483647
-              ulNbOfPackets: 2147483647
+              dlNbOfPackets: 0
+              ulNbOfPackets: 0
               ulVolume: ulVolume
-              totalNbOfPackets: 2147483647
+              totalNbOfPackets: 0
             appId: appId
             throughputMeasurement:
               dlThroughput: dlThroughput
@@ -2800,13 +2821,13 @@ components:
               - null
               domainInfoList:
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
               - domainName: domainName
-                domainNameProtocol: DNS_QNAME
+                domainNameProtocol: domainNameProtocol
             flowInfo:
               flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -2826,7 +2847,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -2845,13 +2866,13 @@ components:
                 ssrcId: 343953088
                 rtpSdesHdrExtId: 0
           ueIpv6Prefix: 2001:db8:abcd:12::0/64
-          ratType: null
-          eventType: null
+          ratType: ratType
+          eventType: eventType
           supi: supi
           gpsi: gpsi
           timeStamp: 2000-01-23T04:56:07.000+00:00
           ueIpv4Addr: 198.51.100.1
-          terminationCause: N4_SESSION_RELEASE
+          terminationCause: terminationCause
           startTime: 2000-01-23T04:56:07.000+00:00
           qosMonitoringMeasurement:
             _dlMinPacketDelay: 2147483647
@@ -2877,21 +2898,21 @@ components:
             natMappingList:
             - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
               remotePortNumber: 44421
-              transportProtocol: UDP
+              transportProtocol: transportProtocol
               ipv4Addr: 198.51.100.1
               portNumber: 18901
             - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
               remotePortNumber: 44421
-              transportProtocol: UDP
+              transportProtocol: transportProtocol
               ipv4Addr: 198.51.100.1
               portNumber: 18901
         subscription:
           eventReportingMode:
-            notifFlag: ACTIVATE
+            notifFlag: notifFlag
             partitioningCriteria:
-            - TAC
-            - TAC
-            trigger: ONE_TIME
+            - null
+            - null
+            trigger: trigger
             expiry: 2000-01-23T04:56:07.000+00:00
             mutingExcInstructions: ""
             subTerminationReportInd: true
@@ -2912,7 +2933,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -2929,7 +2950,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -2941,8 +2962,8 @@ components:
                 - null
                 - null
               skipReportCond:
-              - SKIP_NULL_REPORT
-              - SKIP_NULL_REPORT
+              - null
+              - null
               thresholdCond:
                 thresholdThroughput:
                   dlThroughput: dlThroughput
@@ -2952,17 +2973,17 @@ components:
                 thresholdTrafficVolume:
                   totalVolume: totalVolume
                   dlVolume: dlVolume
-                  dlNbOfPackets: 2147483647
-                  ulNbOfPackets: 2147483647
+                  dlNbOfPackets: 0
+                  ulNbOfPackets: 0
                   ulVolume: ulVolume
-                  totalNbOfPackets: 2147483647
+                  totalNbOfPackets: 0
             remotePortNumber: 15087
-            remainingDataReports: DISCARD
+            remainingDataReports: remainingDataReports
             ipDomain: ipDomain
             trafficFilters:
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -2982,7 +3003,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -3002,7 +3023,7 @@ components:
                 rtpSdesHdrExtId: 0
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -3022,7 +3043,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -3041,23 +3062,23 @@ components:
                 ssrcId: 343953088
                 rtpSdesHdrExtId: 0
             ratTypeList:
-            - NR
-            - NR
-            type: QOS_MONITORING
+            - null
+            - null
+            type: type
             remoteIpv4Addr: 198.51.100.1
             immediateFlag: false
-            granularityOfMeasurement: PER_APPLICATION
+            granularityOfMeasurement: granularityOfMeasurement
             inclRatType: true
             remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
             appIds:
             - null
             - null
             measurementTypes:
-            - VOLUME_MEASUREMENT
-            - VOLUME_MEASUREMENT
+            - null
+            - null
             reportingSuggestionInfo:
               reportingTimeInfo: 5
-              reportingUrgency: DELAY_TOLERANT
+              reportingUrgency: reportingUrgency
           - skipReportingInstruction:
               validityTimes:
               - recurTimeWindow:
@@ -3066,7 +3087,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -3083,7 +3104,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -3095,8 +3116,8 @@ components:
                 - null
                 - null
               skipReportCond:
-              - SKIP_NULL_REPORT
-              - SKIP_NULL_REPORT
+              - null
+              - null
               thresholdCond:
                 thresholdThroughput:
                   dlThroughput: dlThroughput
@@ -3106,17 +3127,17 @@ components:
                 thresholdTrafficVolume:
                   totalVolume: totalVolume
                   dlVolume: dlVolume
-                  dlNbOfPackets: 2147483647
-                  ulNbOfPackets: 2147483647
+                  dlNbOfPackets: 0
+                  ulNbOfPackets: 0
                   ulVolume: ulVolume
-                  totalNbOfPackets: 2147483647
+                  totalNbOfPackets: 0
             remotePortNumber: 15087
-            remainingDataReports: DISCARD
+            remainingDataReports: remainingDataReports
             ipDomain: ipDomain
             trafficFilters:
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -3136,7 +3157,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -3156,7 +3177,7 @@ components:
                 rtpSdesHdrExtId: 0
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -3176,7 +3197,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -3195,23 +3216,23 @@ components:
                 ssrcId: 343953088
                 rtpSdesHdrExtId: 0
             ratTypeList:
-            - NR
-            - NR
-            type: QOS_MONITORING
+            - null
+            - null
+            type: type
             remoteIpv4Addr: 198.51.100.1
             immediateFlag: false
-            granularityOfMeasurement: PER_APPLICATION
+            granularityOfMeasurement: granularityOfMeasurement
             inclRatType: true
             remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
             appIds:
             - null
             - null
             measurementTypes:
-            - VOLUME_MEASUREMENT
-            - VOLUME_MEASUREMENT
+            - null
+            - null
             reportingSuggestionInfo:
               reportingTimeInfo: 5
-              reportingUrgency: DELAY_TOLERANT
+              reportingUrgency: reportingUrgency
           dnn: dnn
           bundlingAllowed: true
           bundleId: 639699262
@@ -3253,10 +3274,12 @@ components:
       description: Reporting Suggestion Information
       example:
         reportingTimeInfo: 5
-        reportingUrgency: DELAY_TOLERANT
+        reportingUrgency: reportingUrgency
       properties:
         reportingUrgency:
-          $ref: '#/components/schemas/ReportingUrgency'
+          description: Reporting Urgency
+          title: ReportingUrgency
+          type: string
         reportingTimeInfo:
           description: indicating a time in seconds.
           title: DurationSec
@@ -3434,10 +3457,10 @@ components:
         volumeMeasurement:
           totalVolume: totalVolume
           dlVolume: dlVolume
-          dlNbOfPackets: 2147483647
-          ulNbOfPackets: 2147483647
+          dlNbOfPackets: 0
+          ulNbOfPackets: 0
           ulVolume: ulVolume
-          totalNbOfPackets: 2147483647
+          totalNbOfPackets: 0
         appId: appId
         throughputMeasurement:
           dlThroughput: dlThroughput
@@ -3459,13 +3482,13 @@ components:
           - null
           domainInfoList:
           - domainName: domainName
-            domainNameProtocol: DNS_QNAME
+            domainNameProtocol: domainNameProtocol
           - domainName: domainName
-            domainNameProtocol: DNS_QNAME
+            domainNameProtocol: domainNameProtocol
         flowInfo:
           flowLabel: flowLabel
           packFiltId: packFiltId
-          flowDirection: null
+          flowDirection: flowDirection
           packetFilterUsage: true
           tosTrafficClass: tosTrafficClass
           mpxMediaDlInfos:
@@ -3485,7 +3508,7 @@ components:
             destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -3525,10 +3548,10 @@ components:
       example:
         totalVolume: totalVolume
         dlVolume: dlVolume
-        dlNbOfPackets: 2147483647
-        ulNbOfPackets: 2147483647
+        dlNbOfPackets: 0
+        ulNbOfPackets: 0
         ulVolume: ulVolume
-        totalNbOfPackets: 2147483647
+        totalNbOfPackets: 0
       properties:
         totalVolume:
           description: |
@@ -3551,21 +3574,18 @@ components:
         totalNbOfPackets:
           description: |
             Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
-          maximum: 18446744073709551615
           minimum: 0
           title: Uint64
           type: integer
         ulNbOfPackets:
           description: |
             Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
-          maximum: 18446744073709551615
           minimum: 0
           title: Uint64
           type: integer
         dlNbOfPackets:
           description: |
             Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
-          maximum: 18446744073709551615
           minimum: 0
           title: Uint64
           type: integer
@@ -3613,9 +3633,9 @@ components:
         - null
         domainInfoList:
         - domainName: domainName
-          domainNameProtocol: DNS_QNAME
+          domainNameProtocol: domainNameProtocol
         - domainName: domainName
-          domainNameProtocol: DNS_QNAME
+          domainNameProtocol: domainNameProtocol
       properties:
         urls:
           items:
@@ -3697,7 +3717,7 @@ components:
       description: Domain Information
       example:
         domainName: domainName
-        domainNameProtocol: DNS_QNAME
+        domainNameProtocol: domainNameProtocol
       properties:
         domainName:
           description: Fully Qualified Domain Name
@@ -3708,7 +3728,9 @@ components:
           title: Fqdn
           type: string
         domainNameProtocol:
-          $ref: '#/components/schemas/DnProtocol'
+          description: Domain Name Protocol
+          title: DnProtocol
+          type: string
       required:
       - domainName
       title: DomainInformation
@@ -3719,12 +3741,12 @@ components:
         natMappingList:
         - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
           remotePortNumber: 44421
-          transportProtocol: UDP
+          transportProtocol: transportProtocol
           ipv4Addr: 198.51.100.1
           portNumber: 18901
         - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
           remotePortNumber: 44421
-          transportProtocol: UDP
+          transportProtocol: transportProtocol
           ipv4Addr: 198.51.100.1
           portNumber: 18901
       properties:
@@ -3743,7 +3765,7 @@ components:
       example:
         ipv6Addr: 2001:db8:85a3::8a2e:370:7334
         remotePortNumber: 44421
-        transportProtocol: UDP
+        transportProtocol: transportProtocol
         ipv4Addr: 198.51.100.1
         portNumber: 18901
       nullable: true
@@ -3765,7 +3787,10 @@ components:
           title: Uint16
           type: integer
         transportProtocol:
-          $ref: '#/components/schemas/TransportProtocol'
+          description: "Possible values are:\n- UDP: User Datagram Protocol.\n- TCP:\
+            \ Transmission Control Protocol. \n"
+          title: TransportProtocol
+          type: string
         remotePortNumber:
           description: |
             Integer where the allowed values correspond to the value range of an unsigned 16-bit integer.
@@ -3783,7 +3808,7 @@ components:
         headerValueAfter: headerValueAfter
         headerInfo: headerInfo
         headerValueBefore: headerValueBefore
-        headerAction: DETECT
+        headerAction: headerAction
       properties:
         headerInfo:
           title: headerInfo
@@ -3792,7 +3817,16 @@ components:
           title: headerValueBefore
           type: string
         headerAction:
-          $ref: '#/components/schemas/HeaderHandlingAction'
+          description: |
+            Represents the type of header handling actions.
+            Possible values are:
+            - DETECT: Indicates that the request is for the detection of a header field.
+            - REMOVE: Indicates that the request is for the removal of a header field.
+            - REPLACE: Indicates that the request is for the replacement of information in a header
+              field.
+            - INSERT: Indicates that the request is for the addition of a header field.
+          title: HeaderHandlingAction
+          type: string
         headerValueAfter:
           title: headerValueAfter
           type: string
@@ -3811,7 +3845,7 @@ components:
           recurMonth:
           - null
           - null
-          recurType: DAILY
+          recurType: recurType
           recurDate:
           - null
           - null
@@ -3828,7 +3862,7 @@ components:
           recurMonth:
           - null
           - null
-          recurType: DAILY
+          recurType: recurType
           recurDate:
           - null
           - null
@@ -3840,8 +3874,8 @@ components:
           - null
           - null
         skipReportCond:
-        - SKIP_NULL_REPORT
-        - SKIP_NULL_REPORT
+        - null
+        - null
         thresholdCond:
           thresholdThroughput:
             dlThroughput: dlThroughput
@@ -3851,10 +3885,10 @@ components:
           thresholdTrafficVolume:
             totalVolume: totalVolume
             dlVolume: dlVolume
-            dlNbOfPackets: 2147483647
-            ulNbOfPackets: 2147483647
+            dlNbOfPackets: 0
+            ulNbOfPackets: 0
             ulVolume: ulVolume
-            totalNbOfPackets: 2147483647
+            totalNbOfPackets: 0
       properties:
         skipReportCond:
           items:
@@ -3885,10 +3919,10 @@ components:
         thresholdTrafficVolume:
           totalVolume: totalVolume
           dlVolume: dlVolume
-          dlNbOfPackets: 2147483647
-          ulNbOfPackets: 2147483647
+          dlNbOfPackets: 0
+          ulNbOfPackets: 0
           ulVolume: ulVolume
-          totalNbOfPackets: 2147483647
+          totalNbOfPackets: 0
       properties:
         thresholdTrafficVolume:
           $ref: '#/components/schemas/VolumeMeasurement'
@@ -3897,104 +3931,43 @@ components:
       title: ThresholdCond
       type: object
     ExtNotificationData:
-      oneOf:
-      - $ref: '#/components/schemas/NotificationData'
-      - items:
-          $ref: '#/components/schemas/NotificationData'
-        minItems: 2
-        type: array
-      title: ExtNotificationData
+      $ref: '#/components/schemas/NotificationData'
     EventType:
-      anyOf:
-      - enum:
-        - QOS_MONITORING
-        - USER_DATA_USAGE_MEASURES
-        - USER_DATA_USAGE_TRENDS
-        - TSC_MNGT_INFO
-        - UE_NAT_MAPPING_INFO
-        - HANDLING_OF_PAYLOAD_HEADERS_INFO
-        - SUBSCRIPTION_TERMINATION
-        type: string
-      - type: string
       description: Event Type
       title: EventType
+      type: string
     UpfEventTrigger:
-      anyOf:
-      - enum:
-        - ONE_TIME
-        - PERIODIC
-        - CONTINUOUS
-        type: string
-      - type: string
       description: Upf Event Trigger
       title: UpfEventTrigger
+      type: string
     MeasurementType:
-      anyOf:
-      - enum:
-        - VOLUME_MEASUREMENT
-        - THROUGHPUT_MEASUREMENT
-        - APPLICATION_RELATED_INFO
-        type: string
-      - type: string
       description: Measurement Type
       title: MeasurementType
+      type: string
     GranularityOfMeasurement:
-      anyOf:
-      - enum:
-        - PER_APPLICATION
-        - PER_SESSION
-        - PER_FLOW
-        type: string
-      - type: string
       description: Granularity Of Measurement
       title: GranularityOfMeasurement
+      type: string
     DnProtocol:
-      anyOf:
-      - enum:
-        - DNS_QNAME
-        - TLS_SNI
-        - TLS_SAN
-        - TLS_SCN
-        type: string
-      - type: string
       description: Domain Name Protocol
       title: DnProtocol
+      type: string
     ReportingUrgency:
-      anyOf:
-      - enum:
-        - DELAY_TOLERANT
-        - NON_DELAY_TOLERANT
-        type: string
-      - type: string
       description: Reporting Urgency
       title: ReportingUrgency
+      type: string
     TerminationCause:
-      anyOf:
-      - enum:
-        - N4_SESSION_RELEASE
-        type: string
-      - type: string
       description: the reason to terminate the subscription
       title: TerminationCause
+      type: string
     RemainingDataReports:
-      anyOf:
-      - enum:
-        - DISCARD
-        - SEND
-        type: string
-      - type: string
       description: indication on how to handle the data collected by the source UPF
       title: RemainingDataReports
+      type: string
     SkipReportingCondition:
-      anyOf:
-      - enum:
-        - SKIP_NULL_REPORT
-        - SKIP_OUTSIDE_VALIDITY_TIME
-        - SKIP_BELOW_THRESHOLDS_REPORT
-        type: string
-      - type: string
       description: Conditions for which the UPF can skip sending the event report
       title: SkipReportingCondition
+      type: string
     RedirectResponse:
       description: |
         The response shall include a Location header field containing a different URI  (pointing to a different URI of an other service instance), or the same URI if a request  is redirected to the same target resource via a different SCP.
@@ -4109,13 +4082,15 @@ components:
     PatchItem:
       description: it contains information on data to be changed.
       example:
-        op: add
+        op: op
         path: path
         from: from
         value: ""
       properties:
         op:
-          $ref: '#/components/schemas/PatchOperation'
+          description: Operations as defined in IETF RFC 6902.
+          title: op
+          type: string
         path:
           description: |
             contains a JSON pointer value (as defined in IETF RFC 6901) that references a location of a resource on which the patch operation shall be performed.
@@ -4134,18 +4109,9 @@ components:
       title: PatchItem
       type: object
     PatchOperation:
-      anyOf:
-      - enum:
-        - add
-        - copy
-        - move
-        - remove
-        - replace
-        - test
-        type: string
-      - type: string
       description: Operations as defined in IETF RFC 6902.
-      title: PatchOperation
+      title: op
+      type: string
     PatchResult:
       description: The execution report result on failed modification.
       example:
@@ -4277,45 +4243,9 @@ components:
       title: DateTime
       type: string
     RatType:
-      anyOf:
-      - enum:
-        - NR
-        - EUTRA
-        - WLAN
-        - VIRTUAL
-        - NBIOT
-        - WIRELINE
-        - WIRELINE_CABLE
-        - WIRELINE_BBF
-        - LTE-M
-        - NR_U
-        - EUTRA_U
-        - TRUSTED_N3GA
-        - TRUSTED_WLAN
-        - UTRA
-        - GERA
-        - NR_LEO
-        - NR_MEO
-        - NR_GEO
-        - NR_OTHER_SAT
-        - NR_REDCAP
-        - WB_E_UTRAN_LEO
-        - WB_E_UTRAN_MEO
-        - WB_E_UTRAN_GEO
-        - WB_E_UTRAN_OTHERSAT
-        - NB_IOT_LEO
-        - NB_IOT_MEO
-        - NB_IOT_GEO
-        - NB_IOT_OTHERSAT
-        - LTE_M_LEO
-        - LTE_M_MEO
-        - LTE_M_GEO
-        - LTE_M_OTHERSAT
-        - NR_EREDCAP
-        type: string
-      - type: string
       description: Indicates the radio access used.
       title: RatType
+      type: string
     NfInstanceId:
       description: "String uniquely identifying a NF instance. The format of the NF\
         \ Instance ID shall be a  Universally Unique Identifier (UUID) version 4.\
@@ -4329,8 +4259,6 @@ components:
         ipv6Addr: 2001:db8:85a3::8a2e:370:7334
         ipv4Addr: 198.51.100.1
         ipv6Prefix: 2001:db8:abcd:12::0/64
-      nullable: true
-      oneOf: []
       properties:
         ipv4Addr:
           description: |
@@ -4363,17 +4291,6 @@ components:
       title: DurationSec
       type: integer
     PartitioningCriteria:
-      anyOf:
-      - enum:
-        - TAC
-        - SUBPLMN
-        - GEOAREA
-        - SNSSAI
-        - DNN
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration but is not used to encode content defined in the present version of this API.
-        type: string
       description: |
         Possible values are:
         - "TAC": Type Allocation Code
@@ -4382,55 +4299,41 @@ components:
         - "SNSSAI": S-NSSAI
         - "DNN": DNN
       title: PartitioningCriteria
+      type: string
     NotificationFlag:
-      anyOf:
-      - enum:
-        - ACTIVATE
-        - DEACTIVATE
-        - RETRIEVAL
-        type: string
-      - description: "This string provides forward-compatibility with future extensions\
-          \ to the enumeration but is not used to encode content defined in the present\
-          \ version of this API. \n"
-        type: string
       description: "Possible values are:\n- ACTIVATE: The event notification is activated.\n\
         - DEACTIVATE: The event notification is deactivated and shall be muted. The\
         \ available\n   event(s) shall be stored.\n- RETRIEVAL: The event notification\
         \ shall be sent to the NF service consumer(s),\n  after that, is muted again.\
         \ \n"
       title: NotificationFlag
+      type: string
     MutingExceptionInstructions:
       description: |
         Indicates to an Event producer NF instructions for the subscription and stored events when an exception (e.g. full buffer) occurs at the Event producer NF while the event is muted.
       properties:
         bufferedNotifs:
-          $ref: '#/components/schemas/BufferedNotificationsAction'
+          description: |
+            Indicates the required action by the event producer NF on the buffered Notifications.
+          title: BufferedNotificationsAction
+          type: string
         subscription:
-          $ref: '#/components/schemas/SubscriptionAction'
+          description: |
+            Indicates the required action by the event producer NF on the event subscription if an exception occurs while the event is muted.
+          title: SubscriptionAction
+          type: string
       title: MutingExceptionInstructions
       type: object
     BufferedNotificationsAction:
-      anyOf:
-      - enum:
-        - SEND_ALL
-        - DISCARD_ALL
-        - DROP_OLD
-        type: string
-      - type: string
       description: |
         Indicates the required action by the event producer NF on the buffered Notifications.
       title: BufferedNotificationsAction
+      type: string
     SubscriptionAction:
-      anyOf:
-      - enum:
-        - CLOSE
-        - CONTINUE_WITH_MUTING
-        - CONTINUE_WITHOUT_MUTING
-        type: string
-      - type: string
       description: |
         Indicates the required action by the event producer NF on the event subscription if an exception occurs while the event is muted.
       title: SubscriptionAction
+      type: string
     MutingNotificationsSettings:
       description: |
         Indicates the Event producer NF settings to the Event consumer NF
@@ -4453,7 +4356,7 @@ components:
       example:
         flowLabel: flowLabel
         packFiltId: packFiltId
-        flowDirection: null
+        flowDirection: flowDirection
         packetFilterUsage: true
         tosTrafficClass: tosTrafficClass
         mpxMediaDlInfos:
@@ -4473,7 +4376,7 @@ components:
           destMacAddr: destMacAddr
           destMacAddrEnd: destMacAddrEnd
           sourceMacAddr: sourceMacAddr
-          fDir: DOWNLINK
+          fDir: fDir
           ethType: ethType
           fDesc: fDesc
           vlanTags:
@@ -4524,7 +4427,19 @@ components:
           title: flowLabel
           type: string
         flowDirection:
-          $ref: '#/components/schemas/FlowDirection'
+          description: "Indicates the direction of the service data flow.  \nPossible\
+            \ values are:\n- DOWNLINK: The corresponding filter applies for traffic\
+            \ to the UE.\n- UPLINK: The corresponding filter applies for traffic from\
+            \ the UE.\n- BIDIRECTIONAL: The corresponding filter applies for traffic\
+            \ both to and from the UE.\n- UNSPECIFIED: The corresponding filter applies\
+            \ for traffic to the UE (downlink), but has no\nspecific direction declared.\
+            \ The service data flow detection shall apply the filter for\nuplink traffic\
+            \ as if the filter was bidirectional. The PCF shall not use the value\n\
+            UNSPECIFIED in filters created by the network in NW-initiated procedures.\
+            \ The PCF shall only\ninclude the value UNSPECIFIED in filters in UE-initiated\
+            \ procedures if the same value is\nreceived from the SMF.\n"
+          title: FlowDirection
+          type: string
         mpxMediaUlInfos:
           description: Multiplexed media information for the Uplink IP flow.
           items:
@@ -4551,7 +4466,7 @@ components:
         destMacAddr: destMacAddr
         destMacAddrEnd: destMacAddrEnd
         sourceMacAddr: sourceMacAddr
-        fDir: DOWNLINK
+        fDir: fDir
         ethType: ethType
         fDesc: fDesc
         vlanTags:
@@ -4573,7 +4488,19 @@ components:
           title: FlowDescription
           type: string
         fDir:
-          $ref: '#/components/schemas/FlowDirection'
+          description: "Indicates the direction of the service data flow.  \nPossible\
+            \ values are:\n- DOWNLINK: The corresponding filter applies for traffic\
+            \ to the UE.\n- UPLINK: The corresponding filter applies for traffic from\
+            \ the UE.\n- BIDIRECTIONAL: The corresponding filter applies for traffic\
+            \ both to and from the UE.\n- UNSPECIFIED: The corresponding filter applies\
+            \ for traffic to the UE (downlink), but has no\nspecific direction declared.\
+            \ The service data flow detection shall apply the filter for\nuplink traffic\
+            \ as if the filter was bidirectional. The PCF shall not use the value\n\
+            UNSPECIFIED in filters created by the network in NW-initiated procedures.\
+            \ The PCF shall only\ninclude the value UNSPECIFIED in filters in UE-initiated\
+            \ procedures if the same value is\nreceived from the SMF.\n"
+          title: FlowDirection
+          type: string
         sourceMacAddr:
           description: |
             String identifying a MAC address formatted in the hexadecimal notation according to clause 1.1 and clause 2.1 of RFC 7042.
@@ -4604,16 +4531,6 @@ components:
       title: EthFlowDescription
       type: object
     FlowDirection:
-      anyOf:
-      - enum:
-        - DOWNLINK
-        - UPLINK
-        - BIDIRECTIONAL
-        - UNSPECIFIED
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration and is not used to encode content defined in the present version of this API.
-        type: string
       description: "Indicates the direction of the service data flow.  \nPossible\
         \ values are:\n- DOWNLINK: The corresponding filter applies for traffic to\
         \ the UE.\n- UPLINK: The corresponding filter applies for traffic from the\
@@ -4626,6 +4543,7 @@ components:
         \ only\ninclude the value UNSPECIFIED in filters in UE-initiated procedures\
         \ if the same value is\nreceived from the SMF.\n"
       title: FlowDirection
+      type: string
     FlowDirectionRm:
       $ref: '#/components/schemas/FlowDirection'
     MpxMediaInfo:
@@ -4744,7 +4662,6 @@ components:
     Uint64:
       description: |
         Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
-      maximum: 18446744073709551615
       minimum: 0
       title: Uint64
       type: integer
@@ -4755,29 +4672,11 @@ components:
       title: PacketRate
       type: string
     TransportProtocol:
-      anyOf:
-      - enum:
-        - UDP
-        - TCP
-        type: string
-      - description: "This string provides forward-compatibility with future extensions\
-          \ to the enumeration but is not used to encode content defined in the present\
-          \ version of this API. \n"
-        type: string
       description: "Possible values are:\n- UDP: User Datagram Protocol.\n- TCP: Transmission\
         \ Control Protocol. \n"
       title: TransportProtocol
+      type: string
     HeaderHandlingAction:
-      anyOf:
-      - enum:
-        - DETECT
-        - REMOVE
-        - REPLACE
-        - INSERT
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration but is not used to encode content defined in the present version of this API.
-        type: string
       description: |
         Represents the type of header handling actions.
         Possible values are:
@@ -4787,6 +4686,7 @@ components:
           field.
         - INSERT: Indicates that the request is for the addition of a header field.
       title: HeaderHandlingAction
+      type: string
     RecurTime:
       description: Contains the recurring time period
       example:
@@ -4796,7 +4696,7 @@ components:
         recurMonth:
         - null
         - null
-        recurType: DAILY
+        recurType: recurType
         recurDate:
         - null
         - null
@@ -4811,7 +4711,9 @@ components:
         recurTimeWindow:
           $ref: '#/components/schemas/ValidTimePeriod'
         recurType:
-          $ref: '#/components/schemas/RecurType'
+          description: Indicates the recurrence applicable to a time window.
+          title: RecurType
+          type: string
         recurMonth:
           items:
             $ref: '#/components/schemas/MonthOfYear'
@@ -4864,21 +4766,9 @@ components:
       title: ValidTimePeriod
       type: object
     RecurType:
-      anyOf:
-      - enum:
-        - DAILY
-        - WEEKLY
-        - MONTHLY_BY_DATE
-        - MONTHLY_BY_DAY
-        - YEARLY
-        - WEEKDAYS_ONLY
-        - WEEKENDS_ONLY
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration but is not used to encode content defined in the present version of this API.
-        type: string
       description: Indicates the recurrence applicable to a time window.
       title: RecurType
+      type: string
     NullValue:
       description: JSON's null value.
       enum:

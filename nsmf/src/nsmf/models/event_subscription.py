@@ -21,16 +21,12 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nsmf.models.ddd_traffic_descriptor import DddTrafficDescriptor
-from nsmf.models.dl_data_delivery_status import DlDataDeliveryStatus
-from nsmf.models.dnai_change_type import DnaiChangeType
 from nsmf.models.ip_addr import IpAddr
 from nsmf.models.network_area_info import NetworkAreaInfo
-from nsmf.models.smf_event import SmfEvent
 from nsmf.models.time_window import TimeWindow
-from nsmf.models.transaction_metric import TransactionMetric
 from nsmf.models.upf_event import UpfEvent
 try:
     from typing import Self
@@ -41,17 +37,17 @@ class EventSubscription(BaseModel):
     """
     Represents a subscription to a single event.
     """ # noqa: E501
-    event: SmfEvent
-    reference_id: Optional[Annotated[int, Field(le=-1, strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 64-bit integer. ", alias="referenceId")
-    dnai_chg_type: Optional[DnaiChangeType] = Field(default=None, alias="dnaiChgType")
+    event: StrictStr = Field(description="Represents the types of events that can be subscribed.   Possible values are: - AC_TY_CH: Access Type Change. - UP_PATH_CH: UP Path Change. - PDU_SES_REL: PDU Session Release. - PLMN_CH: PLMN Change. - UE_IP_CH: UE IP address change. - RAT_TY_CH: RAT Type Change. - DDDS: Downlink data delivery status. - COMM_FAIL: Communication Failure. - PDU_SES_EST: PDU Session Establishment. - QFI_ALLOC: QFI allocation. - QOS_MON: QoS Monitoring. - SMCC_EXP: SM congestion control experience for PDU Session. - DISPERSION: Session Management transaction dispersion. - RED_TRANS_EXP: Redundant transmission experience for PDU Session. - WLAN_INFO: WLAN information on PDU session for which Access Type is NON_3GPP_ACCESS and   RAT Type is TRUSTED_WLAN. - UPF_INFO: The UPF information, including the UPF ID/address/FQDN information. - UP_STATUS_INFO: The User Plane status information. - UPF_EVENT: UPF event subscribed via SMF. - SATB_CH: Satellite backhaul category change. - TRAFFIC_CORRELATION: Indicates that the SMF provides 5GC determined traffic correlation   information for a set of UEs identified by Traffic Correlation ID. - TRAFF_ROUTE_REQ_OUTCOME: Indicates the report of the installation outcome of the requested   traffic routing requirements. - SIM_CONN_FAIL: Indicates that the simultaneous connectivity over the source and the target   PDU Session Anchor failed to be established during a PDU Session Anchor change. - QFI_DEALLOCATION: QFI deallocation. - QOS_FLOW_CHANGE: QoS flow change. - ENERGY_USAGE_DATA: Indicates that the SMF event is the user-plane energy consumption   information. - SIGNALLING_INFO: Indicates the report of Service Signalling characteristics. ")
+    reference_id: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 64-bit integer. ", alias="referenceId")
+    dnai_chg_type: Optional[StrictStr] = Field(default=None, description="Possible values are: - EARLY: Early notification of UP path reconfiguration. - EARLY_LATE: Early and late notification of UP path reconfiguration. This value shall   only be present in the subscription to the DNAI change event. - LATE: Late notification of UP path reconfiguration.  ", alias="dnaiChgType")
     ddd_tra_descriptors: Optional[Annotated[List[DddTrafficDescriptor], Field(min_length=1)]] = Field(default=None, alias="dddTraDescriptors")
-    ddd_stati: Optional[Annotated[List[DlDataDeliveryStatus], Field(min_length=1)]] = Field(default=None, alias="dddStati")
+    ddd_stati: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="dddStati")
     app_ids: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="appIds")
     network_area: Optional[NetworkAreaInfo] = Field(default=None, alias="networkArea")
     target_period: Optional[TimeWindow] = Field(default=None, alias="targetPeriod")
     tws: Optional[Annotated[List[TimeWindow], Field(min_length=1)]] = None
     transac_disp_ind: Optional[StrictBool] = Field(default=None, description="Indicates the subscription for UE transaction dispersion collection, if it is included and set to \"true\". Default value is \"false\". ", alias="transacDispInd")
-    transac_metrics: Optional[Annotated[List[TransactionMetric], Field(min_length=1)]] = Field(default=None, description="Indicates Session Management Transaction metrics.", alias="transacMetrics")
+    transac_metrics: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, description="Indicates Session Management Transaction metrics.", alias="transacMetrics")
     ue_ip_addr: Optional[IpAddr] = Field(default=None, alias="ueIpAddr")
     upf_events: Optional[Annotated[List[UpfEvent], Field(min_length=1)]] = Field(default=None, description="Indicates UPF event exposure information.", alias="upfEvents")
     bundling_allowed: Optional[StrictBool] = Field(default=None, description="This attribute may be included for event \"UPF_EVENT\" and indicates whether it is requested to allow the bundling of event reports in UPF notifications. Possible values: -\"true\": it is requested to allow the bundling of event reports in UPF notifications. The presence of this attribute with the value \"false\" shall be prohibited. ", alias="bundlingAllowed")
@@ -97,12 +93,6 @@ class EventSubscription(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of event
-        if self.event:
-            _dict['event'] = self.event.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of dnai_chg_type
-        if self.dnai_chg_type:
-            _dict['dnaiChgType'] = self.dnai_chg_type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in ddd_tra_descriptors (list)
         _items = []
         if self.ddd_tra_descriptors:
@@ -110,13 +100,6 @@ class EventSubscription(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['dddTraDescriptors'] = _items
-        # override the default output from pydantic by calling `to_dict()` of each item in ddd_stati (list)
-        _items = []
-        if self.ddd_stati:
-            for _item in self.ddd_stati:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['dddStati'] = _items
         # override the default output from pydantic by calling `to_dict()` of network_area
         if self.network_area:
             _dict['networkArea'] = self.network_area.to_dict()
@@ -130,13 +113,6 @@ class EventSubscription(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['tws'] = _items
-        # override the default output from pydantic by calling `to_dict()` of each item in transac_metrics (list)
-        _items = []
-        if self.transac_metrics:
-            for _item in self.transac_metrics:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['transacMetrics'] = _items
         # override the default output from pydantic by calling `to_dict()` of ue_ip_addr
         if self.ue_ip_addr:
             _dict['ueIpAddr'] = self.ue_ip_addr.to_dict()
@@ -147,11 +123,6 @@ class EventSubscription(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['upfEvents'] = _items
-        # set to None if ue_ip_addr (nullable) is None
-        # and model_fields_set contains the field
-        if self.ue_ip_addr is None and "ue_ip_addr" in self.model_fields_set:
-            _dict['ueIpAddr'] = None
-
         return _dict
 
     @classmethod
@@ -164,17 +135,17 @@ class EventSubscription(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "event": SmfEvent.from_dict(obj.get("event")) if obj.get("event") is not None else None,
+            "event": obj.get("event"),
             "referenceId": obj.get("referenceId"),
-            "dnaiChgType": DnaiChangeType.from_dict(obj.get("dnaiChgType")) if obj.get("dnaiChgType") is not None else None,
+            "dnaiChgType": obj.get("dnaiChgType"),
             "dddTraDescriptors": [DddTrafficDescriptor.from_dict(_item) for _item in obj.get("dddTraDescriptors")] if obj.get("dddTraDescriptors") is not None else None,
-            "dddStati": [DlDataDeliveryStatus.from_dict(_item) for _item in obj.get("dddStati")] if obj.get("dddStati") is not None else None,
+            "dddStati": obj.get("dddStati"),
             "appIds": obj.get("appIds"),
             "networkArea": NetworkAreaInfo.from_dict(obj.get("networkArea")) if obj.get("networkArea") is not None else None,
             "targetPeriod": TimeWindow.from_dict(obj.get("targetPeriod")) if obj.get("targetPeriod") is not None else None,
             "tws": [TimeWindow.from_dict(_item) for _item in obj.get("tws")] if obj.get("tws") is not None else None,
             "transacDispInd": obj.get("transacDispInd"),
-            "transacMetrics": [TransactionMetric.from_dict(_item) for _item in obj.get("transacMetrics")] if obj.get("transacMetrics") is not None else None,
+            "transacMetrics": obj.get("transacMetrics"),
             "ueIpAddr": IpAddr.from_dict(obj.get("ueIpAddr")) if obj.get("ueIpAddr") is not None else None,
             "upfEvents": [UpfEvent.from_dict(_item) for _item in obj.get("upfEvents")] if obj.get("upfEvents") is not None else None,
             "bundlingAllowed": obj.get("bundlingAllowed"),

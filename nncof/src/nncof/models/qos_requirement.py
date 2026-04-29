@@ -20,11 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nncof.models.device_type import DeviceType
-from nncof.models.qos_resource_type import QosResourceType
 from nncof.models.velocity_estimate import VelocityEstimate
 try:
     from typing import Self
@@ -38,11 +36,11 @@ class QosRequirement(BaseModel):
     var_5qi: Optional[Annotated[int, Field(le=255, strict=True, ge=0)]] = Field(default=None, description="Unsigned integer representing a 5G QoS Identifier (see clause 5.7.2.1 of 3GPP TS 23.501, within the range 0 to 255. ", alias="5qi")
     gfbr_ul: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix \"K\" is used to represent the standard symbol \"k\". ", alias="gfbrUl")
     gfbr_dl: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix \"K\" is used to represent the standard symbol \"k\". ", alias="gfbrDl")
-    res_type: Optional[QosResourceType] = Field(default=None, alias="resType")
+    res_type: Optional[StrictStr] = Field(default=None, description="The enumeration QosResourceType indicates whether a QoS Flow is non-GBR, delay critical GBR, or non-delay critical GBR (see clauses 5.7.3.4 and 5.7.3.5 of 3GPP TS 23.501). It shall comply with the provisions defined in table 5.5.3.6-1.  ", alias="resType")
     pdb: Optional[Annotated[int, Field(strict=True, ge=1)]] = Field(default=None, description="Unsigned integer indicating Packet Delay Budget (see clauses 5.7.3.4 and 5.7.4 of 3GPP TS 23.501), expressed in milliseconds. ")
     per: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String representing Packet Error Rate (see clause 5.7.3.5 and 5.7.4 of 3GPP TS 23.501, expressed as a \"scalar x 10-k\" where the scalar and the exponent k are each encoded as one decimal digit. ")
     device_speed: Optional[VelocityEstimate] = Field(default=None, alias="deviceSpeed")
-    device_type: Optional[DeviceType] = Field(default=None, alias="deviceType")
+    device_type: Optional[StrictStr] = Field(default=None, description="Represents the device type.   Possible values are:     - MOBILE_PHONE: Mobile Phone.   - SMART_PHONE: Smartphone.   - TABLET: Tablet.   - DONGLE: Dongle.   - MODEM: Modem.   - WLAN_ROUTER: WLAN Router.   - IOT_DEVICE: IoT Device.   - WEARABLE: Wearable.   - MOBILE_TEST_PLATFORM: Mobile Test Platform.   - UNDEFINED: Undefined. ", alias="deviceType")
     __properties: ClassVar[List[str]] = ["5qi", "gfbrUl", "gfbrDl", "resType", "pdb", "per", "deviceSpeed", "deviceType"]
 
     @field_validator('gfbr_ul')
@@ -112,15 +110,9 @@ class QosRequirement(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of res_type
-        if self.res_type:
-            _dict['resType'] = self.res_type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of device_speed
         if self.device_speed:
             _dict['deviceSpeed'] = self.device_speed.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of device_type
-        if self.device_type:
-            _dict['deviceType'] = self.device_type.to_dict()
         return _dict
 
     @classmethod
@@ -136,11 +128,11 @@ class QosRequirement(BaseModel):
             "5qi": obj.get("5qi"),
             "gfbrUl": obj.get("gfbrUl"),
             "gfbrDl": obj.get("gfbrDl"),
-            "resType": QosResourceType.from_dict(obj.get("resType")) if obj.get("resType") is not None else None,
+            "resType": obj.get("resType"),
             "pdb": obj.get("pdb"),
             "per": obj.get("per"),
             "deviceSpeed": VelocityEstimate.from_dict(obj.get("deviceSpeed")) if obj.get("deviceSpeed") is not None else None,
-            "deviceType": DeviceType.from_dict(obj.get("deviceType")) if obj.get("deviceType") is not None else None
+            "deviceType": obj.get("deviceType")
         })
         return _obj
 

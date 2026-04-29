@@ -21,12 +21,11 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.analytics_context_identifier import AnalyticsContextIdentifier
 from nncof.models.model_info import ModelInfo
 from nncof.models.nncof_events_subscription import NncofEventsSubscription
-from nncof.models.transfer_request_type import TransferRequestType
 try:
     from typing import Self
 except ImportError:
@@ -36,7 +35,7 @@ class SubscriptionTransferInfo(BaseModel):
     """
     Contains information about subscriptions that are requested to be transferred.
     """ # noqa: E501
-    trans_req_type: TransferRequestType = Field(alias="transReqType")
+    trans_req_type: StrictStr = Field(description="Represents the request type for the analytics subscription transfer.   Possible values are: - PREPARE: Indicates that the request is for analytics subscription transfer preparation. - TRANSFER: Indicates that the request is for analytics subscription transfer execution. ", alias="transReqType")
     ncof_ev_sub: NncofEventsSubscription = Field(alias="ncofEvSub")
     consumer_id: StrictStr = Field(description="String uniquely identifying a NF instance. The format of the NF Instance ID shall be a  Universally Unique Identifier (UUID) version 4.  ", alias="consumerId")
     context_id: Optional[AnalyticsContextIdentifier] = Field(default=None, alias="contextId")
@@ -82,9 +81,6 @@ class SubscriptionTransferInfo(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of trans_req_type
-        if self.trans_req_type:
-            _dict['transReqType'] = self.trans_req_type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of ncof_ev_sub
         if self.ncof_ev_sub:
             _dict['ncofEvSub'] = self.ncof_ev_sub.to_dict()
@@ -110,7 +106,7 @@ class SubscriptionTransferInfo(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "transReqType": TransferRequestType.from_dict(obj.get("transReqType")) if obj.get("transReqType") is not None else None,
+            "transReqType": obj.get("transReqType"),
             "ncofEvSub": NncofEventsSubscription.from_dict(obj.get("ncofEvSub")) if obj.get("ncofEvSub") is not None else None,
             "consumerId": obj.get("consumerId"),
             "contextId": AnalyticsContextIdentifier.from_dict(obj.get("contextId")) if obj.get("contextId") is not None else None,

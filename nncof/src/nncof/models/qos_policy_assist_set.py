@@ -13,176 +13,136 @@
 
 
 from __future__ import annotations
-from inspect import getfullargspec
-import json
 import pprint
 import re  # noqa: F401
+import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr, ValidationError, field_validator
-from typing import Any, Optional
-from typing import Union, Any, List, TYPE_CHECKING, Optional, Dict
-from typing_extensions import Literal
-from pydantic import StrictStr, Field
+
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing_extensions import Annotated
+from nncof.models.ip_eth_flow_description import IpEthFlowDescription
+from nncof.models.network_area_info import NetworkAreaInfo
+from nncof.models.qos_para import QosPara
+from nncof.models.time_window import TimeWindow
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-QOSPOLICYASSISTSET_ANY_OF_SCHEMAS = ["object"]
-
 class QosPolicyAssistSet(BaseModel):
     """
     The QoS and policy assistance parameter set.
-    """
-
-    # data type: object
-    anyof_schema_1_validator: Optional[Any] = None
-    # data type: object
-    anyof_schema_2_validator: Optional[Any] = None
-    # data type: object
-    anyof_schema_3_validator: Optional[Any] = None
-    # data type: object
-    anyof_schema_4_validator: Optional[Any] = None
-    if TYPE_CHECKING:
-        actual_instance: Optional[Union[object]] = None
-    else:
-        actual_instance: Any = None
-    any_of_schemas: List[str] = Literal[QOSPOLICYASSISTSET_ANY_OF_SCHEMAS]
+    """ # noqa: E501
+    qos_param_set: Optional[QosPara] = Field(default=None, alias="qosParamSet")
+    dnn: Optional[StrictStr] = Field(default=None, description="String representing a Data Network as defined in clause 9A of 3GPP TS 23.003;  it shall contain either a DNN Network Identifier, or a full DNN with both the Network  Identifier and Operator Identifier, as specified in 3GPP TS 23.003 clause 9.1.1 and 9.1.2. It shall be coded as string in which the labels are separated by dots  (e.g. \"Label1.Label2.Label3\"). ")
+    app_id: Optional[StrictStr] = Field(default=None, description="String providing an application identifier.", alias="appId")
+    f_descs: Optional[Annotated[List[IpEthFlowDescription], Field(min_length=1)]] = Field(default=None, alias="fDescs")
+    app_duration: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="appDuration")
+    predicted_avg_qoe: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="string with format 'float' as defined in OpenAPI.", alias="predictedAvgQoe")
+    predicted_max_qoe: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="string with format 'float' as defined in OpenAPI.", alias="predictedMaxQoe")
+    predicted_min_qoe: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="string with format 'float' as defined in OpenAPI.", alias="predictedMinQoe")
+    pred_qoe_variance: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="string with format 'float' as defined in OpenAPI.", alias="predQoeVariance")
+    qos_pol_time_win: Optional[TimeWindow] = Field(default=None, alias="qosPolTimeWin")
+    freqs: Optional[Annotated[List[Annotated[int, Field(le=3279165, strict=True, ge=0)]], Field(min_length=1)]] = None
+    rat_types: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="ratTypes")
+    validity_period: Optional[TimeWindow] = Field(default=None, alias="validityPeriod")
+    spatial_validity: Optional[NetworkAreaInfo] = Field(default=None, alias="spatialValidity")
+    max_qo_s_flow_usg_dur: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="maxQoSFlowUsgDur")
+    min_qo_s_flow_usg_dur: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="minQoSFlowUsgDur")
+    avg_qo_s_flow_usg_dur: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="avgQoSFlowUsgDur")
+    qos_flow_usg_number: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="qosFlowUsgNumber")
+    __properties: ClassVar[List[str]] = ["qosParamSet", "dnn", "appId", "fDescs", "appDuration", "predictedAvgQoe", "predictedMaxQoe", "predictedMinQoe", "predQoeVariance", "qosPolTimeWin", "freqs", "ratTypes", "validityPeriod", "spatialValidity", "maxQoSFlowUsgDur", "minQoSFlowUsgDur", "avgQoSFlowUsgDur", "qosFlowUsgNumber"]
 
     model_config = {
+        "populate_by_name": True,
         "validate_assignment": True,
         "protected_namespaces": (),
     }
 
-    def __init__(self, *args, **kwargs) -> None:
-        if args:
-            if len(args) > 1:
-                raise ValueError("If a position argument is used, only 1 is allowed to set `actual_instance`")
-            if kwargs:
-                raise ValueError("If a position argument is used, keyword arguments cannot be used.")
-            super().__init__(actual_instance=args[0])
-        else:
-            super().__init__(**kwargs)
 
-    @field_validator('actual_instance')
-    def actual_instance_must_validate_anyof(cls, v):
-        if v is None:
-            return v
+    def to_str(self) -> str:
+        """Returns the string representation of the model using alias"""
+        return pprint.pformat(self.model_dump(by_alias=True))
 
-        instance = QosPolicyAssistSet.model_construct()
-        error_messages = []
-        # validate data type: object
-        try:
-            instance.anyof_schema_1_validator = v
-            return v
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        # validate data type: object
-        try:
-            instance.anyof_schema_2_validator = v
-            return v
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        # validate data type: object
-        try:
-            instance.anyof_schema_3_validator = v
-            return v
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        # validate data type: object
-        try:
-            instance.anyof_schema_4_validator = v
-            return v
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        if error_messages:
-            # no match
-            raise ValueError("No match found when setting the actual_instance in QosPolicyAssistSet with anyOf schemas: object. Details: " + ", ".join(error_messages))
-        else:
-            return v
-
-    @classmethod
-    def from_dict(cls, obj: dict) -> Self:
-        return cls.from_json(json.dumps(obj))
+    def to_json(self) -> str:
+        """Returns the JSON representation of the model using alias"""
+        # TODO: pydantic v2: use .model_dump_json(by_alias=True, exclude_unset=True) instead
+        return json.dumps(self.to_dict())
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Returns the object represented by the json string"""
-        instance = cls.model_construct()
-        if json_str is None:
-            return instance
+        """Create an instance of QosPolicyAssistSet from a JSON string"""
+        return cls.from_dict(json.loads(json_str))
 
-        error_messages = []
-        # deserialize data into object
-        try:
-            # validation
-            instance.anyof_schema_1_validator = json.loads(json_str)
-            # assign value to actual_instance
-            instance.actual_instance = instance.anyof_schema_1_validator
-            return instance
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        # deserialize data into object
-        try:
-            # validation
-            instance.anyof_schema_2_validator = json.loads(json_str)
-            # assign value to actual_instance
-            instance.actual_instance = instance.anyof_schema_2_validator
-            return instance
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        # deserialize data into object
-        try:
-            # validation
-            instance.anyof_schema_3_validator = json.loads(json_str)
-            # assign value to actual_instance
-            instance.actual_instance = instance.anyof_schema_3_validator
-            return instance
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        # deserialize data into object
-        try:
-            # validation
-            instance.anyof_schema_4_validator = json.loads(json_str)
-            # assign value to actual_instance
-            instance.actual_instance = instance.anyof_schema_4_validator
-            return instance
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
+    def to_dict(self) -> Dict[str, Any]:
+        """Return the dictionary representation of the model using alias.
 
-        if error_messages:
-            # no match
-            raise ValueError("No match found when deserializing the JSON string into QosPolicyAssistSet with anyOf schemas: object. Details: " + ", ".join(error_messages))
-        else:
-            return instance
+        This has the following differences from calling pydantic's
+        `self.model_dump(by_alias=True)`:
 
-    def to_json(self) -> str:
-        """Returns the JSON representation of the actual instance"""
-        if self.actual_instance is None:
-            return "null"
+        * `None` is only added to the output dict for nullable fields that
+          were set at model initialization. Other fields with value `None`
+          are ignored.
+        """
+        _dict = self.model_dump(
+            by_alias=True,
+            exclude={
+            },
+            exclude_none=True,
+        )
+        # override the default output from pydantic by calling `to_dict()` of qos_param_set
+        if self.qos_param_set:
+            _dict['qosParamSet'] = self.qos_param_set.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of each item in f_descs (list)
+        _items = []
+        if self.f_descs:
+            for _item in self.f_descs:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['fDescs'] = _items
+        # override the default output from pydantic by calling `to_dict()` of qos_pol_time_win
+        if self.qos_pol_time_win:
+            _dict['qosPolTimeWin'] = self.qos_pol_time_win.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of validity_period
+        if self.validity_period:
+            _dict['validityPeriod'] = self.validity_period.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of spatial_validity
+        if self.spatial_validity:
+            _dict['spatialValidity'] = self.spatial_validity.to_dict()
+        return _dict
 
-        to_json = getattr(self.actual_instance, "to_json", None)
-        if callable(to_json):
-            return self.actual_instance.to_json()
-        else:
-            return json.dumps(self.actual_instance)
+    @classmethod
+    def from_dict(cls, obj: Dict) -> Self:
+        """Create an instance of QosPolicyAssistSet from a dict"""
+        if obj is None:
+            return None
 
-    def to_dict(self) -> Dict:
-        """Returns the dict representation of the actual instance"""
-        if self.actual_instance is None:
-            return "null"
+        if not isinstance(obj, dict):
+            return cls.model_validate(obj)
 
-        to_json = getattr(self.actual_instance, "to_json", None)
-        if callable(to_json):
-            return self.actual_instance.to_dict()
-        else:
-            # primitive type
-            return self.actual_instance
-
-    def to_str(self) -> str:
-        """Returns the string representation of the actual instance"""
-        return pprint.pformat(self.model_dump())
+        _obj = cls.model_validate({
+            "qosParamSet": QosPara.from_dict(obj.get("qosParamSet")) if obj.get("qosParamSet") is not None else None,
+            "dnn": obj.get("dnn"),
+            "appId": obj.get("appId"),
+            "fDescs": [IpEthFlowDescription.from_dict(_item) for _item in obj.get("fDescs")] if obj.get("fDescs") is not None else None,
+            "appDuration": obj.get("appDuration"),
+            "predictedAvgQoe": obj.get("predictedAvgQoe"),
+            "predictedMaxQoe": obj.get("predictedMaxQoe"),
+            "predictedMinQoe": obj.get("predictedMinQoe"),
+            "predQoeVariance": obj.get("predQoeVariance"),
+            "qosPolTimeWin": TimeWindow.from_dict(obj.get("qosPolTimeWin")) if obj.get("qosPolTimeWin") is not None else None,
+            "freqs": obj.get("freqs"),
+            "ratTypes": obj.get("ratTypes"),
+            "validityPeriod": TimeWindow.from_dict(obj.get("validityPeriod")) if obj.get("validityPeriod") is not None else None,
+            "spatialValidity": NetworkAreaInfo.from_dict(obj.get("spatialValidity")) if obj.get("spatialValidity") is not None else None,
+            "maxQoSFlowUsgDur": obj.get("maxQoSFlowUsgDur"),
+            "minQoSFlowUsgDur": obj.get("minQoSFlowUsgDur"),
+            "avgQoSFlowUsgDur": obj.get("avgQoSFlowUsgDur"),
+            "qosFlowUsgNumber": obj.get("qosFlowUsgNumber")
+        })
+        return _obj
 
 

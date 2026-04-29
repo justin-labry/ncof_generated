@@ -20,10 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nncof.models.analytics_accuracy_indication import AnalyticsAccuracyIndication
 try:
     from typing import Self
 except ImportError:
@@ -35,7 +34,7 @@ class AccuracyInfo(BaseModel):
     """ # noqa: E501
     accuracy_val: Annotated[int, Field(strict=True, ge=0)] = Field(description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="accuracyVal")
     accu_sample_nbr: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="accuSampleNbr")
-    ana_accu_ind: Optional[AnalyticsAccuracyIndication] = Field(default=None, alias="anaAccuInd")
+    ana_accu_ind: Optional[StrictStr] = Field(default=None, description="Represents the notification methods for the subscribed events.   Possible values are: - MEET: Indicates meet the analytics accuracy requirement. - NOT_MEET: Indicates not meet the analytics accuracy requirement. ", alias="anaAccuInd")
     __properties: ClassVar[List[str]] = ["accuracyVal", "accuSampleNbr", "anaAccuInd"]
 
     model_config = {
@@ -75,9 +74,6 @@ class AccuracyInfo(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of ana_accu_ind
-        if self.ana_accu_ind:
-            _dict['anaAccuInd'] = self.ana_accu_ind.to_dict()
         return _dict
 
     @classmethod
@@ -92,7 +88,7 @@ class AccuracyInfo(BaseModel):
         _obj = cls.model_validate({
             "accuracyVal": obj.get("accuracyVal"),
             "accuSampleNbr": obj.get("accuSampleNbr"),
-            "anaAccuInd": AnalyticsAccuracyIndication.from_dict(obj.get("anaAccuInd")) if obj.get("anaAccuInd") is not None else None
+            "anaAccuInd": obj.get("anaAccuInd")
         })
         return _obj
 

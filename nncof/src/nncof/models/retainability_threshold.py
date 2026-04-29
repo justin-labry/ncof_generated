@@ -20,8 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict
-from typing import Any, ClassVar, Dict, List
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
+from typing_extensions import Annotated
 try:
     from typing import Self
 except ImportError:
@@ -29,9 +30,12 @@ except ImportError:
 
 class RetainabilityThreshold(BaseModel):
     """
-    RetainabilityThreshold
+    Represents a QoS flow retainability threshold.
     """ # noqa: E501
-    __properties: ClassVar[List[str]] = []
+    rel_flow_num: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="relFlowNum")
+    rel_time_unit: Optional[StrictStr] = Field(default=None, description="Represents the unit for the session active time.   Possible values are: - MINUTE: Time unit is per minute. - HOUR: Time unit is per hour. - DAY: Time unit is per day. ", alias="relTimeUnit")
+    rel_flow_ratio: Optional[Annotated[int, Field(le=100, strict=True, ge=1)]] = Field(default=None, description="Unsigned integer indicating Sampling Ratio (see clauses 4.15.1 of 3GPP TS 23.502), expressed in percent.  ", alias="relFlowRatio")
+    __properties: ClassVar[List[str]] = ["relFlowNum", "relTimeUnit", "relFlowRatio"]
 
     model_config = {
         "populate_by_name": True,
@@ -82,6 +86,9 @@ class RetainabilityThreshold(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "relFlowNum": obj.get("relFlowNum"),
+            "relTimeUnit": obj.get("relTimeUnit"),
+            "relFlowRatio": obj.get("relFlowRatio")
         })
         return _obj
 

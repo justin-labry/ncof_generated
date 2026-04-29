@@ -22,10 +22,6 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional, Union
-from nnef.models.block_type import BlockType
-from nnef.models.connectivity_type import ConnectivityType
-from nnef.models.rat_type import RatType
-from nnef.models.ref_signal_type import RefSignalType
 try:
     from typing import Self
 except ImportError:
@@ -35,14 +31,14 @@ class RefSignalMeasurements(BaseModel):
     """
     Contains reference signal related information.
     """ # noqa: E501
-    rat_type: Optional[RatType] = Field(default=None, alias="_ratType")
-    ref_signal_type: Optional[RefSignalType] = Field(default=None, alias="_refSignalType")
-    block_type: Optional[BlockType] = Field(default=None, alias="_blockType")
+    rat_type: Optional[StrictStr] = Field(default=None, description="Indicates the radio access used.", alias="_ratType")
+    ref_signal_type: Optional[StrictStr] = Field(default=None, description="Represents the preferred power state of cell.   Possible values are: - SS. - CSI. - CLI. - PRS. - PSBCH.  - PSCCH. - PDSCH. - PUSCH. - PDCCH.  - PBCH. ", alias="_refSignalType")
+    block_type: Optional[StrictStr] = Field(default=None, description="Represents the preferred power state of cell.   Possible values are: - TB. - CB. - HARQ. ", alias="_blockType")
     rsrp: Optional[StrictStr] = Field(default=None, alias="_rsrp")
     rsrq: Optional[StrictStr] = Field(default=None, alias="_rsrq")
     sinr: Optional[StrictStr] = Field(default=None, alias="_sinr")
     bler: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="string with format 'float' as defined in OpenAPI.", alias="_bler")
-    connectivity: Optional[ConnectivityType] = Field(default=None, alias="_connectivity")
+    connectivity: Optional[StrictStr] = Field(default=None, description="Represents the preferred power state of cell.   Possible values are: - EXCELLENT. - GOOD. - MEDIUM. - WEAK.  ", alias="_connectivity")
     __properties: ClassVar[List[str]] = ["_ratType", "_refSignalType", "_blockType", "_rsrp", "_rsrq", "_sinr", "_bler", "_connectivity"]
 
     model_config = {
@@ -82,18 +78,6 @@ class RefSignalMeasurements(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of rat_type
-        if self.rat_type:
-            _dict['_ratType'] = self.rat_type.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of ref_signal_type
-        if self.ref_signal_type:
-            _dict['_refSignalType'] = self.ref_signal_type.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of block_type
-        if self.block_type:
-            _dict['_blockType'] = self.block_type.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of connectivity
-        if self.connectivity:
-            _dict['_connectivity'] = self.connectivity.to_dict()
         return _dict
 
     @classmethod
@@ -106,14 +90,14 @@ class RefSignalMeasurements(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "_ratType": RatType.from_dict(obj.get("_ratType")) if obj.get("_ratType") is not None else None,
-            "_refSignalType": RefSignalType.from_dict(obj.get("_refSignalType")) if obj.get("_refSignalType") is not None else None,
-            "_blockType": BlockType.from_dict(obj.get("_blockType")) if obj.get("_blockType") is not None else None,
+            "_ratType": obj.get("_ratType"),
+            "_refSignalType": obj.get("_refSignalType"),
+            "_blockType": obj.get("_blockType"),
             "_rsrp": obj.get("_rsrp"),
             "_rsrq": obj.get("_rsrq"),
             "_sinr": obj.get("_sinr"),
             "_bler": obj.get("_bler"),
-            "_connectivity": ConnectivityType.from_dict(obj.get("_connectivity")) if obj.get("_connectivity") is not None else None
+            "_connectivity": obj.get("_connectivity")
         })
         return _obj
 

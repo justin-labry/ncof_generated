@@ -20,10 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nsmf.models.af_result_status import AfResultStatus
 from nsmf.models.eas_ip_replacement_info import EasIpReplacementInfo
 from nsmf.models.route_to_location import RouteToLocation
 try:
@@ -35,7 +34,7 @@ class AfResultInfo(BaseModel):
     """
     Identifies the result of application layer handling.
     """ # noqa: E501
-    af_status: AfResultStatus = Field(alias="afStatus")
+    af_status: StrictStr = Field(description="Represents the status of application handling result.   Possible values are: - SUCCESS: The application layer is ready or the relocation is completed. - TEMPORARY_CONGESTION: The application relocation fails due to temporary congestion. - RELOC_NO_ALLOWED: The application relocation fails because application relocation   is not allowed. - OTHER: The application relocation fails due to other reason. ", alias="afStatus")
     traffic_route: Optional[RouteToLocation] = Field(default=None, alias="trafficRoute")
     up_buff_ind: Optional[StrictBool] = Field(default=None, description="If present and set to \"true\" it indicates that buffering of uplink traffic to the target DNAI is needed. ", alias="upBuffInd")
     eas_ip_replace_infos: Optional[Annotated[List[EasIpReplacementInfo], Field(min_length=1)]] = Field(default=None, description="Contains EAS IP replacement information.", alias="easIpReplaceInfos")
@@ -78,9 +77,6 @@ class AfResultInfo(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of af_status
-        if self.af_status:
-            _dict['afStatus'] = self.af_status.to_dict()
         # override the default output from pydantic by calling `to_dict()` of traffic_route
         if self.traffic_route:
             _dict['trafficRoute'] = self.traffic_route.to_dict()
@@ -108,7 +104,7 @@ class AfResultInfo(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "afStatus": AfResultStatus.from_dict(obj.get("afStatus")) if obj.get("afStatus") is not None else None,
+            "afStatus": obj.get("afStatus"),
             "trafficRoute": RouteToLocation.from_dict(obj.get("trafficRoute")) if obj.get("trafficRoute") is not None else None,
             "upBuffInd": obj.get("upBuffInd"),
             "easIpReplaceInfos": [EasIpReplacementInfo.from_dict(_item) for _item in obj.get("easIpReplaceInfos")] if obj.get("easIpReplaceInfos") is not None else None

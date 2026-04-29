@@ -21,14 +21,11 @@ import json
 
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nupf.models.muting_exception_instructions import MutingExceptionInstructions
 from nupf.models.muting_notifications_settings import MutingNotificationsSettings
-from nupf.models.notification_flag import NotificationFlag
-from nupf.models.partitioning_criteria import PartitioningCriteria
-from nupf.models.upf_event_trigger import UpfEventTrigger
 try:
     from typing import Self
 except ImportError:
@@ -38,13 +35,13 @@ class UpfEventMode(BaseModel):
     """
     UPF Event Mode
     """ # noqa: E501
-    trigger: UpfEventTrigger
+    trigger: StrictStr = Field(description="Upf Event Trigger")
     max_reports: Optional[StrictInt] = Field(default=None, alias="maxReports")
     expiry: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.")
     rep_period: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="repPeriod")
     samp_ratio: Optional[Annotated[int, Field(le=100, strict=True, ge=1)]] = Field(default=None, description="Unsigned integer indicating Sampling Ratio (see clauses 4.15.1 of 3GPP TS 23.502), expressed in percent.  ", alias="sampRatio")
-    partitioning_criteria: Optional[Annotated[List[PartitioningCriteria], Field(min_length=1)]] = Field(default=None, alias="partitioningCriteria")
-    notif_flag: Optional[NotificationFlag] = Field(default=None, alias="notifFlag")
+    partitioning_criteria: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="partitioningCriteria")
+    notif_flag: Optional[StrictStr] = Field(default=None, description="Possible values are: - ACTIVATE: The event notification is activated. - DEACTIVATE: The event notification is deactivated and shall be muted. The available    event(s) shall be stored. - RETRIEVAL: The event notification shall be sent to the NF service consumer(s),   after that, is muted again.  ", alias="notifFlag")
     muting_exc_instructions: Optional[MutingExceptionInstructions] = Field(default=None, alias="mutingExcInstructions")
     muting_not_settings: Optional[MutingNotificationsSettings] = Field(default=None, alias="mutingNotSettings")
     sub_termination_report_ind: Optional[StrictBool] = Field(default=None, alias="subTerminationReportInd")
@@ -89,19 +86,6 @@ class UpfEventMode(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of trigger
-        if self.trigger:
-            _dict['trigger'] = self.trigger.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in partitioning_criteria (list)
-        _items = []
-        if self.partitioning_criteria:
-            for _item in self.partitioning_criteria:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['partitioningCriteria'] = _items
-        # override the default output from pydantic by calling `to_dict()` of notif_flag
-        if self.notif_flag:
-            _dict['notifFlag'] = self.notif_flag.to_dict()
         # override the default output from pydantic by calling `to_dict()` of muting_exc_instructions
         if self.muting_exc_instructions:
             _dict['mutingExcInstructions'] = self.muting_exc_instructions.to_dict()
@@ -120,13 +104,13 @@ class UpfEventMode(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "trigger": UpfEventTrigger.from_dict(obj.get("trigger")) if obj.get("trigger") is not None else None,
+            "trigger": obj.get("trigger"),
             "maxReports": obj.get("maxReports"),
             "expiry": obj.get("expiry"),
             "repPeriod": obj.get("repPeriod"),
             "sampRatio": obj.get("sampRatio"),
-            "partitioningCriteria": [PartitioningCriteria.from_dict(_item) for _item in obj.get("partitioningCriteria")] if obj.get("partitioningCriteria") is not None else None,
-            "notifFlag": NotificationFlag.from_dict(obj.get("notifFlag")) if obj.get("notifFlag") is not None else None,
+            "partitioningCriteria": obj.get("partitioningCriteria"),
+            "notifFlag": obj.get("notifFlag"),
             "mutingExcInstructions": MutingExceptionInstructions.from_dict(obj.get("mutingExcInstructions")) if obj.get("mutingExcInstructions") is not None else None,
             "mutingNotSettings": MutingNotificationsSettings.from_dict(obj.get("mutingNotSettings")) if obj.get("mutingNotSettings") is not None else None,
             "subTerminationReportInd": obj.get("subTerminationReportInd")

@@ -20,10 +20,8 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from nnef.models.buffered_notifications_action import BufferedNotificationsAction
-from nnef.models.subscription_action import SubscriptionAction
 try:
     from typing import Self
 except ImportError:
@@ -33,8 +31,8 @@ class MutingExceptionInstructions(BaseModel):
     """
     Indicates to an Event producer NF instructions for the subscription and stored events when an exception (e.g. full buffer) occurs at the Event producer NF while the event is muted. 
     """ # noqa: E501
-    buffered_notifs: Optional[BufferedNotificationsAction] = Field(default=None, alias="bufferedNotifs")
-    subscription: Optional[SubscriptionAction] = None
+    buffered_notifs: Optional[StrictStr] = Field(default=None, description="Indicates the required action by the event producer NF on the buffered Notifications. ", alias="bufferedNotifs")
+    subscription: Optional[StrictStr] = Field(default=None, description="Indicates the required action by the event producer NF on the event subscription if an exception occurs while the event is muted. ")
     __properties: ClassVar[List[str]] = ["bufferedNotifs", "subscription"]
 
     model_config = {
@@ -74,12 +72,6 @@ class MutingExceptionInstructions(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of buffered_notifs
-        if self.buffered_notifs:
-            _dict['bufferedNotifs'] = self.buffered_notifs.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of subscription
-        if self.subscription:
-            _dict['subscription'] = self.subscription.to_dict()
         return _dict
 
     @classmethod
@@ -92,8 +84,8 @@ class MutingExceptionInstructions(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "bufferedNotifs": BufferedNotificationsAction.from_dict(obj.get("bufferedNotifs")) if obj.get("bufferedNotifs") is not None else None,
-            "subscription": SubscriptionAction.from_dict(obj.get("subscription")) if obj.get("subscription") is not None else None
+            "bufferedNotifs": obj.get("bufferedNotifs"),
+            "subscription": obj.get("subscription")
         })
         return _obj
 

@@ -21,15 +21,10 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nsmf.models.event_type import EventType
 from nsmf.models.flow_information import FlowInformation
-from nsmf.models.granularity_of_measurement import GranularityOfMeasurement
 from nsmf.models.ipv6_addr import Ipv6Addr
-from nsmf.models.measurement_type import MeasurementType
-from nsmf.models.rat_type import RatType
-from nsmf.models.remaining_data_reports import RemainingDataReports
 from nsmf.models.reporting_suggestion_information import ReportingSuggestionInformation
 from nsmf.models.skip_reporting_instruction import SkipReportingInstruction
 try:
@@ -41,21 +36,21 @@ class UpfEvent(BaseModel):
     """
     UPF Event
     """ # noqa: E501
-    type: EventType
+    type: StrictStr = Field(description="Event Type")
     immediate_flag: Optional[StrictBool] = Field(default=False, alias="immediateFlag")
-    measurement_types: Optional[Annotated[List[MeasurementType], Field(min_length=1)]] = Field(default=None, alias="measurementTypes")
+    measurement_types: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="measurementTypes")
     app_ids: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="appIds")
     traffic_filters: Optional[Annotated[List[FlowInformation], Field(min_length=1)]] = Field(default=None, alias="trafficFilters")
-    granularity_of_measurement: Optional[GranularityOfMeasurement] = Field(default=None, alias="granularityOfMeasurement")
+    granularity_of_measurement: Optional[StrictStr] = Field(default=None, description="Granularity Of Measurement", alias="granularityOfMeasurement")
     reporting_suggestion_info: Optional[ReportingSuggestionInformation] = Field(default=None, alias="reportingSuggestionInfo")
     remote_ipv4_addr: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a IPv4 address formatted in the 'dotted decimal' notation as defined in RFC 1166. ", alias="remoteIpv4Addr")
     remote_ipv6_addr: Optional[Ipv6Addr] = Field(default=None, alias="remoteIpv6Addr")
     remote_port_number: Optional[Annotated[int, Field(le=65535, strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 16-bit integer. ", alias="remotePortNumber")
     ip_domain: Optional[StrictStr] = Field(default=None, alias="ipDomain")
-    remaining_data_reports: Optional[RemainingDataReports] = Field(default=None, alias="remainingDataReports")
+    remaining_data_reports: Optional[StrictStr] = Field(default=None, description="indication on how to handle the data collected by the source UPF", alias="remainingDataReports")
     skip_reporting_instruction: Optional[SkipReportingInstruction] = Field(default=None, alias="skipReportingInstruction")
     incl_rat_type: Optional[StrictBool] = Field(default=None, alias="inclRatType")
-    rat_type_list: Optional[Annotated[List[RatType], Field(min_length=1)]] = Field(default=None, alias="ratTypeList")
+    rat_type_list: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="ratTypeList")
     __properties: ClassVar[List[str]] = ["type", "immediateFlag", "measurementTypes", "appIds", "trafficFilters", "granularityOfMeasurement", "reportingSuggestionInfo", "remoteIpv4Addr", "remoteIpv6Addr", "remotePortNumber", "ipDomain", "remainingDataReports", "skipReportingInstruction", "inclRatType", "ratTypeList"]
 
     @field_validator('remote_ipv4_addr')
@@ -105,16 +100,6 @@ class UpfEvent(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of type
-        if self.type:
-            _dict['type'] = self.type.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in measurement_types (list)
-        _items = []
-        if self.measurement_types:
-            for _item in self.measurement_types:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['measurementTypes'] = _items
         # override the default output from pydantic by calling `to_dict()` of each item in traffic_filters (list)
         _items = []
         if self.traffic_filters:
@@ -122,28 +107,15 @@ class UpfEvent(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['trafficFilters'] = _items
-        # override the default output from pydantic by calling `to_dict()` of granularity_of_measurement
-        if self.granularity_of_measurement:
-            _dict['granularityOfMeasurement'] = self.granularity_of_measurement.to_dict()
         # override the default output from pydantic by calling `to_dict()` of reporting_suggestion_info
         if self.reporting_suggestion_info:
             _dict['reportingSuggestionInfo'] = self.reporting_suggestion_info.to_dict()
         # override the default output from pydantic by calling `to_dict()` of remote_ipv6_addr
         if self.remote_ipv6_addr:
             _dict['remoteIpv6Addr'] = self.remote_ipv6_addr.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of remaining_data_reports
-        if self.remaining_data_reports:
-            _dict['remainingDataReports'] = self.remaining_data_reports.to_dict()
         # override the default output from pydantic by calling `to_dict()` of skip_reporting_instruction
         if self.skip_reporting_instruction:
             _dict['skipReportingInstruction'] = self.skip_reporting_instruction.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in rat_type_list (list)
-        _items = []
-        if self.rat_type_list:
-            for _item in self.rat_type_list:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['ratTypeList'] = _items
         return _dict
 
     @classmethod
@@ -156,21 +128,21 @@ class UpfEvent(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "type": EventType.from_dict(obj.get("type")) if obj.get("type") is not None else None,
+            "type": obj.get("type"),
             "immediateFlag": obj.get("immediateFlag") if obj.get("immediateFlag") is not None else False,
-            "measurementTypes": [MeasurementType.from_dict(_item) for _item in obj.get("measurementTypes")] if obj.get("measurementTypes") is not None else None,
+            "measurementTypes": obj.get("measurementTypes"),
             "appIds": obj.get("appIds"),
             "trafficFilters": [FlowInformation.from_dict(_item) for _item in obj.get("trafficFilters")] if obj.get("trafficFilters") is not None else None,
-            "granularityOfMeasurement": GranularityOfMeasurement.from_dict(obj.get("granularityOfMeasurement")) if obj.get("granularityOfMeasurement") is not None else None,
+            "granularityOfMeasurement": obj.get("granularityOfMeasurement"),
             "reportingSuggestionInfo": ReportingSuggestionInformation.from_dict(obj.get("reportingSuggestionInfo")) if obj.get("reportingSuggestionInfo") is not None else None,
             "remoteIpv4Addr": obj.get("remoteIpv4Addr"),
             "remoteIpv6Addr": Ipv6Addr.from_dict(obj.get("remoteIpv6Addr")) if obj.get("remoteIpv6Addr") is not None else None,
             "remotePortNumber": obj.get("remotePortNumber"),
             "ipDomain": obj.get("ipDomain"),
-            "remainingDataReports": RemainingDataReports.from_dict(obj.get("remainingDataReports")) if obj.get("remainingDataReports") is not None else None,
+            "remainingDataReports": obj.get("remainingDataReports"),
             "skipReportingInstruction": SkipReportingInstruction.from_dict(obj.get("skipReportingInstruction")) if obj.get("skipReportingInstruction") is not None else None,
             "inclRatType": obj.get("inclRatType"),
-            "ratTypeList": [RatType.from_dict(_item) for _item in obj.get("ratTypeList")] if obj.get("ratTypeList") is not None else None
+            "ratTypeList": obj.get("ratTypeList")
         })
         return _obj
 

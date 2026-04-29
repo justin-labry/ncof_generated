@@ -22,7 +22,7 @@ import json
 
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictInt
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List
 from typing_extensions import Annotated
 from nncof.models.e2e_data_vol_trans_time_per_ue import E2eDataVolTransTimePerUe
 try:
@@ -36,7 +36,7 @@ class E2eDataVolTransTimePerTS(BaseModel):
     """ # noqa: E501
     ts_start: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="tsStart")
     ts_duration: StrictInt = Field(description="indicating a time in seconds.", alias="tsDuration")
-    e2e_data_vol_trans_time_per_ue: Annotated[List[Optional[E2eDataVolTransTimePerUe]], Field(min_length=1)] = Field(alias="e2eDataVolTransTimePerUe")
+    e2e_data_vol_trans_time_per_ue: Annotated[List[E2eDataVolTransTimePerUe], Field(min_length=1)] = Field(alias="e2eDataVolTransTimePerUe")
     __properties: ClassVar[List[str]] = ["tsStart", "tsDuration", "e2eDataVolTransTimePerUe"]
 
     model_config = {

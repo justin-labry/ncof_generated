@@ -24,7 +24,6 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nnef.models.event_record_type import EventRecordType
 from nnef.models.location_area5_g import LocationArea5G
 from nnef.models.snssai import Snssai
 try:
@@ -36,7 +35,7 @@ class BaseEventRecord(BaseModel):
     """
     Abstract base data type describing a single UE data record or summarising a set of UE data records.
     """ # noqa: E501
-    record_type: EventRecordType = Field(alias="recordType")
+    record_type: StrictStr = Field(description="Enumeration of event record types.", alias="recordType")
     record_timestamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="recordTimestamp")
     app_id: StrictStr = Field(description="String providing an application identifier.", alias="appId")
     provisioning_session_id: Optional[StrictStr] = Field(default=None, description="String chosen by the 5GMS AF to serve as an identifier in a resource URI.", alias="provisioningSessionId")
@@ -84,9 +83,6 @@ class BaseEventRecord(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of record_type
-        if self.record_type:
-            _dict['recordType'] = self.record_type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of slice_id
         if self.slice_id:
             _dict['sliceId'] = self.slice_id.to_dict()
@@ -109,7 +105,7 @@ class BaseEventRecord(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "recordType": EventRecordType.from_dict(obj.get("recordType")) if obj.get("recordType") is not None else None,
+            "recordType": obj.get("recordType"),
             "recordTimestamp": obj.get("recordTimestamp"),
             "appId": obj.get("appId"),
             "provisioningSessionId": obj.get("provisioningSessionId"),

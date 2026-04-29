@@ -20,10 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List
 from typing_extensions import Annotated
-from nncof.models.units_linear_velocity import UnitsLinearVelocity
 try:
     from typing import Self
 except ImportError:
@@ -33,7 +32,7 @@ class RadialVelocity(BaseModel):
     """
     Rate of change of a range.
     """ # noqa: E501
-    units_radial_velocity: UnitsLinearVelocity = Field(alias="unitsRadialVelocity")
+    units_radial_velocity: StrictStr = Field(description="The the units of linear velocity.", alias="unitsRadialVelocity")
     radial_velocity: Annotated[int, Field(le=2047, strict=True, ge=-2048)] = Field(description="Indicates value of rate of change of a range between the device A and device B.", alias="radialVelocity")
     r_velocity_uncertainty: Annotated[int, Field(le=255, strict=True, ge=0)] = Field(description="Indicates uncertainty for rate of change of an range.", alias="rVelocityUncertainty")
     __properties: ClassVar[List[str]] = ["unitsRadialVelocity", "radialVelocity", "rVelocityUncertainty"]
@@ -75,9 +74,6 @@ class RadialVelocity(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of units_radial_velocity
-        if self.units_radial_velocity:
-            _dict['unitsRadialVelocity'] = self.units_radial_velocity.to_dict()
         return _dict
 
     @classmethod
@@ -90,7 +86,7 @@ class RadialVelocity(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "unitsRadialVelocity": UnitsLinearVelocity.from_dict(obj.get("unitsRadialVelocity")) if obj.get("unitsRadialVelocity") is not None else None,
+            "unitsRadialVelocity": obj.get("unitsRadialVelocity"),
             "radialVelocity": obj.get("radialVelocity"),
             "rVelocityUncertainty": obj.get("rVelocityUncertainty")
         })

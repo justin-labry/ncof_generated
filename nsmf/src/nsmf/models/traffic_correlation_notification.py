@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nsmf.models.ip_addr import IpAddr
 try:
@@ -91,11 +91,6 @@ class TrafficCorrelationNotification(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of eas_ip_addr
         if self.eas_ip_addr:
             _dict['easIpAddr'] = self.eas_ip_addr.to_dict()
-        # set to None if eas_ip_addr (nullable) is None
-        # and model_fields_set contains the field
-        if self.eas_ip_addr is None and "eas_ip_addr" in self.model_fields_set:
-            _dict['easIpAddr'] = None
-
         return _dict
 
     @classmethod

@@ -109,11 +109,6 @@ class DispersionCollection(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of data_usage
         if self.data_usage:
             _dict['dataUsage'] = self.data_usage.to_dict()
-        # set to None if ue_addr (nullable) is None
-        # and model_fields_set contains the field
-        if self.ue_addr is None and "ue_addr" in self.model_fields_set:
-            _dict['ueAddr'] = None
-
         return _dict
 
     @classmethod

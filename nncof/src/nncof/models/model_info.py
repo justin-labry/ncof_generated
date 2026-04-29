@@ -20,11 +20,10 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List
 from typing_extensions import Annotated
 from nncof.models.ml_model_info import MLModelInfo
-from nncof.models.ncof_event import NcofEvent
 try:
     from typing import Self
 except ImportError:
@@ -34,8 +33,8 @@ class ModelInfo(BaseModel):
     """
     Contains information about an ML model.
     """ # noqa: E501
-    analytics_id: NcofEvent = Field(alias="analyticsId")
-    ml_model_infos: Annotated[List[Optional[MLModelInfo]], Field(min_length=1)] = Field(alias="mlModelInfos")
+    analytics_id: StrictStr = Field(description="Describes the NCOF Events.   Possible values are: - SLICE_LOAD_LEVEL: Indicates that the event subscribed is load level information of Network   Slice. - NETWORK_PERFORMANCE: Indicates that the event subscribed is network performance   information. - NF_LOAD: Indicates that the event subscribed is load level and status of one or several   Network Functions. - SERVICE_EXPERIENCE: Indicates that the event subscribed is service experience. - UE_MOBILITY: Indicates that the event subscribed is UE mobility information. - UE_COMMUNICATION: Indicates that the event subscribed is UE communication information. - QOS_SUSTAINABILITY: Indicates that the event subscribed is QoS sustainability. - ABNORMAL_BEHAVIOUR: Indicates that the event subscribed is abnormal behaviour. - USER_DATA_CONGESTION: Indicates that the event subscribed is user data congestion   information. - NSI_LOAD_LEVEL: Indicates that the event subscribed is load level information of Network   Slice and the optionally associated Network Slice Instance. - DN_PERFORMANCE: Indicates that the event subscribed is DN performance information. - DISPERSION: Indicates that the event subscribed is dispersion information. - RED_TRANS_EXP: Indicates that the event subscribed is redundant transmission experience. - WLAN_PERFORMANCE: Indicates that the event subscribed is WLAN performance. - SM_CONGESTION: Indicates the Session Management Congestion Control Experience information   for specific DNN and/or S-NSSAI. - PFD_DETERMINATION: Indicates that the event subscribed is the PFD Determination nformation   for known application identifier(s). - PDU_SESSION_TRAFFIC: Indicates that the event subscribed is the PDU Session traffic   information. - E2E_DATA_VOL_TRANS_TIME: Indicates that the event subscribed is of E2E data volume    transfer time. - MOVEMENT_BEHAVIOUR: Indicates that the event subscribed is the Movement Behaviour   information. - LOC_ACCURACY: Indicates that the event subscribed is of location accuracy. - RELATIVE_PROXIMITY: Indicates that the event subscribed is the Relative Proximity   information. - SIGNALLING_STORM: Indicates that the event subscribed is the Signalling Storm information. - QOS_POLICY_ASSIST: Indicates that the event subscribed is the QoS and Policy   Assistance information. ", alias="analyticsId")
+    ml_model_infos: Annotated[List[MLModelInfo], Field(min_length=1)] = Field(alias="mlModelInfos")
     __properties: ClassVar[List[str]] = ["analyticsId", "mlModelInfos"]
 
     model_config = {
@@ -75,9 +74,6 @@ class ModelInfo(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of analytics_id
-        if self.analytics_id:
-            _dict['analyticsId'] = self.analytics_id.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in ml_model_infos (list)
         _items = []
         if self.ml_model_infos:
@@ -97,7 +93,7 @@ class ModelInfo(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "analyticsId": NcofEvent.from_dict(obj.get("analyticsId")) if obj.get("analyticsId") is not None else None,
+            "analyticsId": obj.get("analyticsId"),
             "mlModelInfos": [MLModelInfo.from_dict(_item) for _item in obj.get("mlModelInfos")] if obj.get("mlModelInfos") is not None else None
         })
         return _obj

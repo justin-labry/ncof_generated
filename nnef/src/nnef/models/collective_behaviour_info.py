@@ -23,9 +23,7 @@ import json
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nnef.models.direction import Direction
 from nnef.models.per_ue_attribute import PerUeAttribute
-from nnef.models.relative_direction import RelativeDirection
 from nnef.models.ue_trajectory_collection import UeTrajectoryCollection
 try:
     from typing import Self
@@ -42,8 +40,8 @@ class CollectiveBehaviourInfo(BaseModel):
     ext_ue_ids: Optional[Annotated[List[Annotated[str, Field(strict=True)]], Field(min_length=1)]] = Field(default=None, alias="extUeIds")
     ue_ids: Optional[Annotated[List[Annotated[str, Field(strict=True)]], Field(min_length=1)]] = Field(default=None, alias="ueIds")
     collision_dist: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="collisionDist")
-    abs_dirs: Optional[Annotated[List[Direction], Field(min_length=1)]] = Field(default=None, alias="absDirs")
-    rel_dirs: Optional[Annotated[List[RelativeDirection], Field(min_length=1)]] = Field(default=None, alias="relDirs")
+    abs_dirs: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="absDirs")
+    rel_dirs: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="relDirs")
     ue_trajectory: Optional[UeTrajectoryCollection] = Field(default=None, alias="ueTrajectory")
     confidence: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.")
     __properties: ClassVar[List[str]] = ["colAttrib", "noOfUes", "appIds", "extUeIds", "ueIds", "collisionDist", "absDirs", "relDirs", "ueTrajectory", "confidence"]
@@ -92,20 +90,6 @@ class CollectiveBehaviourInfo(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['colAttrib'] = _items
-        # override the default output from pydantic by calling `to_dict()` of each item in abs_dirs (list)
-        _items = []
-        if self.abs_dirs:
-            for _item in self.abs_dirs:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['absDirs'] = _items
-        # override the default output from pydantic by calling `to_dict()` of each item in rel_dirs (list)
-        _items = []
-        if self.rel_dirs:
-            for _item in self.rel_dirs:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['relDirs'] = _items
         # override the default output from pydantic by calling `to_dict()` of ue_trajectory
         if self.ue_trajectory:
             _dict['ueTrajectory'] = self.ue_trajectory.to_dict()
@@ -127,8 +111,8 @@ class CollectiveBehaviourInfo(BaseModel):
             "extUeIds": obj.get("extUeIds"),
             "ueIds": obj.get("ueIds"),
             "collisionDist": obj.get("collisionDist"),
-            "absDirs": [Direction.from_dict(_item) for _item in obj.get("absDirs")] if obj.get("absDirs") is not None else None,
-            "relDirs": [RelativeDirection.from_dict(_item) for _item in obj.get("relDirs")] if obj.get("relDirs") is not None else None,
+            "absDirs": obj.get("absDirs"),
+            "relDirs": obj.get("relDirs"),
             "ueTrajectory": UeTrajectoryCollection.from_dict(obj.get("ueTrajectory")) if obj.get("ueTrajectory") is not None else None,
             "confidence": obj.get("confidence")
         })

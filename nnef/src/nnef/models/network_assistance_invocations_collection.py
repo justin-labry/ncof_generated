@@ -21,12 +21,10 @@ import json
 
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List
 from typing_extensions import Annotated
-from nnef.models.data_aggregation_function_type import DataAggregationFunctionType
 from nnef.models.network_assistance_invocation_event import NetworkAssistanceInvocationEvent
-from nnef.models.provisioning_session_type import ProvisioningSessionType
 try:
     from typing import Self
 except ImportError:
@@ -40,8 +38,8 @@ class NetworkAssistanceInvocationsCollection(BaseModel):
     start_timestamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="startTimestamp")
     end_timestamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="endTimestamp")
     sample_count: Annotated[int, Field(strict=True, ge=1)] = Field(description="The number of data samples included in or summarised by this collection.", alias="sampleCount")
-    streaming_direction: ProvisioningSessionType = Field(alias="streamingDirection")
-    summarisations: Annotated[List[DataAggregationFunctionType], Field(min_length=1)] = Field(description="One or more data aggregation functions that have been applied to the UE data to produce summary records present in this collection.")
+    streaming_direction: StrictStr = Field(alias="streamingDirection")
+    summarisations: Annotated[List[StrictStr], Field(min_length=1)] = Field(description="One or more data aggregation functions that have been applied to the UE data to produce summary records present in this collection.")
     records: Annotated[List[NetworkAssistanceInvocationEvent], Field(min_length=0)] = Field(description="A set of records, each one describing a Network Assistance invocation or summarising a set of Network Assistance invocations.")
     __properties: ClassVar[List[str]] = ["collectionTimestamp", "startTimestamp", "endTimestamp", "sampleCount", "streamingDirection", "summarisations", "records"]
 
@@ -82,16 +80,6 @@ class NetworkAssistanceInvocationsCollection(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of streaming_direction
-        if self.streaming_direction:
-            _dict['streamingDirection'] = self.streaming_direction.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in summarisations (list)
-        _items = []
-        if self.summarisations:
-            for _item in self.summarisations:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['summarisations'] = _items
         # override the default output from pydantic by calling `to_dict()` of each item in records (list)
         _items = []
         if self.records:
@@ -115,8 +103,8 @@ class NetworkAssistanceInvocationsCollection(BaseModel):
             "startTimestamp": obj.get("startTimestamp"),
             "endTimestamp": obj.get("endTimestamp"),
             "sampleCount": obj.get("sampleCount"),
-            "streamingDirection": ProvisioningSessionType.from_dict(obj.get("streamingDirection")) if obj.get("streamingDirection") is not None else None,
-            "summarisations": [DataAggregationFunctionType.from_dict(_item) for _item in obj.get("summarisations")] if obj.get("summarisations") is not None else None,
+            "streamingDirection": obj.get("streamingDirection"),
+            "summarisations": obj.get("summarisations"),
             "records": [NetworkAssistanceInvocationEvent.from_dict(_item) for _item in obj.get("records")] if obj.get("records") is not None else None
         })
         return _obj

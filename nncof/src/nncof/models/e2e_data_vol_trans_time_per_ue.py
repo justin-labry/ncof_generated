@@ -21,12 +21,11 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.access_type import AccessType
 from nncof.models.data_volume_transfer_time import DataVolumeTransferTime
 from nncof.models.network_area_info import NetworkAreaInfo
-from nncof.models.rat_type import RatType
 from nncof.models.snssai import Snssai
 from nncof.models.time_window import TimeWindow
 from nncof.models.user_location import UserLocation
@@ -43,7 +42,7 @@ class E2eDataVolTransTimePerUe(BaseModel):
     gpsi: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a Gpsi shall contain either an External Id or an MSISDN.  It shall be formatted as follows -External Identifier= \"extid-'extid', where 'extid'  shall be formatted according to clause 19.7.2 of 3GPP TS 23.003 that describes an  External Identifier.  ")
     snssai: Optional[Snssai] = None
     access_type: Optional[AccessType] = Field(default=None, alias="accessType")
-    rat_types: Optional[Annotated[List[RatType], Field(min_length=1)]] = Field(default=None, description="The RAT types.", alias="ratTypes")
+    rat_types: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, description="The RAT types.", alias="ratTypes")
     app_id: Optional[StrictStr] = Field(default=None, description="String providing an application identifier.", alias="appId")
     ue_loc: Optional[UserLocation] = Field(default=None, alias="ueLoc")
     dnn: Optional[StrictStr] = Field(default=None, description="String representing a Data Network as defined in clause 9A of 3GPP TS 23.003;  it shall contain either a DNN Network Identifier, or a full DNN with both the Network  Identifier and Operator Identifier, as specified in 3GPP TS 23.003 clause 9.1.1 and 9.1.2. It shall be coded as string in which the labels are separated by dots  (e.g. \"Label1.Label2.Label3\"). ")
@@ -112,13 +111,6 @@ class E2eDataVolTransTimePerUe(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of snssai
         if self.snssai:
             _dict['snssai'] = self.snssai.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in rat_types (list)
-        _items = []
-        if self.rat_types:
-            for _item in self.rat_types:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['ratTypes'] = _items
         # override the default output from pydantic by calling `to_dict()` of ue_loc
         if self.ue_loc:
             _dict['ueLoc'] = self.ue_loc.to_dict()
@@ -147,7 +139,7 @@ class E2eDataVolTransTimePerUe(BaseModel):
             "gpsi": obj.get("gpsi"),
             "snssai": Snssai.from_dict(obj.get("snssai")) if obj.get("snssai") is not None else None,
             "accessType": obj.get("accessType"),
-            "ratTypes": [RatType.from_dict(_item) for _item in obj.get("ratTypes")] if obj.get("ratTypes") is not None else None,
+            "ratTypes": obj.get("ratTypes"),
             "appId": obj.get("appId"),
             "ueLoc": UserLocation.from_dict(obj.get("ueLoc")) if obj.get("ueLoc") is not None else None,
             "dnn": obj.get("dnn"),

@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.consumer_nf_information import ConsumerNfInformation
 from nncof.models.event_notification import EventNotification
@@ -126,16 +126,6 @@ class NncofEventsSubscription(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of cons_nf_info
         if self.cons_nf_info:
             _dict['consNfInfo'] = self.cons_nf_info.to_dict()
-        # set to None if prev_sub (nullable) is None
-        # and model_fields_set contains the field
-        if self.prev_sub is None and "prev_sub" in self.model_fields_set:
-            _dict['prevSub'] = None
-
-        # set to None if cons_nf_info (nullable) is None
-        # and model_fields_set contains the field
-        if self.cons_nf_info is None and "cons_nf_info" in self.model_fields_set:
-            _dict['consNfInfo'] = None
-
         return _dict
 
     @classmethod

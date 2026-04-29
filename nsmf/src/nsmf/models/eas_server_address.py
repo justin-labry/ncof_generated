@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List
 from typing_extensions import Annotated
 from nsmf.models.ip_addr import IpAddr
 try:
@@ -33,7 +33,7 @@ class EasServerAddress(BaseModel):
     """
     Represents the IP address and port of an EAS server.
     """ # noqa: E501
-    ip: Optional[IpAddr]
+    ip: IpAddr
     port: Annotated[int, Field(strict=True, ge=0)] = Field(description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.")
     __properties: ClassVar[List[str]] = ["ip", "port"]
 
@@ -77,11 +77,6 @@ class EasServerAddress(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of ip
         if self.ip:
             _dict['ip'] = self.ip.to_dict()
-        # set to None if ip (nullable) is None
-        # and model_fields_set contains the field
-        if self.ip is None and "ip" in self.model_fields_set:
-            _dict['ip'] = None
-
         return _dict
 
     @classmethod

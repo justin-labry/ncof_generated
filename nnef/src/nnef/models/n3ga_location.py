@@ -25,10 +25,8 @@ from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing_extensions import Annotated
 from nnef.models.hfc_node_id import HfcNodeId
 from nnef.models.ipv6_addr import Ipv6Addr
-from nnef.models.line_type import LineType
 from nnef.models.tai import Tai
 from nnef.models.tnap_id import TnapId
-from nnef.models.transport_protocol import TransportProtocol
 from nnef.models.twap_id import TwapId
 try:
     from typing import Self
@@ -44,12 +42,12 @@ class N3gaLocation(BaseModel):
     ue_ipv4_addr: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a IPv4 address formatted in the 'dotted decimal' notation as defined in RFC 1166. ", alias="ueIpv4Addr")
     ue_ipv6_addr: Optional[Ipv6Addr] = Field(default=None, alias="ueIpv6Addr")
     port_number: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="portNumber")
-    protocol: Optional[TransportProtocol] = None
+    protocol: Optional[StrictStr] = Field(default=None, description="Possible values are: - UDP: User Datagram Protocol. - TCP: Transmission Control Protocol.  ")
     tnap_id: Optional[TnapId] = Field(default=None, alias="tnapId")
     twap_id: Optional[TwapId] = Field(default=None, alias="twapId")
     hfc_node_id: Optional[HfcNodeId] = Field(default=None, alias="hfcNodeId")
     gli: Optional[Union[StrictBytes, StrictStr]] = Field(default=None, description="string with format 'bytes' as defined in OpenAPI")
-    w5gban_line_type: Optional[LineType] = Field(default=None, alias="w5gbanLineType")
+    w5gban_line_type: Optional[StrictStr] = Field(default=None, description="Possible values are: - DSL: Identifies a DSL line - PON: Identifies a PON line ", alias="w5gbanLineType")
     gci: Optional[StrictStr] = Field(default=None, description="Global Cable Identifier uniquely identifying the connection between the 5G-CRG or FN-CRG to the 5GS. See clause 28.15.4 of 3GPP TS 23.003. This shall be encoded as a string per clause 28.15.4 of 3GPP TS 23.003, and compliant with the syntax specified  in clause 2.2  of IETF RFC 7542 for the username part of a NAI. The GCI value is specified in CableLabs WR-TR-5WWC-ARCH. ")
     __properties: ClassVar[List[str]] = ["n3gppTai", "n3IwfId", "ueIpv4Addr", "ueIpv6Addr", "portNumber", "protocol", "tnapId", "twapId", "hfcNodeId", "gli", "w5gbanLineType", "gci"]
 
@@ -116,9 +114,6 @@ class N3gaLocation(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of ue_ipv6_addr
         if self.ue_ipv6_addr:
             _dict['ueIpv6Addr'] = self.ue_ipv6_addr.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of protocol
-        if self.protocol:
-            _dict['protocol'] = self.protocol.to_dict()
         # override the default output from pydantic by calling `to_dict()` of tnap_id
         if self.tnap_id:
             _dict['tnapId'] = self.tnap_id.to_dict()
@@ -128,9 +123,6 @@ class N3gaLocation(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of hfc_node_id
         if self.hfc_node_id:
             _dict['hfcNodeId'] = self.hfc_node_id.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of w5gban_line_type
-        if self.w5gban_line_type:
-            _dict['w5gbanLineType'] = self.w5gban_line_type.to_dict()
         return _dict
 
     @classmethod
@@ -148,12 +140,12 @@ class N3gaLocation(BaseModel):
             "ueIpv4Addr": obj.get("ueIpv4Addr"),
             "ueIpv6Addr": Ipv6Addr.from_dict(obj.get("ueIpv6Addr")) if obj.get("ueIpv6Addr") is not None else None,
             "portNumber": obj.get("portNumber"),
-            "protocol": TransportProtocol.from_dict(obj.get("protocol")) if obj.get("protocol") is not None else None,
+            "protocol": obj.get("protocol"),
             "tnapId": TnapId.from_dict(obj.get("tnapId")) if obj.get("tnapId") is not None else None,
             "twapId": TwapId.from_dict(obj.get("twapId")) if obj.get("twapId") is not None else None,
             "hfcNodeId": HfcNodeId.from_dict(obj.get("hfcNodeId")) if obj.get("hfcNodeId") is not None else None,
             "gli": obj.get("gli"),
-            "w5gbanLineType": LineType.from_dict(obj.get("w5gbanLineType")) if obj.get("w5gbanLineType") is not None else None,
+            "w5gbanLineType": obj.get("w5gbanLineType"),
             "gci": obj.get("gci")
         })
         return _obj

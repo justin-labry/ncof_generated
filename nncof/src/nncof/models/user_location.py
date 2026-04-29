@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from nncof.models.eutra_location import EutraLocation
 from nncof.models.gera_location import GeraLocation
 from nncof.models.n3ga_location import N3gaLocation
@@ -95,16 +95,6 @@ class UserLocation(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of gera_location
         if self.gera_location:
             _dict['geraLocation'] = self.gera_location.to_dict()
-        # set to None if utra_location (nullable) is None
-        # and model_fields_set contains the field
-        if self.utra_location is None and "utra_location" in self.model_fields_set:
-            _dict['utraLocation'] = None
-
-        # set to None if gera_location (nullable) is None
-        # and model_fields_set contains the field
-        if self.gera_location is None and "gera_location" in self.model_fields_set:
-            _dict['geraLocation'] = None
-
         return _dict
 
     @classmethod

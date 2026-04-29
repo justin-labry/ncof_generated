@@ -13,148 +13,91 @@
 
 
 from __future__ import annotations
-from inspect import getfullargspec
-import json
 import pprint
 import re  # noqa: F401
+import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr, ValidationError, field_validator
-from typing import Any, List, Optional
-from typing import Union, Any, List, TYPE_CHECKING, Optional, Dict
-from typing_extensions import Literal
-from pydantic import StrictStr, Field
+
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
+from typing_extensions import Annotated
+from nncof.models.tai import Tai
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-CONSUMERNFINFORMATION_ONE_OF_SCHEMAS = ["object"]
-
 class ConsumerNfInformation(BaseModel):
     """
-    ConsumerNfInformation
-    """
-    # data type: object
-    oneof_schema_1_validator: Optional[Any] = None
-    # data type: object
-    oneof_schema_2_validator: Optional[Any] = None
-    actual_instance: Optional[Union[object]] = None
-    one_of_schemas: List[str] = Literal["object"]
+    Represents the analytics consumer NF Information.
+    """ # noqa: E501
+    nf_id: Optional[StrictStr] = Field(default=None, description="String uniquely identifying a NF instance. The format of the NF Instance ID shall be a  Universally Unique Identifier (UUID) version 4.  ", alias="nfId")
+    nf_set_id: Optional[StrictStr] = Field(default=None, description="NF Set Identifier (see clause 28.12 of 3GPP TS 23.003), formatted as the following string \"set<Set ID>.<nftype>set.5gc.mnc<MNC>.mcc<MCC>\", or  \"set<SetID>.<NFType>set.5gc.nid<NID>.mnc<MNC>.mcc<MCC>\" with  <MCC> encoded as defined in clause 5.4.2 (\"Mcc\" data type definition)  <MNC> encoding the Mobile Network Code part of the PLMN, comprising 3 digits.    If there are only 2 significant digits in the MNC, one \"0\" digit shall be inserted    at the left side to fill the 3 digits coding of MNC.  Pattern: '^[0-9]{3}$' <NFType> encoded as a value defined in Table 6.1.6.3.3-1 of 3GPP TS 29.510 but    with lower case characters <Set ID> encoded as a string of characters consisting of    alphabetic characters (A-Z and a-z), digits (0-9) and/or the hyphen (-) and that    shall end with either an alphabetic character or a digit.  ", alias="nfSetId")
+    tai_list: Optional[Annotated[List[Tai], Field(min_length=1)]] = Field(default=None, alias="taiList")
+    __properties: ClassVar[List[str]] = ["nfId", "nfSetId", "taiList"]
 
     model_config = {
+        "populate_by_name": True,
         "validate_assignment": True,
         "protected_namespaces": (),
     }
 
 
-    def __init__(self, *args, **kwargs) -> None:
-        if args:
-            if len(args) > 1:
-                raise ValueError("If a position argument is used, only 1 is allowed to set `actual_instance`")
-            if kwargs:
-                raise ValueError("If a position argument is used, keyword arguments cannot be used.")
-            super().__init__(actual_instance=args[0])
-        else:
-            super().__init__(**kwargs)
+    def to_str(self) -> str:
+        """Returns the string representation of the model using alias"""
+        return pprint.pformat(self.model_dump(by_alias=True))
 
-    @field_validator('actual_instance')
-    def actual_instance_must_validate_oneof(cls, v):
-        if v is None:
-            return v
-
-        instance = ConsumerNfInformation.model_construct()
-        error_messages = []
-        match = 0
-        # validate data type: object
-        try:
-            instance.oneof_schema_1_validator = v
-            match += 1
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        # validate data type: object
-        try:
-            instance.oneof_schema_2_validator = v
-            match += 1
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        if match > 1:
-            # Accept first match (both schemas are 'object', generator issue)
-            return v
-        elif match == 0:
-            # no match
-            raise ValueError("No match found when setting `actual_instance` in ConsumerNfInformation with oneOf schemas: object. Details: " + ", ".join(error_messages))
-        else:
-            return v
-
-    @classmethod
-    def from_dict(cls, obj: dict) -> Self:
-        return cls.from_json(json.dumps(obj))
+    def to_json(self) -> str:
+        """Returns the JSON representation of the model using alias"""
+        # TODO: pydantic v2: use .model_dump_json(by_alias=True, exclude_unset=True) instead
+        return json.dumps(self.to_dict())
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Returns the object represented by the json string"""
-        instance = cls.model_construct()
-        if json_str is None:
-            return instance
+        """Create an instance of ConsumerNfInformation from a JSON string"""
+        return cls.from_dict(json.loads(json_str))
 
-        error_messages = []
-        match = 0
+    def to_dict(self) -> Dict[str, Any]:
+        """Return the dictionary representation of the model using alias.
 
-        # deserialize data into object
-        try:
-            # validation
-            instance.oneof_schema_1_validator = json.loads(json_str)
-            # assign value to actual_instance
-            instance.actual_instance = instance.oneof_schema_1_validator
-            match += 1
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
-        # deserialize data into object
-        try:
-            # validation
-            instance.oneof_schema_2_validator = json.loads(json_str)
-            # assign value to actual_instance
-            instance.actual_instance = instance.oneof_schema_2_validator
-            match += 1
-        except (ValidationError, ValueError) as e:
-            error_messages.append(str(e))
+        This has the following differences from calling pydantic's
+        `self.model_dump(by_alias=True)`:
 
-        if match > 1:
-            # Accept first match (both schemas are 'object', generator issue)
-            return instance
-        elif match == 0:
-            # no match
-            raise ValueError("No match found when deserializing the JSON string into ConsumerNfInformation with oneOf schemas: object. Details: " + ", ".join(error_messages))
-        else:
-            return instance
+        * `None` is only added to the output dict for nullable fields that
+          were set at model initialization. Other fields with value `None`
+          are ignored.
+        """
+        _dict = self.model_dump(
+            by_alias=True,
+            exclude={
+            },
+            exclude_none=True,
+        )
+        # override the default output from pydantic by calling `to_dict()` of each item in tai_list (list)
+        _items = []
+        if self.tai_list:
+            for _item in self.tai_list:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['taiList'] = _items
+        return _dict
 
-    def to_json(self) -> str:
-        """Returns the JSON representation of the actual instance"""
-        if self.actual_instance is None:
-            return "null"
-
-        to_json = getattr(self.actual_instance, "to_json", None)
-        if callable(to_json):
-            return self.actual_instance.to_json()
-        else:
-            return json.dumps(self.actual_instance)
-
-    def to_dict(self) -> Dict:
-        """Returns the dict representation of the actual instance"""
-        if self.actual_instance is None:
+    @classmethod
+    def from_dict(cls, obj: Dict) -> Self:
+        """Create an instance of ConsumerNfInformation from a dict"""
+        if obj is None:
             return None
 
-        to_dict = getattr(self.actual_instance, "to_dict", None)
-        if callable(to_dict):
-            return self.actual_instance.to_dict()
-        else:
-            # primitive type
-            return self.actual_instance
+        if not isinstance(obj, dict):
+            return cls.model_validate(obj)
 
-    def to_str(self) -> str:
-        """Returns the string representation of the actual instance"""
-        return pprint.pformat(self.model_dump())
+        _obj = cls.model_validate({
+            "nfId": obj.get("nfId"),
+            "nfSetId": obj.get("nfSetId"),
+            "taiList": [Tai.from_dict(_item) for _item in obj.get("taiList")] if obj.get("taiList") is not None else None
+        })
+        return _obj
 
 

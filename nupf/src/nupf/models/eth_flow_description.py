@@ -21,9 +21,8 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nupf.models.flow_direction import FlowDirection
 try:
     from typing import Self
 except ImportError:
@@ -36,7 +35,7 @@ class EthFlowDescription(BaseModel):
     dest_mac_addr: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a MAC address formatted in the hexadecimal notation according to clause 1.1 and clause 2.1 of RFC 7042. ", alias="destMacAddr")
     eth_type: StrictStr = Field(alias="ethType")
     f_desc: Optional[StrictStr] = Field(default=None, description="Defines a packet filter of an IP flow.", alias="fDesc")
-    f_dir: Optional[FlowDirection] = Field(default=None, alias="fDir")
+    f_dir: Optional[StrictStr] = Field(default=None, description="Indicates the direction of the service data flow.   Possible values are: - DOWNLINK: The corresponding filter applies for traffic to the UE. - UPLINK: The corresponding filter applies for traffic from the UE. - BIDIRECTIONAL: The corresponding filter applies for traffic both to and from the UE. - UNSPECIFIED: The corresponding filter applies for traffic to the UE (downlink), but has no specific direction declared. The service data flow detection shall apply the filter for uplink traffic as if the filter was bidirectional. The PCF shall not use the value UNSPECIFIED in filters created by the network in NW-initiated procedures. The PCF shall only include the value UNSPECIFIED in filters in UE-initiated procedures if the same value is received from the SMF. ", alias="fDir")
     source_mac_addr: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a MAC address formatted in the hexadecimal notation according to clause 1.1 and clause 2.1 of RFC 7042. ", alias="sourceMacAddr")
     vlan_tags: Optional[Annotated[List[StrictStr], Field(min_length=1, max_length=2)]] = Field(default=None, alias="vlanTags")
     src_mac_addr_end: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a MAC address formatted in the hexadecimal notation according to clause 1.1 and clause 2.1 of RFC 7042. ", alias="srcMacAddrEnd")
@@ -120,9 +119,6 @@ class EthFlowDescription(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of f_dir
-        if self.f_dir:
-            _dict['fDir'] = self.f_dir.to_dict()
         return _dict
 
     @classmethod
@@ -138,7 +134,7 @@ class EthFlowDescription(BaseModel):
             "destMacAddr": obj.get("destMacAddr"),
             "ethType": obj.get("ethType"),
             "fDesc": obj.get("fDesc"),
-            "fDir": FlowDirection.from_dict(obj.get("fDir")) if obj.get("fDir") is not None else None,
+            "fDir": obj.get("fDir"),
             "sourceMacAddr": obj.get("sourceMacAddr"),
             "vlanTags": obj.get("vlanTags"),
             "srcMacAddrEnd": obj.get("srcMacAddrEnd"),

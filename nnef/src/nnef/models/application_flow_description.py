@@ -24,10 +24,8 @@ from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nnef.models.ip_packet_filter_set import IpPacketFilterSet
-from nnef.models.media_type import MediaType
 from nnef.models.mpx_media_info import MpxMediaInfo
 from nnef.models.protocol_description import ProtocolDescription
-from nnef.models.sdf_method import SdfMethod
 try:
     from typing import Self
 except ImportError:
@@ -37,10 +35,10 @@ class ApplicationFlowDescription(BaseModel):
     """
     ApplicationFlowDescription
     """ # noqa: E501
-    filter_method: SdfMethod = Field(alias="filterMethod")
+    filter_method: StrictStr = Field(alias="filterMethod")
     packet_filter: Optional[IpPacketFilterSet] = Field(default=None, alias="packetFilter")
     domain_name: Optional[StrictStr] = Field(default=None, alias="domainName")
-    media_type: Optional[MediaType] = Field(default=None, alias="mediaType")
+    media_type: Optional[StrictStr] = Field(default=None, description="Indicates the media type of a media component.", alias="mediaType")
     media_transport_parameters: Optional[ProtocolDescription] = Field(default=None, alias="mediaTransportParameters")
     uplink_multiplexed_media_infos: Optional[Annotated[List[Optional[MpxMediaInfo]], Field(min_length=1)]] = Field(default=None, description="Multiplexed media identification information for the uplink IP flow.", alias="uplinkMultiplexedMediaInfos")
     downlink_multiplexed_media_infos: Optional[Annotated[List[Optional[MpxMediaInfo]], Field(min_length=1)]] = Field(default=None, description="Multiplexed media identification information for the downlink IP flow.", alias="downlinkMultiplexedMediaInfos")
@@ -83,15 +81,9 @@ class ApplicationFlowDescription(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of filter_method
-        if self.filter_method:
-            _dict['filterMethod'] = self.filter_method.to_dict()
         # override the default output from pydantic by calling `to_dict()` of packet_filter
         if self.packet_filter:
             _dict['packetFilter'] = self.packet_filter.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of media_type
-        if self.media_type:
-            _dict['mediaType'] = self.media_type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of media_transport_parameters
         if self.media_transport_parameters:
             _dict['mediaTransportParameters'] = self.media_transport_parameters.to_dict()
@@ -121,10 +113,10 @@ class ApplicationFlowDescription(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "filterMethod": SdfMethod.from_dict(obj.get("filterMethod")) if obj.get("filterMethod") is not None else None,
+            "filterMethod": obj.get("filterMethod"),
             "packetFilter": IpPacketFilterSet.from_dict(obj.get("packetFilter")) if obj.get("packetFilter") is not None else None,
             "domainName": obj.get("domainName"),
-            "mediaType": MediaType.from_dict(obj.get("mediaType")) if obj.get("mediaType") is not None else None,
+            "mediaType": obj.get("mediaType"),
             "mediaTransportParameters": ProtocolDescription.from_dict(obj.get("mediaTransportParameters")) if obj.get("mediaTransportParameters") is not None else None,
             "uplinkMultiplexedMediaInfos": [MpxMediaInfo.from_dict(_item) for _item in obj.get("uplinkMultiplexedMediaInfos")] if obj.get("uplinkMultiplexedMediaInfos") is not None else None,
             "downlinkMultiplexedMediaInfos": [MpxMediaInfo.from_dict(_item) for _item in obj.get("downlinkMultiplexedMediaInfos")] if obj.get("downlinkMultiplexedMediaInfos") is not None else None

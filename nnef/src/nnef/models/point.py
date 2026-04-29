@@ -20,11 +20,10 @@ import json
 
 
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List
 from nnef.models.gad_shape import GADShape
 from nnef.models.geographical_coordinates import GeographicalCoordinates
-from nnef.models.supported_gad_shapes import SupportedGADShapes
 try:
     from typing import Self
 except ImportError:
@@ -34,7 +33,7 @@ class Point(GADShape):
     """
     Ellipsoid Point.
     """ # noqa: E501
-    shape: SupportedGADShapes
+    shape: StrictStr = Field(description="Indicates supported GAD shapes.")
     point: GeographicalCoordinates
     __properties: ClassVar[List[str]] = ["shape", "point"]
 
@@ -75,9 +74,6 @@ class Point(GADShape):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of shape
-        if self.shape:
-            _dict['shape'] = self.shape.to_dict()
         # override the default output from pydantic by calling `to_dict()` of point
         if self.point:
             _dict['point'] = self.point.to_dict()
@@ -93,7 +89,7 @@ class Point(GADShape):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "shape": SupportedGADShapes.from_dict(obj.get("shape")) if obj.get("shape") is not None else None,
+            "shape": obj.get("shape"),
             "point": GeographicalCoordinates.from_dict(obj.get("point")) if obj.get("point") is not None else None
         })
         return _obj

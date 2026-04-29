@@ -16,11 +16,10 @@ from fastapi.security import (  # noqa: F401
 )
 from fastapi.security.api_key import APIKeyCookie, APIKeyHeader, APIKeyQuery  # noqa: F401
 
+oauth2_ = OAuth2PasswordBearer(tokenUrl="/oauth2/token", auto_error=False)
+
 from nncof_cb.models.extra_models import TokenModel
 
-# OpenAPI Generator bug workaround: oauth2_ is referenced in Depends(...)
-# but not declared in generated callback security modules.
-oauth2_ = OAuth2PasswordBearer(tokenUrl="/oauth2/token", auto_error=False)
 
 
 def get_token_oAuth2ClientCredentials(

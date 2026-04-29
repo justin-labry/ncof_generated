@@ -20,10 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nsmf.models.smf_event import SmfEvent
 try:
     from typing import Self
 except ImportError:
@@ -35,7 +34,7 @@ class StateTransitionInfo(BaseModel):
     """ # noqa: E501
     supi: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a Supi that shall contain either an IMSI, a network specific identifier, a Global Cable Identifier (GCI) or a Global Line Identifier (GLI) as specified in clause  2.2A of 3GPP TS 23.003. It shall be formatted as follows  - for an IMSI \"imsi-<imsi>\", where <imsi> shall be formatted according to clause 2.2    of 3GPP TS 23.003 that describes an IMSI.  - for a network specific identifier \"nai-<nai>, where <nai> shall be formatted    according to clause 28.7.2 of 3GPP TS 23.003 that describes an NAI.  - for a GCI \"gci-<gci>\", where <gci> shall be formatted according to clause 28.15.2    of 3GPP TS 23.003.  - for a GLI \"gli-<gli>\", where <gli> shall be formatted according to clause 28.16.2 of    3GPP TS 23.003.To enable that the value is used as part of an URI, the string shall    only contain characters allowed according to the \"lower-with-hyphen\" naming convention    defined in 3GPP TS 29.501. ")
     group_id: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a group of devices network internal globally unique ID which identifies a set of IMSIs, as specified in clause 19.9 of 3GPP TS 23.003.  ", alias="groupId")
-    trans_type: SmfEvent = Field(alias="transType")
+    trans_type: StrictStr = Field(description="Represents the types of events that can be subscribed.   Possible values are: - AC_TY_CH: Access Type Change. - UP_PATH_CH: UP Path Change. - PDU_SES_REL: PDU Session Release. - PLMN_CH: PLMN Change. - UE_IP_CH: UE IP address change. - RAT_TY_CH: RAT Type Change. - DDDS: Downlink data delivery status. - COMM_FAIL: Communication Failure. - PDU_SES_EST: PDU Session Establishment. - QFI_ALLOC: QFI allocation. - QOS_MON: QoS Monitoring. - SMCC_EXP: SM congestion control experience for PDU Session. - DISPERSION: Session Management transaction dispersion. - RED_TRANS_EXP: Redundant transmission experience for PDU Session. - WLAN_INFO: WLAN information on PDU session for which Access Type is NON_3GPP_ACCESS and   RAT Type is TRUSTED_WLAN. - UPF_INFO: The UPF information, including the UPF ID/address/FQDN information. - UP_STATUS_INFO: The User Plane status information. - UPF_EVENT: UPF event subscribed via SMF. - SATB_CH: Satellite backhaul category change. - TRAFFIC_CORRELATION: Indicates that the SMF provides 5GC determined traffic correlation   information for a set of UEs identified by Traffic Correlation ID. - TRAFF_ROUTE_REQ_OUTCOME: Indicates the report of the installation outcome of the requested   traffic routing requirements. - SIM_CONN_FAIL: Indicates that the simultaneous connectivity over the source and the target   PDU Session Anchor failed to be established during a PDU Session Anchor change. - QFI_DEALLOCATION: QFI deallocation. - QOS_FLOW_CHANGE: QoS flow change. - ENERGY_USAGE_DATA: Indicates that the SMF event is the user-plane energy consumption   information. - SIGNALLING_INFO: Indicates the report of Service Signalling characteristics. ", alias="transType")
     num_of_tran: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="numOfTran")
     pct_ues: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="pctUes")
     __properties: ClassVar[List[str]] = ["supi", "groupId", "transType", "numOfTran", "pctUes"]
@@ -97,9 +96,6 @@ class StateTransitionInfo(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of trans_type
-        if self.trans_type:
-            _dict['transType'] = self.trans_type.to_dict()
         return _dict
 
     @classmethod
@@ -114,7 +110,7 @@ class StateTransitionInfo(BaseModel):
         _obj = cls.model_validate({
             "supi": obj.get("supi"),
             "groupId": obj.get("groupId"),
-            "transType": SmfEvent.from_dict(obj.get("transType")) if obj.get("transType") is not None else None,
+            "transType": obj.get("transType"),
             "numOfTran": obj.get("numOfTran"),
             "pctUes": obj.get("pctUes")
         })

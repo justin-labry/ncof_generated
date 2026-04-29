@@ -20,10 +20,8 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List
-from nncof.models.ncof_event import NcofEvent
-from nncof.models.ncof_failure_code import NcofFailureCode
 try:
     from typing import Self
 except ImportError:
@@ -33,8 +31,8 @@ class FailureEventInfo(BaseModel):
     """
     Contains information on the event for which the subscription is not successful.
     """ # noqa: E501
-    event: NcofEvent
-    failure_code: NcofFailureCode = Field(alias="failureCode")
+    event: StrictStr = Field(description="Describes the NCOF Events.   Possible values are: - SLICE_LOAD_LEVEL: Indicates that the event subscribed is load level information of Network   Slice. - NETWORK_PERFORMANCE: Indicates that the event subscribed is network performance   information. - NF_LOAD: Indicates that the event subscribed is load level and status of one or several   Network Functions. - SERVICE_EXPERIENCE: Indicates that the event subscribed is service experience. - UE_MOBILITY: Indicates that the event subscribed is UE mobility information. - UE_COMMUNICATION: Indicates that the event subscribed is UE communication information. - QOS_SUSTAINABILITY: Indicates that the event subscribed is QoS sustainability. - ABNORMAL_BEHAVIOUR: Indicates that the event subscribed is abnormal behaviour. - USER_DATA_CONGESTION: Indicates that the event subscribed is user data congestion   information. - NSI_LOAD_LEVEL: Indicates that the event subscribed is load level information of Network   Slice and the optionally associated Network Slice Instance. - DN_PERFORMANCE: Indicates that the event subscribed is DN performance information. - DISPERSION: Indicates that the event subscribed is dispersion information. - RED_TRANS_EXP: Indicates that the event subscribed is redundant transmission experience. - WLAN_PERFORMANCE: Indicates that the event subscribed is WLAN performance. - SM_CONGESTION: Indicates the Session Management Congestion Control Experience information   for specific DNN and/or S-NSSAI. - PFD_DETERMINATION: Indicates that the event subscribed is the PFD Determination nformation   for known application identifier(s). - PDU_SESSION_TRAFFIC: Indicates that the event subscribed is the PDU Session traffic   information. - E2E_DATA_VOL_TRANS_TIME: Indicates that the event subscribed is of E2E data volume    transfer time. - MOVEMENT_BEHAVIOUR: Indicates that the event subscribed is the Movement Behaviour   information. - LOC_ACCURACY: Indicates that the event subscribed is of location accuracy. - RELATIVE_PROXIMITY: Indicates that the event subscribed is the Relative Proximity   information. - SIGNALLING_STORM: Indicates that the event subscribed is the Signalling Storm information. - QOS_POLICY_ASSIST: Indicates that the event subscribed is the QoS and Policy   Assistance information. ")
+    failure_code: StrictStr = Field(description="Represents the failure reason.   Possible values are: - UNAVAILABLE_DATA: Indicates the requested statistics information for the event is rejected   since necessary data to perform the service is unavailable. - BOTH_STAT_PRED_NOT_ALLOWED: Indicates the requested analysis information for the event is   rejected since the start time is in the past and the end time is in the future, which   means the NF service consumer requested both statistics and prediction for the analytics. - PREDICTION_NOT_ALLOWED: Indicates that the request for the prediction of the analytics   event is not allowed. - UNSATISFIED_REQUESTED_ANALYTICS_TIME: Indicates that the requested event is rejected since   the analytics information is not ready when the time indicated by the \"timeAnaNeeded\"   attribute (as provided during the creation or modification of subscription) is reached. - NO_ROAMING_SUPPORT: Indicates that the request shall be rejected because roaming analytics   or data are required and the NCOF neither supports roaming exchange capabilitiy nor can   it forward the request to another NCOF. - OTHER: Indicates the requested analysis information for the event is rejected due to other   reasons. ", alias="failureCode")
     __properties: ClassVar[List[str]] = ["event", "failureCode"]
 
     model_config = {
@@ -74,12 +72,6 @@ class FailureEventInfo(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of event
-        if self.event:
-            _dict['event'] = self.event.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of failure_code
-        if self.failure_code:
-            _dict['failureCode'] = self.failure_code.to_dict()
         return _dict
 
     @classmethod
@@ -92,8 +84,8 @@ class FailureEventInfo(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "event": NcofEvent.from_dict(obj.get("event")) if obj.get("event") is not None else None,
-            "failureCode": NcofFailureCode.from_dict(obj.get("failureCode")) if obj.get("failureCode") is not None else None
+            "event": obj.get("event"),
+            "failureCode": obj.get("failureCode")
         })
         return _obj
 

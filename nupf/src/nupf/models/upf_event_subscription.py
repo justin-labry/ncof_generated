@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nupf.models.ip_addr import IpAddr
 from nupf.models.snssai import Snssai
@@ -114,11 +114,6 @@ class UpfEventSubscription(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of snssai
         if self.snssai:
             _dict['snssai'] = self.snssai.to_dict()
-        # set to None if ue_ip_address (nullable) is None
-        # and model_fields_set contains the field
-        if self.ue_ip_address is None and "ue_ip_address" in self.model_fields_set:
-            _dict['ueIpAddress'] = None
-
         return _dict
 
     @classmethod

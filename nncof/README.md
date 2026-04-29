@@ -37,5 +37,3 @@ To run the tests:
 pip3 install pytest
 PYTHONPATH=src pytest tests
 ```
-
-cd /home/labry/git/ncof_generated/nupf && source .venv/bin/activate && python test_server.py

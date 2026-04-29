@@ -21,10 +21,9 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nsmf.models.snssai import Snssai
-from nsmf.models.transaction_metric import TransactionMetric
 try:
     from typing import Self
 except ImportError:
@@ -37,7 +36,7 @@ class TransactionInfo(BaseModel):
     transaction: Annotated[int, Field(strict=True, ge=0)] = Field(description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.")
     snssai: Optional[Snssai] = None
     app_ids: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="appIds")
-    transac_metrics: Optional[Annotated[List[TransactionMetric], Field(min_length=1)]] = Field(default=None, alias="transacMetrics")
+    transac_metrics: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="transacMetrics")
     __properties: ClassVar[List[str]] = ["transaction", "snssai", "appIds", "transacMetrics"]
 
     model_config = {
@@ -80,13 +79,6 @@ class TransactionInfo(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of snssai
         if self.snssai:
             _dict['snssai'] = self.snssai.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in transac_metrics (list)
-        _items = []
-        if self.transac_metrics:
-            for _item in self.transac_metrics:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['transacMetrics'] = _items
         return _dict
 
     @classmethod
@@ -102,7 +94,7 @@ class TransactionInfo(BaseModel):
             "transaction": obj.get("transaction"),
             "snssai": Snssai.from_dict(obj.get("snssai")) if obj.get("snssai") is not None else None,
             "appIds": obj.get("appIds"),
-            "transacMetrics": [TransactionMetric.from_dict(_item) for _item in obj.get("transacMetrics")] if obj.get("transacMetrics") is not None else None
+            "transacMetrics": obj.get("transacMetrics")
         })
         return _obj
 

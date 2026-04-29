@@ -22,7 +22,7 @@ import json
 
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.global_ran_node_id import GlobalRanNodeId
 from nncof.models.ncgi import Ncgi
@@ -117,11 +117,6 @@ class NrLocation(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of ntn_tai_info
         if self.ntn_tai_info:
             _dict['ntnTaiInfo'] = self.ntn_tai_info.to_dict()
-        # set to None if global_gnb_id (nullable) is None
-        # and model_fields_set contains the field
-        if self.global_gnb_id is None and "global_gnb_id" in self.model_fields_set:
-            _dict['globalGnbId'] = None
-
         return _dict
 
     @classmethod

@@ -22,16 +22,12 @@ import json
 
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nupf.models.event_type import EventType
 from nupf.models.handling_of_payload_header import HandlingOfPayloadHeader
 from nupf.models.ipv6_prefix import Ipv6Prefix
 from nupf.models.qos_monitoring_measurement import QosMonitoringMeasurement
-from nupf.models.rat_type import RatType
-from nupf.models.skip_reporting_condition import SkipReportingCondition
 from nupf.models.snssai import Snssai
-from nupf.models.termination_cause import TerminationCause
 from nupf.models.tsc_management_info import TscManagementInfo
 from nupf.models.ue_nat_mapping_info import UeNatMappingInfo
 from nupf.models.user_data_usage_measurements import UserDataUsageMeasurements
@@ -44,7 +40,7 @@ class NotificationItem(BaseModel):
     """
     represents a report on one subscribed event
     """ # noqa: E501
-    event_type: EventType = Field(alias="eventType")
+    event_type: StrictStr = Field(description="Event Type", alias="eventType")
     ue_ipv4_addr: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a IPv4 address formatted in the 'dotted decimal' notation as defined in RFC 1166. ", alias="ueIpv4Addr")
     ue_ipv6_prefix: Optional[Ipv6Prefix] = Field(default=None, alias="ueIpv6Prefix")
     ue_mac_addr: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a MAC address formatted in the hexadecimal notation according to clause 1.1 and clause 2.1 of RFC 7042. ", alias="ueMacAddr")
@@ -54,14 +50,14 @@ class NotificationItem(BaseModel):
     supi: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String identifying a Supi that shall contain either an IMSI, a network specific identifier, a Global Cable Identifier (GCI) or a Global Line Identifier (GLI) as specified in clause  2.2A of 3GPP TS 23.003. It shall be formatted as follows  - for an IMSI \"imsi-<imsi>\", where <imsi> shall be formatted according to clause 2.2    of 3GPP TS 23.003 that describes an IMSI.  - for a network specific identifier \"nai-<nai>, where <nai> shall be formatted    according to clause 28.7.2 of 3GPP TS 23.003 that describes an NAI.  - for a GCI \"gci-<gci>\", where <gci> shall be formatted according to clause 28.15.2    of 3GPP TS 23.003.  - for a GLI \"gli-<gli>\", where <gli> shall be formatted according to clause 28.16.2 of    3GPP TS 23.003.To enable that the value is used as part of an URI, the string shall    only contain characters allowed according to the \"lower-with-hyphen\" naming convention    defined in 3GPP TS 29.501. ")
     time_stamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="timeStamp")
     start_time: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="startTime")
-    rat_type: Optional[RatType] = Field(default=None, alias="ratType")
+    rat_type: Optional[StrictStr] = Field(default=None, description="Indicates the radio access used.", alias="ratType")
     qos_monitoring_measurement: Optional[QosMonitoringMeasurement] = Field(default=None, alias="qosMonitoringMeasurement")
     tsc_mngt_info: Optional[TscManagementInfo] = Field(default=None, alias="tscMngtInfo")
     user_data_usage_measurements: Optional[Annotated[List[UserDataUsageMeasurements], Field(min_length=1)]] = Field(default=None, alias="userDataUsageMeasurements")
     ue_nat_mapping_info: Optional[UeNatMappingInfo] = Field(default=None, alias="ueNatMappingInfo")
     handling_of_payload_headers_info: Optional[Annotated[List[HandlingOfPayloadHeader], Field(min_length=1)]] = Field(default=None, alias="handlingOfPayloadHeadersInfo")
-    termination_cause: Optional[TerminationCause] = Field(default=None, alias="terminationCause")
-    skipped_report_info: Optional[Annotated[List[SkipReportingCondition], Field(min_length=1)]] = Field(default=None, alias="skippedReportInfo")
+    termination_cause: Optional[StrictStr] = Field(default=None, description="the reason to terminate the subscription", alias="terminationCause")
+    skipped_report_info: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="skippedReportInfo")
     __properties: ClassVar[List[str]] = ["eventType", "ueIpv4Addr", "ueIpv6Prefix", "ueMacAddr", "dnn", "snssai", "gpsi", "supi", "timeStamp", "startTime", "ratType", "qosMonitoringMeasurement", "tscMngtInfo", "userDataUsageMeasurements", "ueNatMappingInfo", "handlingOfPayloadHeadersInfo", "terminationCause", "skippedReportInfo"]
 
     @field_validator('ue_ipv4_addr')
@@ -141,18 +137,12 @@ class NotificationItem(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of event_type
-        if self.event_type:
-            _dict['eventType'] = self.event_type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of ue_ipv6_prefix
         if self.ue_ipv6_prefix:
             _dict['ueIpv6Prefix'] = self.ue_ipv6_prefix.to_dict()
         # override the default output from pydantic by calling `to_dict()` of snssai
         if self.snssai:
             _dict['snssai'] = self.snssai.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of rat_type
-        if self.rat_type:
-            _dict['ratType'] = self.rat_type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of qos_monitoring_measurement
         if self.qos_monitoring_measurement:
             _dict['qosMonitoringMeasurement'] = self.qos_monitoring_measurement.to_dict()
@@ -176,16 +166,6 @@ class NotificationItem(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['handlingOfPayloadHeadersInfo'] = _items
-        # override the default output from pydantic by calling `to_dict()` of termination_cause
-        if self.termination_cause:
-            _dict['terminationCause'] = self.termination_cause.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in skipped_report_info (list)
-        _items = []
-        if self.skipped_report_info:
-            for _item in self.skipped_report_info:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['skippedReportInfo'] = _items
         return _dict
 
     @classmethod
@@ -198,7 +178,7 @@ class NotificationItem(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "eventType": EventType.from_dict(obj.get("eventType")) if obj.get("eventType") is not None else None,
+            "eventType": obj.get("eventType"),
             "ueIpv4Addr": obj.get("ueIpv4Addr"),
             "ueIpv6Prefix": Ipv6Prefix.from_dict(obj.get("ueIpv6Prefix")) if obj.get("ueIpv6Prefix") is not None else None,
             "ueMacAddr": obj.get("ueMacAddr"),
@@ -208,14 +188,14 @@ class NotificationItem(BaseModel):
             "supi": obj.get("supi"),
             "timeStamp": obj.get("timeStamp"),
             "startTime": obj.get("startTime"),
-            "ratType": RatType.from_dict(obj.get("ratType")) if obj.get("ratType") is not None else None,
+            "ratType": obj.get("ratType"),
             "qosMonitoringMeasurement": QosMonitoringMeasurement.from_dict(obj.get("qosMonitoringMeasurement")) if obj.get("qosMonitoringMeasurement") is not None else None,
             "tscMngtInfo": TscManagementInfo.from_dict(obj.get("tscMngtInfo")) if obj.get("tscMngtInfo") is not None else None,
             "userDataUsageMeasurements": [UserDataUsageMeasurements.from_dict(_item) for _item in obj.get("userDataUsageMeasurements")] if obj.get("userDataUsageMeasurements") is not None else None,
             "ueNatMappingInfo": UeNatMappingInfo.from_dict(obj.get("ueNatMappingInfo")) if obj.get("ueNatMappingInfo") is not None else None,
             "handlingOfPayloadHeadersInfo": [HandlingOfPayloadHeader.from_dict(_item) for _item in obj.get("handlingOfPayloadHeadersInfo")] if obj.get("handlingOfPayloadHeadersInfo") is not None else None,
-            "terminationCause": TerminationCause.from_dict(obj.get("terminationCause")) if obj.get("terminationCause") is not None else None,
-            "skippedReportInfo": [SkipReportingCondition.from_dict(_item) for _item in obj.get("skippedReportInfo")] if obj.get("skippedReportInfo") is not None else None
+            "terminationCause": obj.get("terminationCause"),
+            "skippedReportInfo": obj.get("skippedReportInfo")
         })
         return _obj
 

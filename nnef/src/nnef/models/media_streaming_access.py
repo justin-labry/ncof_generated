@@ -20,9 +20,8 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional, Union
-from nnef.models.cache_status import CacheStatus
 from nnef.models.endpoint_address import EndpointAddress
 from nnef.models.media_streaming_access_connection_metrics import MediaStreamingAccessConnectionMetrics
 from nnef.models.media_streaming_access_request_message import MediaStreamingAccessRequestMessage
@@ -39,7 +38,7 @@ class MediaStreamingAccess(BaseModel):
     media_stream_handler_endpoint_address: EndpointAddress = Field(alias="mediaStreamHandlerEndpointAddress")
     application_server_endpoint_address: EndpointAddress = Field(alias="applicationServerEndpointAddress")
     request_message: MediaStreamingAccessRequestMessage = Field(alias="requestMessage")
-    cache_status: Optional[CacheStatus] = Field(default=None, alias="cacheStatus")
+    cache_status: Optional[StrictStr] = Field(default=None, alias="cacheStatus")
     response_message: MediaStreamingAccessResponseMessage = Field(alias="responseMessage")
     processing_latency: Union[StrictFloat, StrictInt] = Field(description="string with format 'float' as defined in OpenAPI.", alias="processingLatency")
     connection_metrics: Optional[MediaStreamingAccessConnectionMetrics] = Field(default=None, alias="connectionMetrics")
@@ -91,9 +90,6 @@ class MediaStreamingAccess(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of request_message
         if self.request_message:
             _dict['requestMessage'] = self.request_message.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of cache_status
-        if self.cache_status:
-            _dict['cacheStatus'] = self.cache_status.to_dict()
         # override the default output from pydantic by calling `to_dict()` of response_message
         if self.response_message:
             _dict['responseMessage'] = self.response_message.to_dict()
@@ -115,7 +111,7 @@ class MediaStreamingAccess(BaseModel):
             "mediaStreamHandlerEndpointAddress": EndpointAddress.from_dict(obj.get("mediaStreamHandlerEndpointAddress")) if obj.get("mediaStreamHandlerEndpointAddress") is not None else None,
             "applicationServerEndpointAddress": EndpointAddress.from_dict(obj.get("applicationServerEndpointAddress")) if obj.get("applicationServerEndpointAddress") is not None else None,
             "requestMessage": MediaStreamingAccessRequestMessage.from_dict(obj.get("requestMessage")) if obj.get("requestMessage") is not None else None,
-            "cacheStatus": CacheStatus.from_dict(obj.get("cacheStatus")) if obj.get("cacheStatus") is not None else None,
+            "cacheStatus": obj.get("cacheStatus"),
             "responseMessage": MediaStreamingAccessResponseMessage.from_dict(obj.get("responseMessage")) if obj.get("responseMessage") is not None else None,
             "processingLatency": obj.get("processingLatency"),
             "connectionMetrics": MediaStreamingAccessConnectionMetrics.from_dict(obj.get("connectionMetrics")) if obj.get("connectionMetrics") is not None else None

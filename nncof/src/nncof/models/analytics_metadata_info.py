@@ -23,9 +23,6 @@ import json
 from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing_extensions import Annotated
-from nncof.models.accuracy import Accuracy
-from nncof.models.dataset_statistical_property import DatasetStatisticalProperty
-from nncof.models.output_strategy import OutputStrategy
 from nncof.models.time_window import TimeWindow
 try:
     from typing import Self
@@ -38,9 +35,9 @@ class AnalyticsMetadataInfo(BaseModel):
     """ # noqa: E501
     num_samples: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="numSamples")
     data_window: Optional[TimeWindow] = Field(default=None, alias="dataWindow")
-    data_stat_props: Optional[Annotated[List[DatasetStatisticalProperty], Field(min_length=1)]] = Field(default=None, alias="dataStatProps")
-    strategy: Optional[OutputStrategy] = None
-    accuracy: Optional[Accuracy] = None
+    data_stat_props: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="dataStatProps")
+    strategy: Optional[StrictStr] = Field(default=None, description="Represents the output strategy used for the analytics reporting.   Possible values are: - BINARY: Indicates that the analytics shall only be reported when the requested level   of accuracy is reached within a cycle of periodic notification. - GRADIENT: Indicates that the analytics shall be reported according with the periodicity   irrespective of whether the requested level of accuracy has been reached or not. ")
+    accuracy: Optional[StrictStr] = Field(default=None, description="Represents the preferred level of accuracy of the analytics.   Possible values are: - LOW: Low accuracy. - MEDIUM: Medium accuracy. - HIGH: High accuracy. - HIGHEST: Highest accuracy. ")
     opt_score: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="string with format 'float' as defined in OpenAPI.", alias="_optScore")
     nf_ids: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="nfIds")
     nf_set_ids: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="nfSetIds")
@@ -86,19 +83,6 @@ class AnalyticsMetadataInfo(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of data_window
         if self.data_window:
             _dict['dataWindow'] = self.data_window.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in data_stat_props (list)
-        _items = []
-        if self.data_stat_props:
-            for _item in self.data_stat_props:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['dataStatProps'] = _items
-        # override the default output from pydantic by calling `to_dict()` of strategy
-        if self.strategy:
-            _dict['strategy'] = self.strategy.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of accuracy
-        if self.accuracy:
-            _dict['accuracy'] = self.accuracy.to_dict()
         return _dict
 
     @classmethod
@@ -113,9 +97,9 @@ class AnalyticsMetadataInfo(BaseModel):
         _obj = cls.model_validate({
             "numSamples": obj.get("numSamples"),
             "dataWindow": TimeWindow.from_dict(obj.get("dataWindow")) if obj.get("dataWindow") is not None else None,
-            "dataStatProps": [DatasetStatisticalProperty.from_dict(_item) for _item in obj.get("dataStatProps")] if obj.get("dataStatProps") is not None else None,
-            "strategy": OutputStrategy.from_dict(obj.get("strategy")) if obj.get("strategy") is not None else None,
-            "accuracy": Accuracy.from_dict(obj.get("accuracy")) if obj.get("accuracy") is not None else None,
+            "dataStatProps": obj.get("dataStatProps"),
+            "strategy": obj.get("strategy"),
+            "accuracy": obj.get("accuracy"),
             "_optScore": obj.get("_optScore"),
             "nfIds": obj.get("nfIds"),
             "nfSetIds": obj.get("nfSetIds")

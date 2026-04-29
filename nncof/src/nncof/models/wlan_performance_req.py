@@ -21,10 +21,8 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nncof.models.matching_direction import MatchingDirection
-from nncof.models.wlan_ordering_criterion import WlanOrderingCriterion
 try:
     from typing import Self
 except ImportError:
@@ -36,8 +34,8 @@ class WlanPerformanceReq(BaseModel):
     """ # noqa: E501
     ss_ids: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="ssIds")
     bss_ids: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="bssIds")
-    wlan_order_criter: Optional[WlanOrderingCriterion] = Field(default=None, alias="wlanOrderCriter")
-    order: Optional[MatchingDirection] = None
+    wlan_order_criter: Optional[StrictStr] = Field(default=None, description="Represents the order criterion for the list of WLAN performance information.   Possible values are: - TIME_SLOT_START: Indicates the order of time slot start. - NUMBER_OF_UES: Indicates the order of number of UEs. - RSSI: Indicates the order of RSSI. - RTT: Indicates the order of RTT. - TRAFFIC_INFO: Indicates the order of Traffic information. ", alias="wlanOrderCriter")
+    order: Optional[StrictStr] = Field(default=None, description="Represents the matching direction when crossing a threshold.   Possible values are: - ASCENDING: Threshold is crossed in ascending direction. - DESCENDING: Threshold is crossed in descending direction. - CROSSED: Threshold is crossed either in ascending or descending direction. ")
     __properties: ClassVar[List[str]] = ["ssIds", "bssIds", "wlanOrderCriter", "order"]
 
     model_config = {
@@ -77,12 +75,6 @@ class WlanPerformanceReq(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of wlan_order_criter
-        if self.wlan_order_criter:
-            _dict['wlanOrderCriter'] = self.wlan_order_criter.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of order
-        if self.order:
-            _dict['order'] = self.order.to_dict()
         return _dict
 
     @classmethod
@@ -97,8 +89,8 @@ class WlanPerformanceReq(BaseModel):
         _obj = cls.model_validate({
             "ssIds": obj.get("ssIds"),
             "bssIds": obj.get("bssIds"),
-            "wlanOrderCriter": WlanOrderingCriterion.from_dict(obj.get("wlanOrderCriter")) if obj.get("wlanOrderCriter") is not None else None,
-            "order": MatchingDirection.from_dict(obj.get("order")) if obj.get("order") is not None else None
+            "wlanOrderCriter": obj.get("wlanOrderCriter"),
+            "order": obj.get("order")
         })
         return _obj
 

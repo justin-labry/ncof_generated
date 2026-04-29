@@ -20,11 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nncof.models.matching_direction import MatchingDirection
-from nncof.models.rat_type import RatType
 from nncof.models.threshold_level import ThresholdLevel
 try:
     from typing import Self
@@ -38,9 +36,9 @@ class RatFreqInformation(BaseModel):
     all_freq: Optional[StrictBool] = Field(default=None, description="Set to \"true\" to indicate to handle all the frequencies the NCOF received, otherwise set to \"false\" or omit. The \"allFreq\" attribute and the \"freq\" attribute are mutually exclusive. ", alias="allFreq")
     all_rat: Optional[StrictBool] = Field(default=None, description="Set to \"true\" to indicate to handle all the RAT Types the NCOF received, otherwise set to \"false\" or omit. The \"allRat\" attribute and the \"ratType\" attribute are mutually exclusive. ", alias="allRat")
     freq: Optional[Annotated[int, Field(le=3279165, strict=True, ge=0)]] = Field(default=None, description="Integer value indicating the ARFCN applicable for a downlink, uplink or bi-directional (TDD) NR global frequency raster, as definition of \"ARFCN-ValueNR\" IE in clause 6.3.2 of 3GPP TS 38.331. ")
-    rat_type: Optional[RatType] = Field(default=None, alias="ratType")
+    rat_type: Optional[StrictStr] = Field(default=None, description="Indicates the radio access used.", alias="ratType")
     svc_exp_threshold: Optional[ThresholdLevel] = Field(default=None, alias="svcExpThreshold")
-    matching_dir: Optional[MatchingDirection] = Field(default=None, alias="matchingDir")
+    matching_dir: Optional[StrictStr] = Field(default=None, description="Represents the matching direction when crossing a threshold.   Possible values are: - ASCENDING: Threshold is crossed in ascending direction. - DESCENDING: Threshold is crossed in descending direction. - CROSSED: Threshold is crossed either in ascending or descending direction. ", alias="matchingDir")
     __properties: ClassVar[List[str]] = ["allFreq", "allRat", "freq", "ratType", "svcExpThreshold", "matchingDir"]
 
     model_config = {
@@ -80,15 +78,9 @@ class RatFreqInformation(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of rat_type
-        if self.rat_type:
-            _dict['ratType'] = self.rat_type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of svc_exp_threshold
         if self.svc_exp_threshold:
             _dict['svcExpThreshold'] = self.svc_exp_threshold.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of matching_dir
-        if self.matching_dir:
-            _dict['matchingDir'] = self.matching_dir.to_dict()
         return _dict
 
     @classmethod
@@ -104,9 +96,9 @@ class RatFreqInformation(BaseModel):
             "allFreq": obj.get("allFreq"),
             "allRat": obj.get("allRat"),
             "freq": obj.get("freq"),
-            "ratType": RatType.from_dict(obj.get("ratType")) if obj.get("ratType") is not None else None,
+            "ratType": obj.get("ratType"),
             "svcExpThreshold": ThresholdLevel.from_dict(obj.get("svcExpThreshold")) if obj.get("svcExpThreshold") is not None else None,
-            "matchingDir": MatchingDirection.from_dict(obj.get("matchingDir")) if obj.get("matchingDir") is not None else None
+            "matchingDir": obj.get("matchingDir")
         })
         return _obj
 

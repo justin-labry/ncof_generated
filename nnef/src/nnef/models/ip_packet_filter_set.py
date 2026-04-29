@@ -87,16 +87,6 @@ class IpPacketFilterSet(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of destination_address
         if self.destination_address:
             _dict['destinationAddress'] = self.destination_address.to_dict()
-        # set to None if source_address (nullable) is None
-        # and model_fields_set contains the field
-        if self.source_address is None and "source_address" in self.model_fields_set:
-            _dict['sourceAddress'] = None
-
-        # set to None if destination_address (nullable) is None
-        # and model_fields_set contains the field
-        if self.destination_address is None and "destination_address" in self.model_fields_set:
-            _dict['destinationAddress'] = None
-
         return _dict
 
     @classmethod

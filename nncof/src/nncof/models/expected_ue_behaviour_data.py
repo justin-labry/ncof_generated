@@ -21,15 +21,12 @@ import json
 
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.battery_indication import BatteryIndication
 from nncof.models.location_area import LocationArea
 from nncof.models.scheduled_communication_time import ScheduledCommunicationTime
-from nncof.models.scheduled_communication_type import ScheduledCommunicationType
-from nncof.models.stationary_indication import StationaryIndication
-from nncof.models.traffic_profile import TrafficProfile
 from nncof.models.trajectory_segment import TrajectorySegment
 try:
     from typing import Self
@@ -40,14 +37,14 @@ class ExpectedUeBehaviourData(BaseModel):
     """
     Contains expected UE behaviour data
     """ # noqa: E501
-    stationary_indication: Optional[StationaryIndication] = Field(default=None, alias="stationaryIndication")
+    stationary_indication: Optional[StrictStr] = Field(default=None, description="Possible values are: - STATIONARY: Identifies the UE is stationary - MOBILE: Identifies the UE is mobile ", alias="stationaryIndication")
     communication_duration_time: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="communicationDurationTime")
     periodic_time: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="periodicTime")
     scheduled_communication_time: Optional[ScheduledCommunicationTime] = Field(default=None, alias="scheduledCommunicationTime")
-    scheduled_communication_type: Optional[ScheduledCommunicationType] = Field(default=None, alias="scheduledCommunicationType")
+    scheduled_communication_type: Optional[StrictStr] = Field(default=None, description="Possible values are: -DOWNLINK_ONLY: Downlink only -UPLINK_ONLY: Uplink only -BIDIRECTIONA: Bi-directional ", alias="scheduledCommunicationType")
     expected_umts: Optional[Annotated[List[LocationArea], Field(min_length=1)]] = Field(default=None, description="Identifies the UE's expected geographical movement. The attribute is only applicable in 5G. ", alias="expectedUmts")
     trajectory_segments: Optional[Annotated[List[TrajectorySegment], Field(min_length=1)]] = Field(default=None, alias="trajectorySegments")
-    traffic_profile: Optional[TrafficProfile] = Field(default=None, alias="trafficProfile")
+    traffic_profile: Optional[StrictStr] = Field(default=None, description="Possible values are: - SINGLE_TRANS_UL: Uplink single packet transmission. - SINGLE_TRANS_DL: Downlink single packet transmission. - DUAL_TRANS_UL_FIRST: Dual packet transmission, firstly uplink packet transmission   with subsequent downlink packet transmission. - DUAL_TRANS_DL_FIRST: Dual packet transmission, firstly downlink packet transmission   with subsequent uplink packet transmission.  ", alias="trafficProfile")
     battery_indication: Optional[BatteryIndication] = Field(default=None, alias="batteryIndication")
     validity_time: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="validityTime")
     confidence_level: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, alias="confidenceLevel")
@@ -112,15 +109,9 @@ class ExpectedUeBehaviourData(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of stationary_indication
-        if self.stationary_indication:
-            _dict['stationaryIndication'] = self.stationary_indication.to_dict()
         # override the default output from pydantic by calling `to_dict()` of scheduled_communication_time
         if self.scheduled_communication_time:
             _dict['scheduledCommunicationTime'] = self.scheduled_communication_time.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of scheduled_communication_type
-        if self.scheduled_communication_type:
-            _dict['scheduledCommunicationType'] = self.scheduled_communication_type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in expected_umts (list)
         _items = []
         if self.expected_umts:
@@ -135,9 +126,6 @@ class ExpectedUeBehaviourData(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['trajectorySegments'] = _items
-        # override the default output from pydantic by calling `to_dict()` of traffic_profile
-        if self.traffic_profile:
-            _dict['trafficProfile'] = self.traffic_profile.to_dict()
         # override the default output from pydantic by calling `to_dict()` of battery_indication
         if self.battery_indication:
             _dict['batteryIndication'] = self.battery_indication.to_dict()
@@ -153,14 +141,14 @@ class ExpectedUeBehaviourData(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "stationaryIndication": StationaryIndication.from_dict(obj.get("stationaryIndication")) if obj.get("stationaryIndication") is not None else None,
+            "stationaryIndication": obj.get("stationaryIndication"),
             "communicationDurationTime": obj.get("communicationDurationTime"),
             "periodicTime": obj.get("periodicTime"),
             "scheduledCommunicationTime": ScheduledCommunicationTime.from_dict(obj.get("scheduledCommunicationTime")) if obj.get("scheduledCommunicationTime") is not None else None,
-            "scheduledCommunicationType": ScheduledCommunicationType.from_dict(obj.get("scheduledCommunicationType")) if obj.get("scheduledCommunicationType") is not None else None,
+            "scheduledCommunicationType": obj.get("scheduledCommunicationType"),
             "expectedUmts": [LocationArea.from_dict(_item) for _item in obj.get("expectedUmts")] if obj.get("expectedUmts") is not None else None,
             "trajectorySegments": [TrajectorySegment.from_dict(_item) for _item in obj.get("trajectorySegments")] if obj.get("trajectorySegments") is not None else None,
-            "trafficProfile": TrafficProfile.from_dict(obj.get("trafficProfile")) if obj.get("trafficProfile") is not None else None,
+            "trafficProfile": obj.get("trafficProfile"),
             "batteryIndication": BatteryIndication.from_dict(obj.get("batteryIndication")) if obj.get("batteryIndication") is not None else None,
             "validityTime": obj.get("validityTime"),
             "confidenceLevel": obj.get("confidenceLevel"),

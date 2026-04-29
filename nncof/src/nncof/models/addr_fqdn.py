@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from nncof.models.ip_addr import IpAddr
 try:
     from typing import Self
@@ -76,11 +76,6 @@ class AddrFqdn(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of ip_addr
         if self.ip_addr:
             _dict['ipAddr'] = self.ip_addr.to_dict()
-        # set to None if ip_addr (nullable) is None
-        # and model_fields_set contains the field
-        if self.ip_addr is None and "ip_addr" in self.model_fields_set:
-            _dict['ipAddr'] = None
-
         return _dict
 
     @classmethod

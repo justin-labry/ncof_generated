@@ -21,13 +21,10 @@ import json
 
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictInt
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nncof.models.accuracy import Accuracy
-from nncof.models.analytics_metadata import AnalyticsMetadata
 from nncof.models.analytics_metadata_indication import AnalyticsMetadataIndication
-from nncof.models.optimization_level import OptimizationLevel
 from nncof.models.time_window import TimeWindow
 try:
     from typing import Self
@@ -38,9 +35,9 @@ class EventReportingRequirement(BaseModel):
     """
     Represents the type of reporting that the subscription requires.
     """ # noqa: E501
-    accuracy: Optional[Accuracy] = None
-    opt_level: Optional[OptimizationLevel] = Field(default=None, alias="_optLevel")
-    acc_per_subset: Optional[Annotated[List[Accuracy], Field(min_length=1)]] = Field(default=None, description="Each element indicates the preferred accuracy level per analytics subset. It may be present if the \"listOfAnaSubsets\" attribute is present in the subscription request. ", alias="accPerSubset")
+    accuracy: Optional[StrictStr] = Field(default=None, description="Represents the preferred level of accuracy of the analytics.   Possible values are: - LOW: Low accuracy. - MEDIUM: Medium accuracy. - HIGH: High accuracy. - HIGHEST: Highest accuracy. ")
+    opt_level: Optional[StrictStr] = Field(default=None, description="Represents the preferred level of optimization of the quality.   Possible values are: - LOW: Low quality. - MEDIUM: Medium quality. - HIGH: High quality. - HIGHEST: Highest quality. ", alias="_optLevel")
+    acc_per_subset: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, description="Each element indicates the preferred accuracy level per analytics subset. It may be present if the \"listOfAnaSubsets\" attribute is present in the subscription request. ", alias="accPerSubset")
     start_ts: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="startTs")
     end_ts: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="endTs")
     offset_period: Optional[StrictInt] = Field(default=None, description="Offset period in units of seconds to the reporting time, if the value is negative means statistics in the past offset period, otherwise a positive value means prediction in the future offset period. May be present if the \"repPeriod\" attribute is included within the \"evtReq\" attribute or the \"repetitionPeriod\" attribute is included within the EventSubscription type. ", alias="offsetPeriod")
@@ -48,7 +45,7 @@ class EventReportingRequirement(BaseModel):
     max_object_nbr: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="maxObjectNbr")
     max_supi_nbr: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="maxSupiNbr")
     time_ana_needed: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="timeAnaNeeded")
-    ana_meta: Optional[Annotated[List[AnalyticsMetadata], Field(min_length=1)]] = Field(default=None, alias="anaMeta")
+    ana_meta: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="anaMeta")
     ana_meta_ind: Optional[AnalyticsMetadataIndication] = Field(default=None, alias="anaMetaInd")
     hist_ana_time_period: Optional[TimeWindow] = Field(default=None, alias="histAnaTimePeriod")
     __properties: ClassVar[List[str]] = ["accuracy", "_optLevel", "accPerSubset", "startTs", "endTs", "offsetPeriod", "sampRatio", "maxObjectNbr", "maxSupiNbr", "timeAnaNeeded", "anaMeta", "anaMetaInd", "histAnaTimePeriod"]
@@ -90,26 +87,6 @@ class EventReportingRequirement(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of accuracy
-        if self.accuracy:
-            _dict['accuracy'] = self.accuracy.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of opt_level
-        if self.opt_level:
-            _dict['_optLevel'] = self.opt_level.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in acc_per_subset (list)
-        _items = []
-        if self.acc_per_subset:
-            for _item in self.acc_per_subset:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['accPerSubset'] = _items
-        # override the default output from pydantic by calling `to_dict()` of each item in ana_meta (list)
-        _items = []
-        if self.ana_meta:
-            for _item in self.ana_meta:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['anaMeta'] = _items
         # override the default output from pydantic by calling `to_dict()` of ana_meta_ind
         if self.ana_meta_ind:
             _dict['anaMetaInd'] = self.ana_meta_ind.to_dict()
@@ -128,9 +105,9 @@ class EventReportingRequirement(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "accuracy": Accuracy.from_dict(obj.get("accuracy")) if obj.get("accuracy") is not None else None,
-            "_optLevel": OptimizationLevel.from_dict(obj.get("_optLevel")) if obj.get("_optLevel") is not None else None,
-            "accPerSubset": [Accuracy.from_dict(_item) for _item in obj.get("accPerSubset")] if obj.get("accPerSubset") is not None else None,
+            "accuracy": obj.get("accuracy"),
+            "_optLevel": obj.get("_optLevel"),
+            "accPerSubset": obj.get("accPerSubset"),
             "startTs": obj.get("startTs"),
             "endTs": obj.get("endTs"),
             "offsetPeriod": obj.get("offsetPeriod"),
@@ -138,7 +115,7 @@ class EventReportingRequirement(BaseModel):
             "maxObjectNbr": obj.get("maxObjectNbr"),
             "maxSupiNbr": obj.get("maxSupiNbr"),
             "timeAnaNeeded": obj.get("timeAnaNeeded"),
-            "anaMeta": [AnalyticsMetadata.from_dict(_item) for _item in obj.get("anaMeta")] if obj.get("anaMeta") is not None else None,
+            "anaMeta": obj.get("anaMeta"),
             "anaMetaInd": AnalyticsMetadataIndication.from_dict(obj.get("anaMetaInd")) if obj.get("anaMetaInd") is not None else None,
             "histAnaTimePeriod": TimeWindow.from_dict(obj.get("histAnaTimePeriod")) if obj.get("histAnaTimePeriod") is not None else None
         })

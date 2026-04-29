@@ -21,10 +21,8 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nncof.models.dataset_statistical_property import DatasetStatisticalProperty
-from nncof.models.output_strategy import OutputStrategy
 from nncof.models.time_window import TimeWindow
 try:
     from typing import Self
@@ -36,8 +34,8 @@ class AnalyticsMetadataIndication(BaseModel):
     Contains analytics metadata information requested to be used during analytics generation. 
     """ # noqa: E501
     data_window: Optional[TimeWindow] = Field(default=None, alias="dataWindow")
-    data_stat_props: Optional[Annotated[List[DatasetStatisticalProperty], Field(min_length=1)]] = Field(default=None, alias="dataStatProps")
-    strategy: Optional[OutputStrategy] = None
+    data_stat_props: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="dataStatProps")
+    strategy: Optional[StrictStr] = Field(default=None, description="Represents the output strategy used for the analytics reporting.   Possible values are: - BINARY: Indicates that the analytics shall only be reported when the requested level   of accuracy is reached within a cycle of periodic notification. - GRADIENT: Indicates that the analytics shall be reported according with the periodicity   irrespective of whether the requested level of accuracy has been reached or not. ")
     aggr_ncof_ids: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="aggrNcofIds")
     __properties: ClassVar[List[str]] = ["dataWindow", "dataStatProps", "strategy", "aggrNcofIds"]
 
@@ -81,16 +79,6 @@ class AnalyticsMetadataIndication(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of data_window
         if self.data_window:
             _dict['dataWindow'] = self.data_window.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in data_stat_props (list)
-        _items = []
-        if self.data_stat_props:
-            for _item in self.data_stat_props:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['dataStatProps'] = _items
-        # override the default output from pydantic by calling `to_dict()` of strategy
-        if self.strategy:
-            _dict['strategy'] = self.strategy.to_dict()
         return _dict
 
     @classmethod
@@ -104,8 +92,8 @@ class AnalyticsMetadataIndication(BaseModel):
 
         _obj = cls.model_validate({
             "dataWindow": TimeWindow.from_dict(obj.get("dataWindow")) if obj.get("dataWindow") is not None else None,
-            "dataStatProps": [DatasetStatisticalProperty.from_dict(_item) for _item in obj.get("dataStatProps")] if obj.get("dataStatProps") is not None else None,
-            "strategy": OutputStrategy.from_dict(obj.get("strategy")) if obj.get("strategy") is not None else None,
+            "dataStatProps": obj.get("dataStatProps"),
+            "strategy": obj.get("strategy"),
             "aggrNcofIds": obj.get("aggrNcofIds")
         })
         return _obj

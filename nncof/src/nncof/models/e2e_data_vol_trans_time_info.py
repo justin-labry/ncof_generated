@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.e2e_data_vol_trans_time_per_ts import E2eDataVolTransTimePerTS
 from nncof.models.e2e_data_vol_trans_time_ue_list import E2eDataVolTransTimeUeList
@@ -37,7 +37,7 @@ class E2eDataVolTransTimeInfo(BaseModel):
     """ # noqa: E501
     e2e_data_vol_trans_times: Annotated[List[E2eDataVolTransTimePerTS], Field(min_length=1)] = Field(alias="e2eDataVolTransTimes")
     e2e_data_vol_trans_time_ue_lists: Optional[Annotated[List[Optional[E2eDataVolTransTimeUeList]], Field(min_length=1)]] = Field(default=None, alias="e2eDataVolTransTimeUeLists")
-    geo_distr_infos: Optional[Annotated[List[Optional[GeoDistributionInfo]], Field(min_length=1)]] = Field(default=None, alias="geoDistrInfos")
+    geo_distr_infos: Optional[Annotated[List[GeoDistributionInfo], Field(min_length=1)]] = Field(default=None, alias="geoDistrInfos")
     confidence: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.")
     __properties: ClassVar[List[str]] = ["e2eDataVolTransTimes", "e2eDataVolTransTimeUeLists", "geoDistrInfos", "confidence"]
 

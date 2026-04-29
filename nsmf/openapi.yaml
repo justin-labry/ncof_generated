@@ -833,10 +833,10 @@ components:
           maxNoOfNotif: 0
           durationBufferedNotif: 7
         gpsi: gpsi
-        notifMethod: PERIODIC
+        notifMethod: notifMethod
         grpRepTime: 9
         udrRestartInd: false
-        serviveName: null
+        serviveName: serviveName
         pduSeId: 20
         expiry: 2000-01-23T04:56:07.000+00:00
         altNotifIpv4Addrs:
@@ -847,8 +847,8 @@ components:
         - 2001:db8:85a3::8a2e:370:7334
         - 2001:db8:85a3::8a2e:370:7334
         partitionCriteria:
-        - TAC
-        - TAC
+        - null
+        - null
         snssai:
           sd: sd
           sst: 153
@@ -861,7 +861,7 @@ components:
           ipv6Prefixes:
           - 2001:db8:abcd:12::0/64
           - 2001:db8:abcd:12::0/64
-          sscMode: SSC_MODE_1
+          sscMode: sscMode
           dataVolInfoData:
           - gNBId:
               bitLength: 27
@@ -911,11 +911,11 @@ components:
                   ipv6Prefix: 2001:db8:abcd:12::0/64
           endWlan: 2000-01-23T04:56:07.000+00:00
           ulDataRate: ulDataRate
-          satBackhaulCat: GEO
+          satBackhaulCat: satBackhaulCat
           "5qi": 73
           targetUeIpv4Addr: 198.51.100.1
           qosPara:
-            rscType: NON_GBR
+            rscType: rscType
             gbrDl: gbrDl
             maxPlrDl: 335
             maxDataBurstVol: 2925
@@ -935,7 +935,7 @@ components:
           smNasFromSmf:
             timeStamp: 2000-01-23T04:56:07.000+00:00
             smNasType: smNasType
-            appliedSmccType: DNN_CC
+            appliedSmccType: appliedSmccType
             backoffTimer: 3
           trafCorreInfo:
             smfId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -955,7 +955,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -965,7 +965,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -996,7 +996,7 @@ components:
             nasReleaseCode: nasReleaseCode
           ulCongInfo: 0
           upRedTrans: true
-          dddStatus: null
+          dddStatus: dddStatus
           dddTraDescriptor:
             ipv6Addr: 2001:db8:85a3::8a2e:370:7334
             ipv4Addr: 198.51.100.1
@@ -1015,7 +1015,7 @@ components:
               portNumber: 0
             routeProfId: routeProfId
           sourceUeIpv6Prefix: 2001:db8:abcd:12::0/64
-          pduSessType: IPV4
+          pduSessType: pduSessType
           nfSignalInfo:
             nfSigInfoPerWndw:
             - tw:
@@ -1027,7 +1027,7 @@ components:
                   numOfRedMessages: 0
                   numOfReq: 0
                   numOfReqReject: 0
-                  serviceName: nnrf-nfm
+                  serviceName: serviceName
                   numOfPosteriorReq: 0
             - tw:
                 startTime: 2000-01-23T04:56:07.000+00:00
@@ -1038,7 +1038,7 @@ components:
                   numOfRedMessages: 0
                   numOfReq: 0
                   numOfReqReject: 0
-                  serviceName: nnrf-nfm
+                  serviceName: serviceName
                   numOfPosteriorReq: 0
             nfHeartbeatInfo:
               hbIntvl: 0
@@ -1072,13 +1072,13 @@ components:
             - null
             - null
             transaction: 0
-          referenceId: 2147483647
+          referenceId: 0
           gpsi: gpsi
           ethFlowDescs:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -1088,7 +1088,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -1096,7 +1096,7 @@ components:
             - vlanTags
             srcMacAddrEnd: srcMacAddrEnd
           dlCongInfo: 0
-          dnaiChgType: null
+          dnaiChgType: dnaiChgType
           startWlan: 2000-01-23T04:56:07.000+00:00
           sourceDnai: sourceDnai
           sourceUeIpv4Addr: 198.51.100.1
@@ -1109,7 +1109,7 @@ components:
             mnc: mnc
             nid: nid
             mcc: mcc
-          event: null
+          event: event
           candidateDnais:
           - null
           - null
@@ -1121,7 +1121,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1131,7 +1131,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1145,7 +1145,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1155,7 +1155,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1164,12 +1164,12 @@ components:
               srcMacAddrEnd: srcMacAddrEnd
           reIpv6Prefix: 2001:db8:abcd:12::0/64
           stateTransitions:
-          - transType: null
+          - transType: transType
             numOfTran: 0
             pctUes: 0
             groupId: groupId
             supi: supi
-          - transType: null
+          - transType: transType
             numOfTran: 0
             pctUes: 0
             groupId: groupId
@@ -1198,7 +1198,7 @@ components:
             timeStamp: 2000-01-23T04:56:07.000+00:00
             smNasType: smNasType
           bssId: bssId
-          ratType: null
+          ratType: ratType
           supi: supi
           adIpv4Addr: 198.51.100.1
           timeStamp: 2000-01-23T04:56:07.000+00:00
@@ -1221,12 +1221,12 @@ components:
           qfi: 55
           pduSessInfos:
           - sessInfo:
-              pduSessStatus: ACTIVATED
+              pduSessStatus: pduSessStatus
               sessInactiveTimer: 1
               n4SessId: n4SessId
             pduSessId: 177
           - sessInfo:
-              pduSessStatus: ACTIVATED
+              pduSessStatus: pduSessStatus
               sessInactiveTimer: 1
               n4SessId: n4SessId
             pduSessId: 177
@@ -1235,7 +1235,7 @@ components:
           ipv6Prefixes:
           - 2001:db8:abcd:12::0/64
           - 2001:db8:abcd:12::0/64
-          sscMode: SSC_MODE_1
+          sscMode: sscMode
           dataVolInfoData:
           - gNBId:
               bitLength: 27
@@ -1285,11 +1285,11 @@ components:
                   ipv6Prefix: 2001:db8:abcd:12::0/64
           endWlan: 2000-01-23T04:56:07.000+00:00
           ulDataRate: ulDataRate
-          satBackhaulCat: GEO
+          satBackhaulCat: satBackhaulCat
           "5qi": 73
           targetUeIpv4Addr: 198.51.100.1
           qosPara:
-            rscType: NON_GBR
+            rscType: rscType
             gbrDl: gbrDl
             maxPlrDl: 335
             maxDataBurstVol: 2925
@@ -1309,7 +1309,7 @@ components:
           smNasFromSmf:
             timeStamp: 2000-01-23T04:56:07.000+00:00
             smNasType: smNasType
-            appliedSmccType: DNN_CC
+            appliedSmccType: appliedSmccType
             backoffTimer: 3
           trafCorreInfo:
             smfId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -1329,7 +1329,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -1339,7 +1339,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -1370,7 +1370,7 @@ components:
             nasReleaseCode: nasReleaseCode
           ulCongInfo: 0
           upRedTrans: true
-          dddStatus: null
+          dddStatus: dddStatus
           dddTraDescriptor:
             ipv6Addr: 2001:db8:85a3::8a2e:370:7334
             ipv4Addr: 198.51.100.1
@@ -1389,7 +1389,7 @@ components:
               portNumber: 0
             routeProfId: routeProfId
           sourceUeIpv6Prefix: 2001:db8:abcd:12::0/64
-          pduSessType: IPV4
+          pduSessType: pduSessType
           nfSignalInfo:
             nfSigInfoPerWndw:
             - tw:
@@ -1401,7 +1401,7 @@ components:
                   numOfRedMessages: 0
                   numOfReq: 0
                   numOfReqReject: 0
-                  serviceName: nnrf-nfm
+                  serviceName: serviceName
                   numOfPosteriorReq: 0
             - tw:
                 startTime: 2000-01-23T04:56:07.000+00:00
@@ -1412,7 +1412,7 @@ components:
                   numOfRedMessages: 0
                   numOfReq: 0
                   numOfReqReject: 0
-                  serviceName: nnrf-nfm
+                  serviceName: serviceName
                   numOfPosteriorReq: 0
             nfHeartbeatInfo:
               hbIntvl: 0
@@ -1446,13 +1446,13 @@ components:
             - null
             - null
             transaction: 0
-          referenceId: 2147483647
+          referenceId: 0
           gpsi: gpsi
           ethFlowDescs:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -1462,7 +1462,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -1470,7 +1470,7 @@ components:
             - vlanTags
             srcMacAddrEnd: srcMacAddrEnd
           dlCongInfo: 0
-          dnaiChgType: null
+          dnaiChgType: dnaiChgType
           startWlan: 2000-01-23T04:56:07.000+00:00
           sourceDnai: sourceDnai
           sourceUeIpv4Addr: 198.51.100.1
@@ -1483,7 +1483,7 @@ components:
             mnc: mnc
             nid: nid
             mcc: mcc
-          event: null
+          event: event
           candidateDnais:
           - null
           - null
@@ -1495,7 +1495,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1505,7 +1505,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1519,7 +1519,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1529,7 +1529,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -1538,12 +1538,12 @@ components:
               srcMacAddrEnd: srcMacAddrEnd
           reIpv6Prefix: 2001:db8:abcd:12::0/64
           stateTransitions:
-          - transType: null
+          - transType: transType
             numOfTran: 0
             pctUes: 0
             groupId: groupId
             supi: supi
-          - transType: null
+          - transType: transType
             numOfTran: 0
             pctUes: 0
             groupId: groupId
@@ -1572,7 +1572,7 @@ components:
             timeStamp: 2000-01-23T04:56:07.000+00:00
             smNasType: smNasType
           bssId: bssId
-          ratType: null
+          ratType: ratType
           supi: supi
           adIpv4Addr: 198.51.100.1
           timeStamp: 2000-01-23T04:56:07.000+00:00
@@ -1595,12 +1595,12 @@ components:
           qfi: 55
           pduSessInfos:
           - sessInfo:
-              pduSessStatus: ACTIVATED
+              pduSessStatus: pduSessStatus
               sessInactiveTimer: 1
               n4SessId: n4SessId
             pduSessId: 177
           - sessInfo:
-              pduSessStatus: ACTIVATED
+              pduSessStatus: pduSessStatus
               sessInactiveTimer: 1
               n4SessId: n4SessId
             pduSessId: 177
@@ -1617,13 +1617,13 @@ components:
         - null
         - null
         notifFlagInstruct:
-          bufferedNotifs: SEND_ALL
-          subscription: CLOSE
+          bufferedNotifs: bufferedNotifs
+          subscription: subscription
         subId: subId
         eventSubs:
         - dddStati:
-          - BUFFERED
-          - BUFFERED
+          - null
+          - null
           flowDescs:
           - null
           - null
@@ -1632,12 +1632,12 @@ components:
             startTime: 2000-01-23T04:56:07.000+00:00
             stopTime: 2000-01-23T04:56:07.000+00:00
           transacMetrics:
-          - PDU_SES_EST
-          - PDU_SES_EST
+          - null
+          - null
           bundleId: 2147483647
           bundledEventNotifyUri: bundledEventNotifyUri
-          referenceId: 2147483647
-          dnaiChgType: EARLY
+          referenceId: 0
+          dnaiChgType: dnaiChgType
           networkArea:
             ncgis:
             - nid: nid
@@ -1718,7 +1718,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -1735,7 +1735,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -1747,8 +1747,8 @@ components:
                 - null
                 - null
               skipReportCond:
-              - SKIP_NULL_REPORT
-              - SKIP_NULL_REPORT
+              - null
+              - null
               thresholdCond:
                 thresholdThroughput:
                   dlThroughput: dlThroughput
@@ -1758,17 +1758,17 @@ components:
                 thresholdTrafficVolume:
                   totalVolume: totalVolume
                   dlVolume: dlVolume
-                  dlNbOfPackets: 2147483647
-                  ulNbOfPackets: 2147483647
+                  dlNbOfPackets: 0
+                  ulNbOfPackets: 0
                   ulVolume: ulVolume
-                  totalNbOfPackets: 2147483647
+                  totalNbOfPackets: 0
             remotePortNumber: 27168
-            remainingDataReports: DISCARD
+            remainingDataReports: remainingDataReports
             ipDomain: ipDomain
             trafficFilters:
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -1788,7 +1788,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -1808,7 +1808,7 @@ components:
                 rtpSdesHdrExtId: 0
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -1828,7 +1828,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -1847,23 +1847,23 @@ components:
                 ssrcId: 988759834
                 rtpSdesHdrExtId: 0
             ratTypeList:
-            - NR
-            - NR
-            type: QOS_MONITORING
+            - null
+            - null
+            type: type
             remoteIpv4Addr: 198.51.100.1
             immediateFlag: false
-            granularityOfMeasurement: PER_APPLICATION
+            granularityOfMeasurement: granularityOfMeasurement
             inclRatType: true
             remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
             appIds:
             - null
             - null
             measurementTypes:
-            - VOLUME_MEASUREMENT
-            - VOLUME_MEASUREMENT
+            - null
+            - null
             reportingSuggestionInfo:
               reportingTimeInfo: 2
-              reportingUrgency: DELAY_TOLERANT
+              reportingUrgency: reportingUrgency
           - skipReportingInstruction:
               validityTimes:
               - recurTimeWindow:
@@ -1872,7 +1872,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -1889,7 +1889,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -1901,8 +1901,8 @@ components:
                 - null
                 - null
               skipReportCond:
-              - SKIP_NULL_REPORT
-              - SKIP_NULL_REPORT
+              - null
+              - null
               thresholdCond:
                 thresholdThroughput:
                   dlThroughput: dlThroughput
@@ -1912,17 +1912,17 @@ components:
                 thresholdTrafficVolume:
                   totalVolume: totalVolume
                   dlVolume: dlVolume
-                  dlNbOfPackets: 2147483647
-                  ulNbOfPackets: 2147483647
+                  dlNbOfPackets: 0
+                  ulNbOfPackets: 0
                   ulVolume: ulVolume
-                  totalNbOfPackets: 2147483647
+                  totalNbOfPackets: 0
             remotePortNumber: 27168
-            remainingDataReports: DISCARD
+            remainingDataReports: remainingDataReports
             ipDomain: ipDomain
             trafficFilters:
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -1942,7 +1942,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -1962,7 +1962,7 @@ components:
                 rtpSdesHdrExtId: 0
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -1982,7 +1982,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -2001,25 +2001,25 @@ components:
                 ssrcId: 988759834
                 rtpSdesHdrExtId: 0
             ratTypeList:
-            - NR
-            - NR
-            type: QOS_MONITORING
+            - null
+            - null
+            type: type
             remoteIpv4Addr: 198.51.100.1
             immediateFlag: false
-            granularityOfMeasurement: PER_APPLICATION
+            granularityOfMeasurement: granularityOfMeasurement
             inclRatType: true
             remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
             appIds:
             - null
             - null
             measurementTypes:
-            - VOLUME_MEASUREMENT
-            - VOLUME_MEASUREMENT
+            - null
+            - null
             reportingSuggestionInfo:
               reportingTimeInfo: 2
-              reportingUrgency: DELAY_TOLERANT
+              reportingUrgency: reportingUrgency
           transacDispInd: true
-          event: AC_TY_CH
+          event: event
           dddTraDescriptors:
           - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
             ipv4Addr: 198.51.100.1
@@ -2030,8 +2030,8 @@ components:
             portNumber: 0
             macAddr: macAddr
         - dddStati:
-          - BUFFERED
-          - BUFFERED
+          - null
+          - null
           flowDescs:
           - null
           - null
@@ -2040,12 +2040,12 @@ components:
             startTime: 2000-01-23T04:56:07.000+00:00
             stopTime: 2000-01-23T04:56:07.000+00:00
           transacMetrics:
-          - PDU_SES_EST
-          - PDU_SES_EST
+          - null
+          - null
           bundleId: 2147483647
           bundledEventNotifyUri: bundledEventNotifyUri
-          referenceId: 2147483647
-          dnaiChgType: EARLY
+          referenceId: 0
+          dnaiChgType: dnaiChgType
           networkArea:
             ncgis:
             - nid: nid
@@ -2126,7 +2126,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -2143,7 +2143,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -2155,8 +2155,8 @@ components:
                 - null
                 - null
               skipReportCond:
-              - SKIP_NULL_REPORT
-              - SKIP_NULL_REPORT
+              - null
+              - null
               thresholdCond:
                 thresholdThroughput:
                   dlThroughput: dlThroughput
@@ -2166,17 +2166,17 @@ components:
                 thresholdTrafficVolume:
                   totalVolume: totalVolume
                   dlVolume: dlVolume
-                  dlNbOfPackets: 2147483647
-                  ulNbOfPackets: 2147483647
+                  dlNbOfPackets: 0
+                  ulNbOfPackets: 0
                   ulVolume: ulVolume
-                  totalNbOfPackets: 2147483647
+                  totalNbOfPackets: 0
             remotePortNumber: 27168
-            remainingDataReports: DISCARD
+            remainingDataReports: remainingDataReports
             ipDomain: ipDomain
             trafficFilters:
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -2196,7 +2196,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -2216,7 +2216,7 @@ components:
                 rtpSdesHdrExtId: 0
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -2236,7 +2236,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -2255,23 +2255,23 @@ components:
                 ssrcId: 988759834
                 rtpSdesHdrExtId: 0
             ratTypeList:
-            - NR
-            - NR
-            type: QOS_MONITORING
+            - null
+            - null
+            type: type
             remoteIpv4Addr: 198.51.100.1
             immediateFlag: false
-            granularityOfMeasurement: PER_APPLICATION
+            granularityOfMeasurement: granularityOfMeasurement
             inclRatType: true
             remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
             appIds:
             - null
             - null
             measurementTypes:
-            - VOLUME_MEASUREMENT
-            - VOLUME_MEASUREMENT
+            - null
+            - null
             reportingSuggestionInfo:
               reportingTimeInfo: 2
-              reportingUrgency: DELAY_TOLERANT
+              reportingUrgency: reportingUrgency
           - skipReportingInstruction:
               validityTimes:
               - recurTimeWindow:
@@ -2280,7 +2280,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -2297,7 +2297,7 @@ components:
                 recurMonth:
                 - null
                 - null
-                recurType: DAILY
+                recurType: recurType
                 recurDate:
                 - null
                 - null
@@ -2309,8 +2309,8 @@ components:
                 - null
                 - null
               skipReportCond:
-              - SKIP_NULL_REPORT
-              - SKIP_NULL_REPORT
+              - null
+              - null
               thresholdCond:
                 thresholdThroughput:
                   dlThroughput: dlThroughput
@@ -2320,17 +2320,17 @@ components:
                 thresholdTrafficVolume:
                   totalVolume: totalVolume
                   dlVolume: dlVolume
-                  dlNbOfPackets: 2147483647
-                  ulNbOfPackets: 2147483647
+                  dlNbOfPackets: 0
+                  ulNbOfPackets: 0
                   ulVolume: ulVolume
-                  totalNbOfPackets: 2147483647
+                  totalNbOfPackets: 0
             remotePortNumber: 27168
-            remainingDataReports: DISCARD
+            remainingDataReports: remainingDataReports
             ipDomain: ipDomain
             trafficFilters:
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -2350,7 +2350,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -2370,7 +2370,7 @@ components:
                 rtpSdesHdrExtId: 0
             - flowLabel: flowLabel
               packFiltId: packFiltId
-              flowDirection: null
+              flowDirection: flowDirection
               packetFilterUsage: true
               tosTrafficClass: tosTrafficClass
               mpxMediaDlInfos:
@@ -2390,7 +2390,7 @@ components:
                 destMacAddr: destMacAddr
                 destMacAddrEnd: destMacAddrEnd
                 sourceMacAddr: sourceMacAddr
-                fDir: DOWNLINK
+                fDir: fDir
                 ethType: ethType
                 fDesc: fDesc
                 vlanTags:
@@ -2409,25 +2409,25 @@ components:
                 ssrcId: 988759834
                 rtpSdesHdrExtId: 0
             ratTypeList:
-            - NR
-            - NR
-            type: QOS_MONITORING
+            - null
+            - null
+            type: type
             remoteIpv4Addr: 198.51.100.1
             immediateFlag: false
-            granularityOfMeasurement: PER_APPLICATION
+            granularityOfMeasurement: granularityOfMeasurement
             inclRatType: true
             remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
             appIds:
             - null
             - null
             measurementTypes:
-            - VOLUME_MEASUREMENT
-            - VOLUME_MEASUREMENT
+            - null
+            - null
             reportingSuggestionInfo:
               reportingTimeInfo: 2
-              reportingUrgency: DELAY_TOLERANT
+              reportingUrgency: reportingUrgency
           transacDispInd: true
-          event: AC_TY_CH
+          event: event
           dddTraDescriptors:
           - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
             ipv4Addr: 198.51.100.1
@@ -2437,7 +2437,7 @@ components:
             ipv4Addr: 198.51.100.1
             portNumber: 0
             macAddr: macAddr
-        notifFlag: ACTIVATE
+        notifFlag: notifFlag
         defQosSupp: true
         anyUeInd: true
         ImmeRep: true
@@ -2575,7 +2575,12 @@ components:
           title: ImmeRep
           type: boolean
         notifMethod:
-          $ref: '#/components/schemas/NotificationMethod'
+          description: "Represents the notification methods that can be subscribed.\
+            \  \nPossible values are:\n- PERIODIC: The notification is periodically\
+            \ sent.\n- ONE_TIME: The notification is only sent one time.\n- ON_EVENT_DETECTION:\
+            \ The notification is sent each time the event is detected.\n"
+          title: notifMethod
+          type: string
         maxReportNbr:
           description: "Unsigned Integer, i.e. only value 0 and integers above 0 are\
             \ permissible."
@@ -2594,7 +2599,9 @@ components:
         guami:
           $ref: '#/components/schemas/Guami'
         serviveName:
-          $ref: '#/components/schemas/ServiceName'
+          description: Service names known to NRF
+          title: ServiceName
+          type: string
         supportedFeatures:
           description: |
             A string used to indicate the features supported by an API that is used as defined in clause  6.6 in 3GPP TS 29.500. The string shall contain a bitmask indicating supported features in  hexadecimal representation Each character in the string shall take a value of "0" to "9",  "a" to "f" or "A" to "F" and shall represent the support of 4 features as described in  table 5.2.2-3. The most significant character representing the highest-numbered features shall  appear first in the string, and the character representing features 1 to 4 shall appear last  in the string. The list of features and their numbering (starting with 1) are defined  separately for each API. If the string contains a lower number of characters than there are  defined features for an API, all features that would be represented by characters that are not  present in the string are not supported.
@@ -2621,7 +2628,13 @@ components:
           title: DurationSec
           type: integer
         notifFlag:
-          $ref: '#/components/schemas/NotificationFlag'
+          description: "Possible values are:\n- ACTIVATE: The event notification is\
+            \ activated.\n- DEACTIVATE: The event notification is deactivated and\
+            \ shall be muted. The available\n   event(s) shall be stored.\n- RETRIEVAL:\
+            \ The event notification shall be sent to the NF service consumer(s),\n\
+            \  after that, is muted again. \n"
+          title: notifFlag
+          type: string
         notifFlagInstruct:
           $ref: '#/components/schemas/MutingExceptionInstructions'
         mutingSetting:
@@ -2658,7 +2671,7 @@ components:
           ipv6Prefixes:
           - 2001:db8:abcd:12::0/64
           - 2001:db8:abcd:12::0/64
-          sscMode: SSC_MODE_1
+          sscMode: sscMode
           dataVolInfoData:
           - gNBId:
               bitLength: 27
@@ -2708,11 +2721,11 @@ components:
                   ipv6Prefix: 2001:db8:abcd:12::0/64
           endWlan: 2000-01-23T04:56:07.000+00:00
           ulDataRate: ulDataRate
-          satBackhaulCat: GEO
+          satBackhaulCat: satBackhaulCat
           "5qi": 73
           targetUeIpv4Addr: 198.51.100.1
           qosPara:
-            rscType: NON_GBR
+            rscType: rscType
             gbrDl: gbrDl
             maxPlrDl: 335
             maxDataBurstVol: 2925
@@ -2732,7 +2745,7 @@ components:
           smNasFromSmf:
             timeStamp: 2000-01-23T04:56:07.000+00:00
             smNasType: smNasType
-            appliedSmccType: DNN_CC
+            appliedSmccType: appliedSmccType
             backoffTimer: 3
           trafCorreInfo:
             smfId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -2752,7 +2765,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -2762,7 +2775,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -2793,7 +2806,7 @@ components:
             nasReleaseCode: nasReleaseCode
           ulCongInfo: 0
           upRedTrans: true
-          dddStatus: null
+          dddStatus: dddStatus
           dddTraDescriptor:
             ipv6Addr: 2001:db8:85a3::8a2e:370:7334
             ipv4Addr: 198.51.100.1
@@ -2812,7 +2825,7 @@ components:
               portNumber: 0
             routeProfId: routeProfId
           sourceUeIpv6Prefix: 2001:db8:abcd:12::0/64
-          pduSessType: IPV4
+          pduSessType: pduSessType
           nfSignalInfo:
             nfSigInfoPerWndw:
             - tw:
@@ -2824,7 +2837,7 @@ components:
                   numOfRedMessages: 0
                   numOfReq: 0
                   numOfReqReject: 0
-                  serviceName: nnrf-nfm
+                  serviceName: serviceName
                   numOfPosteriorReq: 0
             - tw:
                 startTime: 2000-01-23T04:56:07.000+00:00
@@ -2835,7 +2848,7 @@ components:
                   numOfRedMessages: 0
                   numOfReq: 0
                   numOfReqReject: 0
-                  serviceName: nnrf-nfm
+                  serviceName: serviceName
                   numOfPosteriorReq: 0
             nfHeartbeatInfo:
               hbIntvl: 0
@@ -2869,13 +2882,13 @@ components:
             - null
             - null
             transaction: 0
-          referenceId: 2147483647
+          referenceId: 0
           gpsi: gpsi
           ethFlowDescs:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -2885,7 +2898,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -2893,7 +2906,7 @@ components:
             - vlanTags
             srcMacAddrEnd: srcMacAddrEnd
           dlCongInfo: 0
-          dnaiChgType: null
+          dnaiChgType: dnaiChgType
           startWlan: 2000-01-23T04:56:07.000+00:00
           sourceDnai: sourceDnai
           sourceUeIpv4Addr: 198.51.100.1
@@ -2906,7 +2919,7 @@ components:
             mnc: mnc
             nid: nid
             mcc: mcc
-          event: null
+          event: event
           candidateDnais:
           - null
           - null
@@ -2918,7 +2931,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -2928,7 +2941,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -2942,7 +2955,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -2952,7 +2965,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -2961,12 +2974,12 @@ components:
               srcMacAddrEnd: srcMacAddrEnd
           reIpv6Prefix: 2001:db8:abcd:12::0/64
           stateTransitions:
-          - transType: null
+          - transType: transType
             numOfTran: 0
             pctUes: 0
             groupId: groupId
             supi: supi
-          - transType: null
+          - transType: transType
             numOfTran: 0
             pctUes: 0
             groupId: groupId
@@ -2995,7 +3008,7 @@ components:
             timeStamp: 2000-01-23T04:56:07.000+00:00
             smNasType: smNasType
           bssId: bssId
-          ratType: null
+          ratType: ratType
           supi: supi
           adIpv4Addr: 198.51.100.1
           timeStamp: 2000-01-23T04:56:07.000+00:00
@@ -3018,12 +3031,12 @@ components:
           qfi: 55
           pduSessInfos:
           - sessInfo:
-              pduSessStatus: ACTIVATED
+              pduSessStatus: pduSessStatus
               sessInactiveTimer: 1
               n4SessId: n4SessId
             pduSessId: 177
           - sessInfo:
-              pduSessStatus: ACTIVATED
+              pduSessStatus: pduSessStatus
               sessInactiveTimer: 1
               n4SessId: n4SessId
             pduSessId: 177
@@ -3032,7 +3045,7 @@ components:
           ipv6Prefixes:
           - 2001:db8:abcd:12::0/64
           - 2001:db8:abcd:12::0/64
-          sscMode: SSC_MODE_1
+          sscMode: sscMode
           dataVolInfoData:
           - gNBId:
               bitLength: 27
@@ -3082,11 +3095,11 @@ components:
                   ipv6Prefix: 2001:db8:abcd:12::0/64
           endWlan: 2000-01-23T04:56:07.000+00:00
           ulDataRate: ulDataRate
-          satBackhaulCat: GEO
+          satBackhaulCat: satBackhaulCat
           "5qi": 73
           targetUeIpv4Addr: 198.51.100.1
           qosPara:
-            rscType: NON_GBR
+            rscType: rscType
             gbrDl: gbrDl
             maxPlrDl: 335
             maxDataBurstVol: 2925
@@ -3106,7 +3119,7 @@ components:
           smNasFromSmf:
             timeStamp: 2000-01-23T04:56:07.000+00:00
             smNasType: smNasType
-            appliedSmccType: DNN_CC
+            appliedSmccType: appliedSmccType
             backoffTimer: 3
           trafCorreInfo:
             smfId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -3126,7 +3139,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -3136,7 +3149,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -3167,7 +3180,7 @@ components:
             nasReleaseCode: nasReleaseCode
           ulCongInfo: 0
           upRedTrans: true
-          dddStatus: null
+          dddStatus: dddStatus
           dddTraDescriptor:
             ipv6Addr: 2001:db8:85a3::8a2e:370:7334
             ipv4Addr: 198.51.100.1
@@ -3186,7 +3199,7 @@ components:
               portNumber: 0
             routeProfId: routeProfId
           sourceUeIpv6Prefix: 2001:db8:abcd:12::0/64
-          pduSessType: IPV4
+          pduSessType: pduSessType
           nfSignalInfo:
             nfSigInfoPerWndw:
             - tw:
@@ -3198,7 +3211,7 @@ components:
                   numOfRedMessages: 0
                   numOfReq: 0
                   numOfReqReject: 0
-                  serviceName: nnrf-nfm
+                  serviceName: serviceName
                   numOfPosteriorReq: 0
             - tw:
                 startTime: 2000-01-23T04:56:07.000+00:00
@@ -3209,7 +3222,7 @@ components:
                   numOfRedMessages: 0
                   numOfReq: 0
                   numOfReqReject: 0
-                  serviceName: nnrf-nfm
+                  serviceName: serviceName
                   numOfPosteriorReq: 0
             nfHeartbeatInfo:
               hbIntvl: 0
@@ -3243,13 +3256,13 @@ components:
             - null
             - null
             transaction: 0
-          referenceId: 2147483647
+          referenceId: 0
           gpsi: gpsi
           ethFlowDescs:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -3259,7 +3272,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -3267,7 +3280,7 @@ components:
             - vlanTags
             srcMacAddrEnd: srcMacAddrEnd
           dlCongInfo: 0
-          dnaiChgType: null
+          dnaiChgType: dnaiChgType
           startWlan: 2000-01-23T04:56:07.000+00:00
           sourceDnai: sourceDnai
           sourceUeIpv4Addr: 198.51.100.1
@@ -3280,7 +3293,7 @@ components:
             mnc: mnc
             nid: nid
             mcc: mcc
-          event: null
+          event: event
           candidateDnais:
           - null
           - null
@@ -3292,7 +3305,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -3302,7 +3315,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -3316,7 +3329,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -3326,7 +3339,7 @@ components:
             - destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -3335,12 +3348,12 @@ components:
               srcMacAddrEnd: srcMacAddrEnd
           reIpv6Prefix: 2001:db8:abcd:12::0/64
           stateTransitions:
-          - transType: null
+          - transType: transType
             numOfTran: 0
             pctUes: 0
             groupId: groupId
             supi: supi
-          - transType: null
+          - transType: transType
             numOfTran: 0
             pctUes: 0
             groupId: groupId
@@ -3369,7 +3382,7 @@ components:
             timeStamp: 2000-01-23T04:56:07.000+00:00
             smNasType: smNasType
           bssId: bssId
-          ratType: null
+          ratType: ratType
           supi: supi
           adIpv4Addr: 198.51.100.1
           timeStamp: 2000-01-23T04:56:07.000+00:00
@@ -3392,12 +3405,12 @@ components:
           qfi: 55
           pduSessInfos:
           - sessInfo:
-              pduSessStatus: ACTIVATED
+              pduSessStatus: pduSessStatus
               sessInactiveTimer: 1
               n4SessId: n4SessId
             pduSessId: 177
           - sessInfo:
-              pduSessStatus: ACTIVATED
+              pduSessStatus: pduSessStatus
               sessInactiveTimer: 1
               n4SessId: n4SessId
             pduSessId: 177
@@ -3427,8 +3440,8 @@ components:
       description: Represents a subscription to a single event.
       example:
         dddStati:
-        - BUFFERED
-        - BUFFERED
+        - null
+        - null
         flowDescs:
         - null
         - null
@@ -3437,12 +3450,12 @@ components:
           startTime: 2000-01-23T04:56:07.000+00:00
           stopTime: 2000-01-23T04:56:07.000+00:00
         transacMetrics:
-        - PDU_SES_EST
-        - PDU_SES_EST
+        - null
+        - null
         bundleId: 2147483647
         bundledEventNotifyUri: bundledEventNotifyUri
-        referenceId: 2147483647
-        dnaiChgType: EARLY
+        referenceId: 0
+        dnaiChgType: dnaiChgType
         networkArea:
           ncgis:
           - nid: nid
@@ -3523,7 +3536,7 @@ components:
               recurMonth:
               - null
               - null
-              recurType: DAILY
+              recurType: recurType
               recurDate:
               - null
               - null
@@ -3540,7 +3553,7 @@ components:
               recurMonth:
               - null
               - null
-              recurType: DAILY
+              recurType: recurType
               recurDate:
               - null
               - null
@@ -3552,8 +3565,8 @@ components:
               - null
               - null
             skipReportCond:
-            - SKIP_NULL_REPORT
-            - SKIP_NULL_REPORT
+            - null
+            - null
             thresholdCond:
               thresholdThroughput:
                 dlThroughput: dlThroughput
@@ -3563,17 +3576,17 @@ components:
               thresholdTrafficVolume:
                 totalVolume: totalVolume
                 dlVolume: dlVolume
-                dlNbOfPackets: 2147483647
-                ulNbOfPackets: 2147483647
+                dlNbOfPackets: 0
+                ulNbOfPackets: 0
                 ulVolume: ulVolume
-                totalNbOfPackets: 2147483647
+                totalNbOfPackets: 0
           remotePortNumber: 27168
-          remainingDataReports: DISCARD
+          remainingDataReports: remainingDataReports
           ipDomain: ipDomain
           trafficFilters:
           - flowLabel: flowLabel
             packFiltId: packFiltId
-            flowDirection: null
+            flowDirection: flowDirection
             packetFilterUsage: true
             tosTrafficClass: tosTrafficClass
             mpxMediaDlInfos:
@@ -3593,7 +3606,7 @@ components:
               destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -3613,7 +3626,7 @@ components:
               rtpSdesHdrExtId: 0
           - flowLabel: flowLabel
             packFiltId: packFiltId
-            flowDirection: null
+            flowDirection: flowDirection
             packetFilterUsage: true
             tosTrafficClass: tosTrafficClass
             mpxMediaDlInfos:
@@ -3633,7 +3646,7 @@ components:
               destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -3652,23 +3665,23 @@ components:
               ssrcId: 988759834
               rtpSdesHdrExtId: 0
           ratTypeList:
-          - NR
-          - NR
-          type: QOS_MONITORING
+          - null
+          - null
+          type: type
           remoteIpv4Addr: 198.51.100.1
           immediateFlag: false
-          granularityOfMeasurement: PER_APPLICATION
+          granularityOfMeasurement: granularityOfMeasurement
           inclRatType: true
           remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
           appIds:
           - null
           - null
           measurementTypes:
-          - VOLUME_MEASUREMENT
-          - VOLUME_MEASUREMENT
+          - null
+          - null
           reportingSuggestionInfo:
             reportingTimeInfo: 2
-            reportingUrgency: DELAY_TOLERANT
+            reportingUrgency: reportingUrgency
         - skipReportingInstruction:
             validityTimes:
             - recurTimeWindow:
@@ -3677,7 +3690,7 @@ components:
               recurMonth:
               - null
               - null
-              recurType: DAILY
+              recurType: recurType
               recurDate:
               - null
               - null
@@ -3694,7 +3707,7 @@ components:
               recurMonth:
               - null
               - null
-              recurType: DAILY
+              recurType: recurType
               recurDate:
               - null
               - null
@@ -3706,8 +3719,8 @@ components:
               - null
               - null
             skipReportCond:
-            - SKIP_NULL_REPORT
-            - SKIP_NULL_REPORT
+            - null
+            - null
             thresholdCond:
               thresholdThroughput:
                 dlThroughput: dlThroughput
@@ -3717,17 +3730,17 @@ components:
               thresholdTrafficVolume:
                 totalVolume: totalVolume
                 dlVolume: dlVolume
-                dlNbOfPackets: 2147483647
-                ulNbOfPackets: 2147483647
+                dlNbOfPackets: 0
+                ulNbOfPackets: 0
                 ulVolume: ulVolume
-                totalNbOfPackets: 2147483647
+                totalNbOfPackets: 0
           remotePortNumber: 27168
-          remainingDataReports: DISCARD
+          remainingDataReports: remainingDataReports
           ipDomain: ipDomain
           trafficFilters:
           - flowLabel: flowLabel
             packFiltId: packFiltId
-            flowDirection: null
+            flowDirection: flowDirection
             packetFilterUsage: true
             tosTrafficClass: tosTrafficClass
             mpxMediaDlInfos:
@@ -3747,7 +3760,7 @@ components:
               destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -3767,7 +3780,7 @@ components:
               rtpSdesHdrExtId: 0
           - flowLabel: flowLabel
             packFiltId: packFiltId
-            flowDirection: null
+            flowDirection: flowDirection
             packetFilterUsage: true
             tosTrafficClass: tosTrafficClass
             mpxMediaDlInfos:
@@ -3787,7 +3800,7 @@ components:
               destMacAddr: destMacAddr
               destMacAddrEnd: destMacAddrEnd
               sourceMacAddr: sourceMacAddr
-              fDir: DOWNLINK
+              fDir: fDir
               ethType: ethType
               fDesc: fDesc
               vlanTags:
@@ -3806,25 +3819,25 @@ components:
               ssrcId: 988759834
               rtpSdesHdrExtId: 0
           ratTypeList:
-          - NR
-          - NR
-          type: QOS_MONITORING
+          - null
+          - null
+          type: type
           remoteIpv4Addr: 198.51.100.1
           immediateFlag: false
-          granularityOfMeasurement: PER_APPLICATION
+          granularityOfMeasurement: granularityOfMeasurement
           inclRatType: true
           remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
           appIds:
           - null
           - null
           measurementTypes:
-          - VOLUME_MEASUREMENT
-          - VOLUME_MEASUREMENT
+          - null
+          - null
           reportingSuggestionInfo:
             reportingTimeInfo: 2
-            reportingUrgency: DELAY_TOLERANT
+            reportingUrgency: reportingUrgency
         transacDispInd: true
-        event: AC_TY_CH
+        event: event
         dddTraDescriptors:
         - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
           ipv4Addr: 198.51.100.1
@@ -3836,16 +3849,46 @@ components:
           macAddr: macAddr
       properties:
         event:
-          $ref: '#/components/schemas/SmfEvent'
+          description: "Represents the types of events that can be subscribed.  \n\
+            Possible values are:\n- AC_TY_CH: Access Type Change.\n- UP_PATH_CH: UP\
+            \ Path Change.\n- PDU_SES_REL: PDU Session Release.\n- PLMN_CH: PLMN Change.\n\
+            - UE_IP_CH: UE IP address change.\n- RAT_TY_CH: RAT Type Change.\n- DDDS:\
+            \ Downlink data delivery status.\n- COMM_FAIL: Communication Failure.\n\
+            - PDU_SES_EST: PDU Session Establishment.\n- QFI_ALLOC: QFI allocation.\n\
+            - QOS_MON: QoS Monitoring.\n- SMCC_EXP: SM congestion control experience\
+            \ for PDU Session.\n- DISPERSION: Session Management transaction dispersion.\n\
+            - RED_TRANS_EXP: Redundant transmission experience for PDU Session.\n\
+            - WLAN_INFO: WLAN information on PDU session for which Access Type is\
+            \ NON_3GPP_ACCESS and\n  RAT Type is TRUSTED_WLAN.\n- UPF_INFO: The UPF\
+            \ information, including the UPF ID/address/FQDN information.\n- UP_STATUS_INFO:\
+            \ The User Plane status information.\n- UPF_EVENT: UPF event subscribed\
+            \ via SMF.\n- SATB_CH: Satellite backhaul category change.\n- TRAFFIC_CORRELATION:\
+            \ Indicates that the SMF provides 5GC determined traffic correlation\n\
+            \  information for a set of UEs identified by Traffic Correlation ID.\n\
+            - TRAFF_ROUTE_REQ_OUTCOME: Indicates the report of the installation outcome\
+            \ of the requested\n  traffic routing requirements.\n- SIM_CONN_FAIL:\
+            \ Indicates that the simultaneous connectivity over the source and the\
+            \ target\n  PDU Session Anchor failed to be established during a PDU Session\
+            \ Anchor change.\n- QFI_DEALLOCATION: QFI deallocation.\n- QOS_FLOW_CHANGE:\
+            \ QoS flow change.\n- ENERGY_USAGE_DATA: Indicates that the SMF event\
+            \ is the user-plane energy consumption\n  information.\n- SIGNALLING_INFO:\
+            \ Indicates the report of Service Signalling characteristics.\n"
+          title: SmfEvent
+          type: string
         referenceId:
           description: |
             Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
-          maximum: 18446744073709551615
           minimum: 0
           title: Uint64
           type: integer
         dnaiChgType:
-          $ref: '#/components/schemas/DnaiChangeType'
+          description: "Possible values are:\n- EARLY: Early notification of UP path\
+            \ reconfiguration.\n- EARLY_LATE: Early and late notification of UP path\
+            \ reconfiguration. This value shall\n  only be present in the subscription\
+            \ to the DNAI change event.\n- LATE: Late notification of UP path reconfiguration.\
+            \ \n"
+          title: DnaiChangeType
+          type: string
         dddTraDescriptors:
           items:
             $ref: '#/components/schemas/DddTrafficDescriptor'
@@ -3930,7 +3973,7 @@ components:
         ipv6Prefixes:
         - 2001:db8:abcd:12::0/64
         - 2001:db8:abcd:12::0/64
-        sscMode: SSC_MODE_1
+        sscMode: sscMode
         dataVolInfoData:
         - gNBId:
             bitLength: 27
@@ -3980,11 +4023,11 @@ components:
                 ipv6Prefix: 2001:db8:abcd:12::0/64
         endWlan: 2000-01-23T04:56:07.000+00:00
         ulDataRate: ulDataRate
-        satBackhaulCat: GEO
+        satBackhaulCat: satBackhaulCat
         "5qi": 73
         targetUeIpv4Addr: 198.51.100.1
         qosPara:
-          rscType: NON_GBR
+          rscType: rscType
           gbrDl: gbrDl
           maxPlrDl: 335
           maxDataBurstVol: 2925
@@ -4004,7 +4047,7 @@ components:
         smNasFromSmf:
           timeStamp: 2000-01-23T04:56:07.000+00:00
           smNasType: smNasType
-          appliedSmccType: DNN_CC
+          appliedSmccType: appliedSmccType
           backoffTimer: 3
         trafCorreInfo:
           smfId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -4024,7 +4067,7 @@ components:
         - destMacAddr: destMacAddr
           destMacAddrEnd: destMacAddrEnd
           sourceMacAddr: sourceMacAddr
-          fDir: DOWNLINK
+          fDir: fDir
           ethType: ethType
           fDesc: fDesc
           vlanTags:
@@ -4034,7 +4077,7 @@ components:
         - destMacAddr: destMacAddr
           destMacAddrEnd: destMacAddrEnd
           sourceMacAddr: sourceMacAddr
-          fDir: DOWNLINK
+          fDir: fDir
           ethType: ethType
           fDesc: fDesc
           vlanTags:
@@ -4065,7 +4108,7 @@ components:
           nasReleaseCode: nasReleaseCode
         ulCongInfo: 0
         upRedTrans: true
-        dddStatus: null
+        dddStatus: dddStatus
         dddTraDescriptor:
           ipv6Addr: 2001:db8:85a3::8a2e:370:7334
           ipv4Addr: 198.51.100.1
@@ -4084,7 +4127,7 @@ components:
             portNumber: 0
           routeProfId: routeProfId
         sourceUeIpv6Prefix: 2001:db8:abcd:12::0/64
-        pduSessType: IPV4
+        pduSessType: pduSessType
         nfSignalInfo:
           nfSigInfoPerWndw:
           - tw:
@@ -4096,7 +4139,7 @@ components:
                 numOfRedMessages: 0
                 numOfReq: 0
                 numOfReqReject: 0
-                serviceName: nnrf-nfm
+                serviceName: serviceName
                 numOfPosteriorReq: 0
           - tw:
               startTime: 2000-01-23T04:56:07.000+00:00
@@ -4107,7 +4150,7 @@ components:
                 numOfRedMessages: 0
                 numOfReq: 0
                 numOfReqReject: 0
-                serviceName: nnrf-nfm
+                serviceName: serviceName
                 numOfPosteriorReq: 0
           nfHeartbeatInfo:
             hbIntvl: 0
@@ -4141,13 +4184,13 @@ components:
           - null
           - null
           transaction: 0
-        referenceId: 2147483647
+        referenceId: 0
         gpsi: gpsi
         ethFlowDescs:
         - destMacAddr: destMacAddr
           destMacAddrEnd: destMacAddrEnd
           sourceMacAddr: sourceMacAddr
-          fDir: DOWNLINK
+          fDir: fDir
           ethType: ethType
           fDesc: fDesc
           vlanTags:
@@ -4157,7 +4200,7 @@ components:
         - destMacAddr: destMacAddr
           destMacAddrEnd: destMacAddrEnd
           sourceMacAddr: sourceMacAddr
-          fDir: DOWNLINK
+          fDir: fDir
           ethType: ethType
           fDesc: fDesc
           vlanTags:
@@ -4165,7 +4208,7 @@ components:
           - vlanTags
           srcMacAddrEnd: srcMacAddrEnd
         dlCongInfo: 0
-        dnaiChgType: null
+        dnaiChgType: dnaiChgType
         startWlan: 2000-01-23T04:56:07.000+00:00
         sourceDnai: sourceDnai
         sourceUeIpv4Addr: 198.51.100.1
@@ -4178,7 +4221,7 @@ components:
           mnc: mnc
           nid: nid
           mcc: mcc
-        event: null
+        event: event
         candidateDnais:
         - null
         - null
@@ -4190,7 +4233,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -4200,7 +4243,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -4214,7 +4257,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -4224,7 +4267,7 @@ components:
           - destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -4233,12 +4276,12 @@ components:
             srcMacAddrEnd: srcMacAddrEnd
         reIpv6Prefix: 2001:db8:abcd:12::0/64
         stateTransitions:
-        - transType: null
+        - transType: transType
           numOfTran: 0
           pctUes: 0
           groupId: groupId
           supi: supi
-        - transType: null
+        - transType: transType
           numOfTran: 0
           pctUes: 0
           groupId: groupId
@@ -4267,7 +4310,7 @@ components:
           timeStamp: 2000-01-23T04:56:07.000+00:00
           smNasType: smNasType
         bssId: bssId
-        ratType: null
+        ratType: ratType
         supi: supi
         adIpv4Addr: 198.51.100.1
         timeStamp: 2000-01-23T04:56:07.000+00:00
@@ -4290,12 +4333,12 @@ components:
         qfi: 55
         pduSessInfos:
         - sessInfo:
-            pduSessStatus: ACTIVATED
+            pduSessStatus: pduSessStatus
             sessInactiveTimer: 1
             n4SessId: n4SessId
           pduSessId: 177
         - sessInfo:
-            pduSessStatus: ACTIVATED
+            pduSessStatus: pduSessStatus
             sessInactiveTimer: 1
             n4SessId: n4SessId
           pduSessId: 177
@@ -4305,11 +4348,35 @@ components:
         - ipv6Prefixes
       properties:
         event:
-          $ref: '#/components/schemas/SmfEvent'
+          description: "Represents the types of events that can be subscribed.  \n\
+            Possible values are:\n- AC_TY_CH: Access Type Change.\n- UP_PATH_CH: UP\
+            \ Path Change.\n- PDU_SES_REL: PDU Session Release.\n- PLMN_CH: PLMN Change.\n\
+            - UE_IP_CH: UE IP address change.\n- RAT_TY_CH: RAT Type Change.\n- DDDS:\
+            \ Downlink data delivery status.\n- COMM_FAIL: Communication Failure.\n\
+            - PDU_SES_EST: PDU Session Establishment.\n- QFI_ALLOC: QFI allocation.\n\
+            - QOS_MON: QoS Monitoring.\n- SMCC_EXP: SM congestion control experience\
+            \ for PDU Session.\n- DISPERSION: Session Management transaction dispersion.\n\
+            - RED_TRANS_EXP: Redundant transmission experience for PDU Session.\n\
+            - WLAN_INFO: WLAN information on PDU session for which Access Type is\
+            \ NON_3GPP_ACCESS and\n  RAT Type is TRUSTED_WLAN.\n- UPF_INFO: The UPF\
+            \ information, including the UPF ID/address/FQDN information.\n- UP_STATUS_INFO:\
+            \ The User Plane status information.\n- UPF_EVENT: UPF event subscribed\
+            \ via SMF.\n- SATB_CH: Satellite backhaul category change.\n- TRAFFIC_CORRELATION:\
+            \ Indicates that the SMF provides 5GC determined traffic correlation\n\
+            \  information for a set of UEs identified by Traffic Correlation ID.\n\
+            - TRAFF_ROUTE_REQ_OUTCOME: Indicates the report of the installation outcome\
+            \ of the requested\n  traffic routing requirements.\n- SIM_CONN_FAIL:\
+            \ Indicates that the simultaneous connectivity over the source and the\
+            \ target\n  PDU Session Anchor failed to be established during a PDU Session\
+            \ Anchor change.\n- QFI_DEALLOCATION: QFI deallocation.\n- QOS_FLOW_CHANGE:\
+            \ QoS flow change.\n- ENERGY_USAGE_DATA: Indicates that the SMF event\
+            \ is the user-plane energy consumption\n  information.\n- SIGNALLING_INFO:\
+            \ Indicates the report of Service Signalling characteristics.\n"
+          title: SmfEvent
+          type: string
         referenceId:
           description: |
             Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
-          maximum: 18446744073709551615
           minimum: 0
           title: Uint64
           type: integer
@@ -4364,7 +4431,13 @@ components:
           title: Dnai
           type: string
         dnaiChgType:
-          $ref: '#/components/schemas/DnaiChangeType'
+          description: "Possible values are:\n- EARLY: Early notification of UP path\
+            \ reconfiguration.\n- EARLY_LATE: Early and late notification of UP path\
+            \ reconfiguration. This value shall\n  only be present in the subscription\
+            \ to the DNAI change event.\n- LATE: Late notification of UP path reconfiguration.\
+            \ \n"
+          title: DnaiChangeType
+          type: string
         traffRouteReqOutcome:
           $ref: '#/components/schemas/TraffRouteReqOutcome'
         candidateDnais:
@@ -4453,9 +4526,22 @@ components:
           title: PduSessionId
           type: integer
         ratType:
-          $ref: '#/components/schemas/RatType'
+          description: Indicates the radio access used.
+          title: RatType
+          type: string
         dddStatus:
-          $ref: '#/components/schemas/DlDataDeliveryStatus'
+          description: |
+            Possible values are:
+            - BUFFERED: The first downlink data is buffered with extended buffering matching the
+              source of the downlink traffic.
+            - TRANSMITTED: The first downlink data matching the source of the downlink traffic is
+              transmitted after previous buffering or discarding of corresponding packet(s) because
+              the UE of the PDU Session becomes ACTIVE, and buffered data can be delivered to UE.
+            - DISCARDED: The first downlink data matching the source of the downlink traffic is
+              discarded because the Extended Buffering time, as determined by the SMF, expires or
+              the amount of downlink data to be buffered is exceeded.
+          title: DlDataDeliveryStatus
+          type: string
         dddTraDescriptor:
           $ref: '#/components/schemas/DddTrafficDescriptor'
         maxWaitTime:
@@ -4485,9 +4571,15 @@ components:
           title: ipv6Addrs
           type: array
         pduSessType:
-          $ref: '#/components/schemas/PduSessionType'
+          description: "PduSessionType indicates the type of a PDU session. It shall\
+            \ comply with the provisions defined in table 5.4.3.3-1. \n"
+          title: PduSessionType
+          type: string
         sscMode:
-          $ref: '#/components/schemas/SscMode'
+          description: "represents the service and session continuity mode It shall\
+            \ comply with the provisions defined in table 5.4.3.6-1. \n"
+          title: SscMode
+          type: string
         qfi:
           description: "Unsigned integer identifying a QoS flow, within the range\
             \ 0 to 63."
@@ -4623,7 +4715,9 @@ components:
           title: pdmf
           type: boolean
         satBackhaulCat:
-          $ref: '#/components/schemas/SatelliteBackhaulCategory'
+          description: Indicates the satellite backhaul used.
+          title: SatelliteBackhaulCategory
+          type: string
         supportedFeatures:
           description: |
             A string used to indicate the features supported by an API that is used as defined in clause  6.6 in 3GPP TS 29.500. The string shall contain a bitmask indicating supported features in  hexadecimal representation Each character in the string shall take a value of "0" to "9",  "a" to "f" or "A" to "F" and shall represent the support of 4 features as described in  table 5.2.2-3. The most significant character representing the highest-numbered features shall  appear first in the string, and the character representing features 1 to 4 shall appear last  in the string. The list of features and their numbering (starting with 1) are defined  separately for each API. If the string contains a lower number of characters than there are  defined features for an API, all features that would be represented by characters that are not  present in the string are not supported.
@@ -4673,13 +4767,13 @@ components:
       type: object
     StateTransitionInfo:
       allOf:
-      - nullable: true
-        oneOf: []
+      - required:
+        - supi
       - anyOf: []
         nullable: true
       description: Represents session-related state transition information.
       example:
-        transType: null
+        transType: transType
         numOfTran: 0
         pctUes: 0
         groupId: groupId
@@ -4711,7 +4805,32 @@ components:
           title: GroupId
           type: string
         transType:
-          $ref: '#/components/schemas/SmfEvent'
+          description: "Represents the types of events that can be subscribed.  \n\
+            Possible values are:\n- AC_TY_CH: Access Type Change.\n- UP_PATH_CH: UP\
+            \ Path Change.\n- PDU_SES_REL: PDU Session Release.\n- PLMN_CH: PLMN Change.\n\
+            - UE_IP_CH: UE IP address change.\n- RAT_TY_CH: RAT Type Change.\n- DDDS:\
+            \ Downlink data delivery status.\n- COMM_FAIL: Communication Failure.\n\
+            - PDU_SES_EST: PDU Session Establishment.\n- QFI_ALLOC: QFI allocation.\n\
+            - QOS_MON: QoS Monitoring.\n- SMCC_EXP: SM congestion control experience\
+            \ for PDU Session.\n- DISPERSION: Session Management transaction dispersion.\n\
+            - RED_TRANS_EXP: Redundant transmission experience for PDU Session.\n\
+            - WLAN_INFO: WLAN information on PDU session for which Access Type is\
+            \ NON_3GPP_ACCESS and\n  RAT Type is TRUSTED_WLAN.\n- UPF_INFO: The UPF\
+            \ information, including the UPF ID/address/FQDN information.\n- UP_STATUS_INFO:\
+            \ The User Plane status information.\n- UPF_EVENT: UPF event subscribed\
+            \ via SMF.\n- SATB_CH: Satellite backhaul category change.\n- TRAFFIC_CORRELATION:\
+            \ Indicates that the SMF provides 5GC determined traffic correlation\n\
+            \  information for a set of UEs identified by Traffic Correlation ID.\n\
+            - TRAFF_ROUTE_REQ_OUTCOME: Indicates the report of the installation outcome\
+            \ of the requested\n  traffic routing requirements.\n- SIM_CONN_FAIL:\
+            \ Indicates that the simultaneous connectivity over the source and the\
+            \ target\n  PDU Session Anchor failed to be established during a PDU Session\
+            \ Anchor change.\n- QFI_DEALLOCATION: QFI deallocation.\n- QOS_FLOW_CHANGE:\
+            \ QoS flow change.\n- ENERGY_USAGE_DATA: Indicates that the SMF event\
+            \ is the user-plane energy consumption\n  information.\n- SIGNALLING_INFO:\
+            \ Indicates the report of Service Signalling characteristics.\n"
+          title: SmfEvent
+          type: string
         numOfTran:
           description: "Unsigned Integer, i.e. only value 0 and integers above 0 are\
             \ permissible."
@@ -4775,7 +4894,7 @@ components:
                 ipv6Addr: 2001:db8:85a3::8a2e:370:7334
                 ipv4Addr: 198.51.100.1
                 ipv6Prefix: 2001:db8:abcd:12::0/64
-          afStatus: SUCCESS
+          afStatus: afStatus
           upBuffInd: true
         supi: supi
         gpsi: gpsi
@@ -4844,7 +4963,7 @@ components:
       example:
         timeStamp: 2000-01-23T04:56:07.000+00:00
         smNasType: smNasType
-        appliedSmccType: DNN_CC
+        appliedSmccType: appliedSmccType
         backoffTimer: 3
       properties:
         smNasType:
@@ -4860,7 +4979,11 @@ components:
           title: DurationSec
           type: integer
         appliedSmccType:
-          $ref: '#/components/schemas/AppliedSmccType'
+          description: "Represents the type of applied SM congestion control.  \n\
+            Possible values are:\n- DNN_CC: Indicates the DNN based congestion control.\n\
+            - SNSSAI_CC: Indicates the S-NSSAI based congestion control.\n"
+          title: AppliedSmccType
+          type: string
       required:
       - appliedSmccType
       - backoffTimer
@@ -4910,7 +5033,7 @@ components:
       description: Represents the PDU session related information.
       example:
         sessInfo:
-          pduSessStatus: ACTIVATED
+          pduSessStatus: pduSessStatus
           sessInactiveTimer: 1
           n4SessId: n4SessId
         pduSessId: 177
@@ -4932,7 +5055,7 @@ components:
     PduSessionInfo:
       description: Represents session information.
       example:
-        pduSessStatus: ACTIVATED
+        pduSessStatus: pduSessStatus
         sessInactiveTimer: 1
         n4SessId: n4SessId
       properties:
@@ -4945,7 +5068,11 @@ components:
           title: DurationSec
           type: integer
         pduSessStatus:
-          $ref: '#/components/schemas/PduSessionStatus'
+          description: "Represents the status of the PDU Session.  \nPossible values\
+            \ are:\n- ACTIVATED: PDU Session status is activated.\n- DEACTIVATED:\
+            \ PDU Session status is deactivated."
+          title: PduSessionStatus
+          type: string
       title: PduSessionInfo
       type: object
     UpfInformation:
@@ -5044,7 +5171,7 @@ components:
         - destMacAddr: destMacAddr
           destMacAddrEnd: destMacAddrEnd
           sourceMacAddr: sourceMacAddr
-          fDir: DOWNLINK
+          fDir: fDir
           ethType: ethType
           fDesc: fDesc
           vlanTags:
@@ -5054,7 +5181,7 @@ components:
         - destMacAddr: destMacAddr
           destMacAddrEnd: destMacAddrEnd
           sourceMacAddr: sourceMacAddr
-          fDir: DOWNLINK
+          fDir: fDir
           ethType: ethType
           fDesc: fDesc
           vlanTags:
@@ -5068,7 +5195,7 @@ components:
         - destMacAddr: destMacAddr
           destMacAddrEnd: destMacAddrEnd
           sourceMacAddr: sourceMacAddr
-          fDir: DOWNLINK
+          fDir: fDir
           ethType: ethType
           fDesc: fDesc
           vlanTags:
@@ -5078,7 +5205,7 @@ components:
         - destMacAddr: destMacAddr
           destMacAddrEnd: destMacAddrEnd
           sourceMacAddr: sourceMacAddr
-          fDir: DOWNLINK
+          fDir: fDir
           ethType: ethType
           fDesc: fDesc
           vlanTags:
@@ -5207,38 +5334,6 @@ components:
       title: IpAddrUsageInfo
       type: object
     SmfEvent:
-      anyOf:
-      - enum:
-        - AC_TY_CH
-        - UP_PATH_CH
-        - PDU_SES_REL
-        - PLMN_CH
-        - UE_IP_CH
-        - RAT_TY_CH
-        - DDDS
-        - COMM_FAIL
-        - PDU_SES_EST
-        - QFI_ALLOC
-        - QOS_MON
-        - SMCC_EXP
-        - DISPERSION
-        - RED_TRANS_EXP
-        - WLAN_INFO
-        - UPF_INFO
-        - UP_STATUS_INFO
-        - UPF_EVENT
-        - SATB_CH
-        - TRAFFIC_CORRELATION
-        - TRAFF_ROUTE_REQ_OUTCOME
-        - SIM_CONN_FAIL
-        - QFI_DEALLOCATION
-        - QOS_FLOW_CHANGE
-        - ENERGY_USAGE_DATA
-        - SIGNALLING_INFO
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration and is not used to encode content defined in the present version of this API.
-        type: string
       description: "Represents the types of events that can be subscribed.  \nPossible\
         \ values are:\n- AC_TY_CH: Access Type Change.\n- UP_PATH_CH: UP Path Change.\n\
         - PDU_SES_REL: PDU Session Release.\n- PLMN_CH: PLMN Change.\n- UE_IP_CH:\
@@ -5262,65 +5357,33 @@ components:
         \ Indicates that the SMF event is the user-plane energy consumption\n  information.\n\
         - SIGNALLING_INFO: Indicates the report of Service Signalling characteristics.\n"
       title: SmfEvent
+      type: string
     NotificationMethod:
-      anyOf:
-      - enum:
-        - PERIODIC
-        - ONE_TIME
-        - ON_EVENT_DETECTION
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration and is not used to encode content defined in the present version of this API.
-        type: string
       description: "Represents the notification methods that can be subscribed.  \n\
         Possible values are:\n- PERIODIC: The notification is periodically sent.\n\
         - ONE_TIME: The notification is only sent one time.\n- ON_EVENT_DETECTION:\
         \ The notification is sent each time the event is detected.\n"
-      title: NotificationMethod
+      title: notifMethod
+      type: string
     AppliedSmccType:
-      anyOf:
-      - description: |
-          This string indicates the type of applied SM congestion control.
-        enum:
-        - DNN_CC
-        - SNSSAI_CC
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration and is not used to encode content defined in the present version of this API.
-        type: string
       description: "Represents the type of applied SM congestion control.  \nPossible\
         \ values are:\n- DNN_CC: Indicates the DNN based congestion control.\n- SNSSAI_CC:\
         \ Indicates the S-NSSAI based congestion control.\n"
       title: AppliedSmccType
+      type: string
     TransactionMetric:
-      anyOf:
-      - enum:
-        - PDU_SES_EST
-        - PDU_SES_AUTH
-        - PDU_SES_MODIF
-        - PDU_SES_REL
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration and is not used to encode content defined in the present version of this API.
-        type: string
       description: "Represents the metric on UE Session Management transactions. \
         \ \nPossible values are:\n- PDU_SES_EST: PDU Session Establishment.\n- PDU_SES_AUTH:\
         \ PDU Session Authentication.\n- PDU_SES_MODIF: PDU Session Modification.\n\
         - PDU_SES_REL: PDU Session Release\n"
       title: TransactionMetric
+      type: string
     PduSessionStatus:
-      anyOf:
-      - enum:
-        - ACTIVATED
-        - DEACTIVATED
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration and is not used to encode content defined in the present version of this API.
-        type: string
       description: "Represents the status of the PDU Session.  \nPossible values are:\n\
         - ACTIVATED: PDU Session status is activated.\n- DEACTIVATED: PDU Session\
         \ status is deactivated."
       title: PduSessionStatus
+      type: string
     ProblemDetails:
       description: Provides additional information in an error response.
       properties:
@@ -5631,208 +5694,9 @@ components:
       title: AmfId
       type: string
     ServiceName:
-      anyOf:
-      - enum:
-        - nnrf-nfm
-        - nnrf-disc
-        - nnrf-oauth2
-        - nudm-sdm
-        - nudm-uecm
-        - nudm-ueau
-        - nudm-ee
-        - nudm-pp
-        - nudm-niddau
-        - nudm-mt
-        - nudm-ssau
-        - nudm-rsds
-        - nudm-ueid
-        - namf-comm
-        - namf-evts
-        - namf-mt
-        - namf-loc
-        - namf-mbs-comm
-        - namf-mbs-bc
-        - namf-aiot
-        - nsmf-pdusession
-        - nsmf-event-exposure
-        - nsmf-nidd
-        - nausf-auth
-        - nausf-sorprotection
-        - nausf-upuprotection
-        - nnef-pfdmanagement
-        - nnef-smcontext
-        - nnef-smservice
-        - nnef-eventexposure
-        - nnef-eas-deployment
-        - nnef-dnai-mapping
-        - nnef-traffic-influence-data
-        - nnef-ecs-addr-cfg-info
-        - nnef-ueid
-        - 3gpp-cp-parameter-provisioning
-        - 3gpp-device-triggering
-        - 3gpp-bdt
-        - 3gpp-traffic-influence
-        - 3gpp-chargeable-party
-        - 3gpp-as-session-with-qos
-        - 3gpp-msisdn-less-mo-sms
-        - 3gpp-service-parameter
-        - 3gpp-monitoring-event
-        - 3gpp-nidd-configuration-trigger
-        - 3gpp-nidd
-        - 3gpp-analyticsexposure
-        - 3gpp-racs-parameter-provisioning
-        - 3gpp-ecr-control
-        - 3gpp-applying-bdt-policy
-        - 3gpp-mo-lcs-notify
-        - 3gpp-time-sync
-        - 3gpp-am-influence
-        - 3gpp-am-policyauthorization
-        - 3gpp-akma
-        - 3gpp-eas-deployment
-        - 3gpp-iptvconfiguration
-        - 3gpp-mbs-tmgi
-        - 3gpp-mbs-session
-        - 3gpp-authentication
-        - 3gpp-asti
-        - 3gpp-pdtq-policy-negotiation
-        - 3gpp-musa
-        - 3gpp-5glan-pp
-        - 3gpp-lpi-pp
-        - 3gpp-acs-pp
-        - 3gpp-ecs-address-provision
-        - 3gpp-data-reporting
-        - 3gpp-data-reporting-provisioning
-        - 3gpp-ueid
-        - 3gpp-mb-us
-        - 3gpp-mb-ud-ingest
-        - 3gpp-event-exposure
-        - 3gpp-mbs-group-msg
-        - 3gpp-dnai-mapping
-        - 3gpp-grp-pp
-        - 3gpp-slice-pp
-        - 3gpp-ue-address
-        - 3gpp-ecs-address
-        - 3gpp-rslppi-pp
-        - 3gpp-group-message-delivery-mb2
-        - 3gpp-group-message-delivery-xmb
-        - 3gpp-network-status-reporting
-        - 3gpp-pfd-management
-        - 3gpp-network-parameter-configuration
-        - 3gpp-addr-pp
-        - 3gpp-uav-fa
-        - 3gpp-caginfo-pp
-        - 3gpp-retrieve-uav-flight
-        - 3gpp-ims-sm
-        - 3gpp-ims-ee
-        - 3gpp-ims-pp
-        - 3gpp-vfl-training
-        - 3gpp-vfl-inference
-        - 3gpp-vfl-nf-discovery
-        - 3gpp-aiot
-        - npcf-am-policy-control
-        - npcf-smpolicycontrol
-        - npcf-policyauthorization
-        - npcf-bdtpolicycontrol
-        - npcf-eventexposure
-        - npcf-ue-policy-control
-        - npcf-am-policyauthorization
-        - npcf-pdtq-policy-control
-        - npcf-mbspolicycontrol
-        - npcf-mbspolicyauth
-        - nsmsf-sms
-        - nnssf-nsselection
-        - nnssf-nssaiavailability
-        - nudr-dr
-        - nudr-group-id-map
-        - nlmf-loc
-        - nlmf-broadcast
-        - nlmf-dataexposure
-        - n5g-eir-eic
-        - nbsf-management
-        - nchf-spendinglimitcontrol
-        - nchf-convergedcharging
-        - nchf-offlineonlycharging
-        - nnwdaf-eventssubscription
-        - nnwdaf-analyticsinfo
-        - nnwdaf-datamanagement
-        - nnwdaf-mlmodelprovision
-        - nnwdaf-mlmodeltraining
-        - nnwdaf-mlmodelmonitor
-        - nnwdaf-roamingdata
-        - nnwdaf-roaminganalytics
-        - nnwdaf-vfltraining
-        - nnwdaf-vflinference
-        - ngmlc-loc
-        - nucmf-provisioning
-        - nucmf-uecapabilitymanagement
-        - nhss-sdm
-        - nhss-uecm
-        - nhss-ueau
-        - nhss-ee
-        - nhss-pp
-        - nhss-ims-sdm
-        - nhss-ims-uecm
-        - nhss-ims-ueau
-        - nhss-gba-sdm
-        - nhss-gba-ueau
-        - nsepp-telescopic
-        - nsoraf-sor
-        - nspaf-secured-packet
-        - nudsf-dr
-        - nudsf-timer
-        - nnssaaf-nssaa
-        - nnssaaf-aiw
-        - naanf-akma
-        - n5gddnmf-discovery
-        - nmfaf-3dadatamanagement
-        - nmfaf-3cadatamanagement
-        - nmfaf-contextmanagement
-        - neasdf-dnscontext
-        - neasdf-baselinednspattern
-        - ndccf-datamanagement
-        - ndccf-contextmanagement
-        - nnsacf-nsac
-        - nnsacf-slice-ee
-        - nmbsmf-tmgi
-        - nmbsmf-mbssession
-        - nadrf-datamanagement
-        - nadrf-mlmodelmanagement
-        - nbsp-gba
-        - ntsctsf-time-sync
-        - ntsctsf-qos-tscai
-        - ntsctsf-asti
-        - npkmf-keyreq
-        - npkmf-userid
-        - npkmf-discovery
-        - nmnpf-npstatus
-        - niwmsc-smservice
-        - nmbsf-mbs-us
-        - nmbsf-mbs-ud-ingest
-        - nmbstf-distsession
-        - npanf-prosekey
-        - npanf-userid
-        - nupf-ee
-        - nupf-gueip
-        - naf-prose
-        - naf-eventexposure
-        - naf-vfltraining
-        - naf-vflinference
-        - naf-training
-        - naf-inference
-        - nmf-mrm
-        - nimsas-sec
-        - nimsas-mc
-        - nimsas-ism
-        - nimsas-ee
-        - nscp-ee
-        - neif-eventexposure
-        - naiotf-aiot
-        - nadm-dmquery
-        - nadm-dmupdate
-        type: string
-      - type: string
       description: Service names known to NRF
       title: ServiceName
+      type: string
     SamplingRatio:
       description: "Unsigned integer indicating Sampling Ratio (see clauses 4.15.1\
         \ of 3GPP TS 23.502), expressed in percent. \n"
@@ -5841,17 +5705,6 @@ components:
       title: sampRatio
       type: integer
     PartitioningCriteria:
-      anyOf:
-      - enum:
-        - TAC
-        - SUBPLMN
-        - GEOAREA
-        - SNSSAI
-        - DNN
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration but is not used to encode content defined in the present version of this API.
-        type: string
       description: |
         Possible values are:
         - "TAC": Type Allocation Code
@@ -5860,58 +5713,44 @@ components:
         - "SNSSAI": S-NSSAI
         - "DNN": DNN
       title: PartitioningCriteria
+      type: string
     NotificationFlag:
-      anyOf:
-      - enum:
-        - ACTIVATE
-        - DEACTIVATE
-        - RETRIEVAL
-        type: string
-      - description: "This string provides forward-compatibility with future extensions\
-          \ to the enumeration but is not used to encode content defined in the present\
-          \ version of this API. \n"
-        type: string
       description: "Possible values are:\n- ACTIVATE: The event notification is activated.\n\
         - DEACTIVATE: The event notification is deactivated and shall be muted. The\
         \ available\n   event(s) shall be stored.\n- RETRIEVAL: The event notification\
         \ shall be sent to the NF service consumer(s),\n  after that, is muted again.\
         \ \n"
-      title: NotificationFlag
+      title: notifFlag
+      type: string
     MutingExceptionInstructions:
       description: |
         Indicates to an Event producer NF instructions for the subscription and stored events when an exception (e.g. full buffer) occurs at the Event producer NF while the event is muted.
       example:
-        bufferedNotifs: SEND_ALL
-        subscription: CLOSE
+        bufferedNotifs: bufferedNotifs
+        subscription: subscription
       properties:
         bufferedNotifs:
-          $ref: '#/components/schemas/BufferedNotificationsAction'
+          description: |
+            Indicates the required action by the event producer NF on the buffered Notifications.
+          title: BufferedNotificationsAction
+          type: string
         subscription:
-          $ref: '#/components/schemas/SubscriptionAction'
+          description: |
+            Indicates the required action by the event producer NF on the event subscription if an exception occurs while the event is muted.
+          title: SubscriptionAction
+          type: string
       title: MutingExceptionInstructions
       type: object
     BufferedNotificationsAction:
-      anyOf:
-      - enum:
-        - SEND_ALL
-        - DISCARD_ALL
-        - DROP_OLD
-        type: string
-      - type: string
       description: |
         Indicates the required action by the event producer NF on the buffered Notifications.
       title: BufferedNotificationsAction
+      type: string
     SubscriptionAction:
-      anyOf:
-      - enum:
-        - CLOSE
-        - CONTINUE_WITH_MUTING
-        - CONTINUE_WITHOUT_MUTING
-        type: string
-      - type: string
       description: |
         Indicates the required action by the event producer NF on the event subscription if an exception occurs while the event is muted.
       title: SubscriptionAction
+      type: string
     MutingNotificationsSettings:
       description: |
         Indicates the Event producer NF settings to the Event consumer NF
@@ -5933,26 +5772,16 @@ components:
     Uint64:
       description: |
         Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
-      maximum: 18446744073709551615
       minimum: 0
       title: Uint64
       type: integer
     DnaiChangeType:
-      anyOf:
-      - enum:
-        - EARLY
-        - EARLY_LATE
-        - LATE
-        type: string
-      - description: "This string provides forward-compatibility with future extensions\
-          \ to the enumeration but is not used to encode  content defined in the present\
-          \ version of this API. \n"
-        type: string
       description: "Possible values are:\n- EARLY: Early notification of UP path reconfiguration.\n\
         - EARLY_LATE: Early and late notification of UP path reconfiguration. This\
         \ value shall\n  only be present in the subscription to the DNAI change event.\n\
         - LATE: Late notification of UP path reconfiguration. \n"
       title: DnaiChangeType
+      type: string
     DddTrafficDescriptor:
       description: Contains a Traffic Descriptor.
       example:
@@ -5991,15 +5820,6 @@ components:
       title: MacAddr48
       type: string
     DlDataDeliveryStatus:
-      anyOf:
-      - enum:
-        - BUFFERED
-        - TRANSMITTED
-        - DISCARDED
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration but is not used to encode content defined in the present version of this API.
-        type: string
       description: |
         Possible values are:
         - BUFFERED: The first downlink data is buffered with extended buffering matching the
@@ -6011,6 +5831,7 @@ components:
           discarded because the Extended Buffering time, as determined by the SMF, expires or
           the amount of downlink data to be buffered is exceeded.
       title: DlDataDeliveryStatus
+      type: string
     ApplicationId:
       description: String providing an application identifier.
       title: ApplicationId
@@ -6141,8 +5962,6 @@ components:
         ipv6Addr: 2001:db8:85a3::8a2e:370:7334
         ipv4Addr: 198.51.100.1
         ipv6Prefix: 2001:db8:abcd:12::0/64
-      nullable: true
-      oneOf: []
       properties:
         ipv4Addr:
           description: |
@@ -6174,7 +5993,7 @@ components:
             recurMonth:
             - null
             - null
-            recurType: DAILY
+            recurType: recurType
             recurDate:
             - null
             - null
@@ -6191,7 +6010,7 @@ components:
             recurMonth:
             - null
             - null
-            recurType: DAILY
+            recurType: recurType
             recurDate:
             - null
             - null
@@ -6203,8 +6022,8 @@ components:
             - null
             - null
           skipReportCond:
-          - SKIP_NULL_REPORT
-          - SKIP_NULL_REPORT
+          - null
+          - null
           thresholdCond:
             thresholdThroughput:
               dlThroughput: dlThroughput
@@ -6214,17 +6033,17 @@ components:
             thresholdTrafficVolume:
               totalVolume: totalVolume
               dlVolume: dlVolume
-              dlNbOfPackets: 2147483647
-              ulNbOfPackets: 2147483647
+              dlNbOfPackets: 0
+              ulNbOfPackets: 0
               ulVolume: ulVolume
-              totalNbOfPackets: 2147483647
+              totalNbOfPackets: 0
         remotePortNumber: 27168
-        remainingDataReports: DISCARD
+        remainingDataReports: remainingDataReports
         ipDomain: ipDomain
         trafficFilters:
         - flowLabel: flowLabel
           packFiltId: packFiltId
-          flowDirection: null
+          flowDirection: flowDirection
           packetFilterUsage: true
           tosTrafficClass: tosTrafficClass
           mpxMediaDlInfos:
@@ -6244,7 +6063,7 @@ components:
             destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -6264,7 +6083,7 @@ components:
             rtpSdesHdrExtId: 0
         - flowLabel: flowLabel
           packFiltId: packFiltId
-          flowDirection: null
+          flowDirection: flowDirection
           packetFilterUsage: true
           tosTrafficClass: tosTrafficClass
           mpxMediaDlInfos:
@@ -6284,7 +6103,7 @@ components:
             destMacAddr: destMacAddr
             destMacAddrEnd: destMacAddrEnd
             sourceMacAddr: sourceMacAddr
-            fDir: DOWNLINK
+            fDir: fDir
             ethType: ethType
             fDesc: fDesc
             vlanTags:
@@ -6303,26 +6122,28 @@ components:
             ssrcId: 988759834
             rtpSdesHdrExtId: 0
         ratTypeList:
-        - NR
-        - NR
-        type: QOS_MONITORING
+        - null
+        - null
+        type: type
         remoteIpv4Addr: 198.51.100.1
         immediateFlag: false
-        granularityOfMeasurement: PER_APPLICATION
+        granularityOfMeasurement: granularityOfMeasurement
         inclRatType: true
         remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
         appIds:
         - null
         - null
         measurementTypes:
-        - VOLUME_MEASUREMENT
-        - VOLUME_MEASUREMENT
+        - null
+        - null
         reportingSuggestionInfo:
           reportingTimeInfo: 2
-          reportingUrgency: DELAY_TOLERANT
+          reportingUrgency: reportingUrgency
       properties:
         type:
-          $ref: '#/components/schemas/EventType'
+          description: Event Type
+          title: EventType
+          type: string
         immediateFlag:
           default: false
           title: immediateFlag
@@ -6346,7 +6167,9 @@ components:
           title: trafficFilters
           type: array
         granularityOfMeasurement:
-          $ref: '#/components/schemas/GranularityOfMeasurement'
+          description: Granularity Of Measurement
+          title: GranularityOfMeasurement
+          type: string
         reportingSuggestionInfo:
           $ref: '#/components/schemas/ReportingSuggestionInformation'
         remoteIpv4Addr:
@@ -6369,7 +6192,10 @@ components:
           title: ipDomain
           type: string
         remainingDataReports:
-          $ref: '#/components/schemas/RemainingDataReports'
+          description: indication on how to handle the data collected by the source
+            UPF
+          title: RemainingDataReports
+          type: string
         skipReportingInstruction:
           $ref: '#/components/schemas/SkipReportingInstruction'
         inclRatType:
@@ -6386,35 +6212,19 @@ components:
       title: UpfEvent
       type: object
     EventType:
-      anyOf:
-      - enum:
-        - QOS_MONITORING
-        - USER_DATA_USAGE_MEASURES
-        - USER_DATA_USAGE_TRENDS
-        - TSC_MNGT_INFO
-        - UE_NAT_MAPPING_INFO
-        - HANDLING_OF_PAYLOAD_HEADERS_INFO
-        - SUBSCRIPTION_TERMINATION
-        type: string
-      - type: string
       description: Event Type
       title: EventType
+      type: string
     MeasurementType:
-      anyOf:
-      - enum:
-        - VOLUME_MEASUREMENT
-        - THROUGHPUT_MEASUREMENT
-        - APPLICATION_RELATED_INFO
-        type: string
-      - type: string
       description: Measurement Type
       title: MeasurementType
+      type: string
     FlowInformation:
       description: Contains the flow information.
       example:
         flowLabel: flowLabel
         packFiltId: packFiltId
-        flowDirection: null
+        flowDirection: flowDirection
         packetFilterUsage: true
         tosTrafficClass: tosTrafficClass
         mpxMediaDlInfos:
@@ -6434,7 +6244,7 @@ components:
           destMacAddr: destMacAddr
           destMacAddrEnd: destMacAddrEnd
           sourceMacAddr: sourceMacAddr
-          fDir: DOWNLINK
+          fDir: fDir
           ethType: ethType
           fDesc: fDesc
           vlanTags:
@@ -6485,7 +6295,19 @@ components:
           title: flowLabel
           type: string
         flowDirection:
-          $ref: '#/components/schemas/FlowDirection'
+          description: "Indicates the direction of the service data flow.  \nPossible\
+            \ values are:\n- DOWNLINK: The corresponding filter applies for traffic\
+            \ to the UE.\n- UPLINK: The corresponding filter applies for traffic from\
+            \ the UE.\n- BIDIRECTIONAL: The corresponding filter applies for traffic\
+            \ both to and from the UE.\n- UNSPECIFIED: The corresponding filter applies\
+            \ for traffic to the UE (downlink), but has no\nspecific direction declared.\
+            \ The service data flow detection shall apply the filter for\nuplink traffic\
+            \ as if the filter was bidirectional. The PCF shall not use the value\n\
+            UNSPECIFIED in filters created by the network in NW-initiated procedures.\
+            \ The PCF shall only\ninclude the value UNSPECIFIED in filters in UE-initiated\
+            \ procedures if the same value is\nreceived from the SMF.\n"
+          title: FlowDirection
+          type: string
         mpxMediaUlInfos:
           description: Multiplexed media information for the Uplink IP flow.
           items:
@@ -6512,7 +6334,7 @@ components:
         destMacAddr: destMacAddr
         destMacAddrEnd: destMacAddrEnd
         sourceMacAddr: sourceMacAddr
-        fDir: DOWNLINK
+        fDir: fDir
         ethType: ethType
         fDesc: fDesc
         vlanTags:
@@ -6534,7 +6356,19 @@ components:
           title: FlowDescription
           type: string
         fDir:
-          $ref: '#/components/schemas/FlowDirection'
+          description: "Indicates the direction of the service data flow.  \nPossible\
+            \ values are:\n- DOWNLINK: The corresponding filter applies for traffic\
+            \ to the UE.\n- UPLINK: The corresponding filter applies for traffic from\
+            \ the UE.\n- BIDIRECTIONAL: The corresponding filter applies for traffic\
+            \ both to and from the UE.\n- UNSPECIFIED: The corresponding filter applies\
+            \ for traffic to the UE (downlink), but has no\nspecific direction declared.\
+            \ The service data flow detection shall apply the filter for\nuplink traffic\
+            \ as if the filter was bidirectional. The PCF shall not use the value\n\
+            UNSPECIFIED in filters created by the network in NW-initiated procedures.\
+            \ The PCF shall only\ninclude the value UNSPECIFIED in filters in UE-initiated\
+            \ procedures if the same value is\nreceived from the SMF.\n"
+          title: FlowDirection
+          type: string
         sourceMacAddr:
           description: |
             String identifying a MAC address formatted in the hexadecimal notation according to clause 1.1 and clause 2.1 of RFC 7042.
@@ -6565,16 +6399,6 @@ components:
       title: EthFlowDescription
       type: object
     FlowDirection:
-      anyOf:
-      - enum:
-        - DOWNLINK
-        - UPLINK
-        - BIDIRECTIONAL
-        - UNSPECIFIED
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration and is not used to encode content defined in the present version of this API.
-        type: string
       description: "Indicates the direction of the service data flow.  \nPossible\
         \ values are:\n- DOWNLINK: The corresponding filter applies for traffic to\
         \ the UE.\n- UPLINK: The corresponding filter applies for traffic from the\
@@ -6587,6 +6411,7 @@ components:
         \ only\ninclude the value UNSPECIFIED in filters in UE-initiated procedures\
         \ if the same value is\nreceived from the SMF.\n"
       title: FlowDirection
+      type: string
     FlowDirectionRm:
       $ref: '#/components/schemas/FlowDirection'
     MpxMediaInfo:
@@ -6629,23 +6454,19 @@ components:
       title: MpxMediaInfo
       type: object
     GranularityOfMeasurement:
-      anyOf:
-      - enum:
-        - PER_APPLICATION
-        - PER_SESSION
-        - PER_FLOW
-        type: string
-      - type: string
       description: Granularity Of Measurement
       title: GranularityOfMeasurement
+      type: string
     ReportingSuggestionInformation:
       description: Reporting Suggestion Information
       example:
         reportingTimeInfo: 2
-        reportingUrgency: DELAY_TOLERANT
+        reportingUrgency: reportingUrgency
       properties:
         reportingUrgency:
-          $ref: '#/components/schemas/ReportingUrgency'
+          description: Reporting Urgency
+          title: ReportingUrgency
+          type: string
         reportingTimeInfo:
           description: indicating a time in seconds.
           title: DurationSec
@@ -6655,23 +6476,13 @@ components:
       title: ReportingSuggestionInformation
       type: object
     ReportingUrgency:
-      anyOf:
-      - enum:
-        - DELAY_TOLERANT
-        - NON_DELAY_TOLERANT
-        type: string
-      - type: string
       description: Reporting Urgency
       title: ReportingUrgency
+      type: string
     RemainingDataReports:
-      anyOf:
-      - enum:
-        - DISCARD
-        - SEND
-        type: string
-      - type: string
       description: indication on how to handle the data collected by the source UPF
       title: RemainingDataReports
+      type: string
     SkipReportingInstruction:
       description: Skip Reporting Instruction Information
       example:
@@ -6682,7 +6493,7 @@ components:
           recurMonth:
           - null
           - null
-          recurType: DAILY
+          recurType: recurType
           recurDate:
           - null
           - null
@@ -6699,7 +6510,7 @@ components:
           recurMonth:
           - null
           - null
-          recurType: DAILY
+          recurType: recurType
           recurDate:
           - null
           - null
@@ -6711,8 +6522,8 @@ components:
           - null
           - null
         skipReportCond:
-        - SKIP_NULL_REPORT
-        - SKIP_NULL_REPORT
+        - null
+        - null
         thresholdCond:
           thresholdThroughput:
             dlThroughput: dlThroughput
@@ -6722,10 +6533,10 @@ components:
           thresholdTrafficVolume:
             totalVolume: totalVolume
             dlVolume: dlVolume
-            dlNbOfPackets: 2147483647
-            ulNbOfPackets: 2147483647
+            dlNbOfPackets: 0
+            ulNbOfPackets: 0
             ulVolume: ulVolume
-            totalNbOfPackets: 2147483647
+            totalNbOfPackets: 0
       properties:
         skipReportCond:
           items:
@@ -6746,15 +6557,9 @@ components:
       title: SkipReportingInstruction
       type: object
     SkipReportingCondition:
-      anyOf:
-      - enum:
-        - SKIP_NULL_REPORT
-        - SKIP_OUTSIDE_VALIDITY_TIME
-        - SKIP_BELOW_THRESHOLDS_REPORT
-        type: string
-      - type: string
       description: Conditions for which the UPF can skip sending the event report
       title: SkipReportingCondition
+      type: string
     RecurTime:
       description: Contains the recurring time period
       example:
@@ -6764,7 +6569,7 @@ components:
         recurMonth:
         - null
         - null
-        recurType: DAILY
+        recurType: recurType
         recurDate:
         - null
         - null
@@ -6779,7 +6584,9 @@ components:
         recurTimeWindow:
           $ref: '#/components/schemas/ValidTimePeriod'
         recurType:
-          $ref: '#/components/schemas/RecurType'
+          description: Indicates the recurrence applicable to a time window.
+          title: RecurType
+          type: string
         recurMonth:
           items:
             $ref: '#/components/schemas/MonthOfYear'
@@ -6832,21 +6639,9 @@ components:
       title: ValidTimePeriod
       type: object
     RecurType:
-      anyOf:
-      - enum:
-        - DAILY
-        - WEEKLY
-        - MONTHLY_BY_DATE
-        - MONTHLY_BY_DAY
-        - YEARLY
-        - WEEKDAYS_ONLY
-        - WEEKENDS_ONLY
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration but is not used to encode content defined in the present version of this API.
-        type: string
       description: Indicates the recurrence applicable to a time window.
       title: RecurType
+      type: string
     ThresholdCond:
       description: Instructions of use of a set of Thresholds
       example:
@@ -6858,10 +6653,10 @@ components:
         thresholdTrafficVolume:
           totalVolume: totalVolume
           dlVolume: dlVolume
-          dlNbOfPackets: 2147483647
-          ulNbOfPackets: 2147483647
+          dlNbOfPackets: 0
+          ulNbOfPackets: 0
           ulVolume: ulVolume
-          totalNbOfPackets: 2147483647
+          totalNbOfPackets: 0
       properties:
         thresholdTrafficVolume:
           $ref: '#/components/schemas/VolumeMeasurement'
@@ -6874,10 +6669,10 @@ components:
       example:
         totalVolume: totalVolume
         dlVolume: dlVolume
-        dlNbOfPackets: 2147483647
-        ulNbOfPackets: 2147483647
+        dlNbOfPackets: 0
+        ulNbOfPackets: 0
         ulVolume: ulVolume
-        totalNbOfPackets: 2147483647
+        totalNbOfPackets: 0
       properties:
         totalVolume:
           description: |
@@ -6900,21 +6695,18 @@ components:
         totalNbOfPackets:
           description: |
             Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
-          maximum: 18446744073709551615
           minimum: 0
           title: Uint64
           type: integer
         ulNbOfPackets:
           description: |
             Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
-          maximum: 18446744073709551615
           minimum: 0
           title: Uint64
           type: integer
         dlNbOfPackets:
           description: |
             Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
-          maximum: 18446744073709551615
           minimum: 0
           title: Uint64
           type: integer
@@ -7026,45 +6818,9 @@ components:
       title: AccessType
       type: string
     RatType:
-      anyOf:
-      - enum:
-        - NR
-        - EUTRA
-        - WLAN
-        - VIRTUAL
-        - NBIOT
-        - WIRELINE
-        - WIRELINE_CABLE
-        - WIRELINE_BBF
-        - LTE-M
-        - NR_U
-        - EUTRA_U
-        - TRUSTED_N3GA
-        - TRUSTED_WLAN
-        - UTRA
-        - GERA
-        - NR_LEO
-        - NR_MEO
-        - NR_GEO
-        - NR_OTHER_SAT
-        - NR_REDCAP
-        - WB_E_UTRAN_LEO
-        - WB_E_UTRAN_MEO
-        - WB_E_UTRAN_GEO
-        - WB_E_UTRAN_OTHERSAT
-        - NB_IOT_LEO
-        - NB_IOT_MEO
-        - NB_IOT_GEO
-        - NB_IOT_OTHERSAT
-        - LTE_M_LEO
-        - LTE_M_MEO
-        - LTE_M_GEO
-        - LTE_M_OTHERSAT
-        - NR_EREDCAP
-        type: string
-      - type: string
       description: Indicates the radio access used.
       title: RatType
+      type: string
     CommunicationFailure:
       description: Describes a communication failure detected by AMF
       example:
@@ -7081,29 +6837,15 @@ components:
       title: CommunicationFailure
       type: object
     PduSessionType:
-      anyOf:
-      - enum:
-        - IPV4
-        - IPV6
-        - IPV4V6
-        - UNSTRUCTURED
-        - ETHERNET
-        type: string
-      - type: string
       description: "PduSessionType indicates the type of a PDU session. It shall comply\
         \ with the provisions defined in table 5.4.3.3-1. \n"
       title: PduSessionType
+      type: string
     SscMode:
-      anyOf:
-      - enum:
-        - SSC_MODE_1
-        - SSC_MODE_2
-        - SSC_MODE_3
-        type: string
-      - type: string
       description: "represents the service and session continuity mode It shall comply\
         \ with the provisions defined in table 5.4.3.6-1. \n"
       title: SscMode
+      type: string
     Qfi:
       description: "Unsigned integer identifying a QoS flow, within the range 0 to\
         \ 63."
@@ -7118,21 +6860,9 @@ components:
       title: BitRate
       type: string
     SatelliteBackhaulCategory:
-      anyOf:
-      - enum:
-        - GEO
-        - MEO
-        - LEO
-        - OTHER_SAT
-        - DYNAMIC_GEO
-        - DYNAMIC_MEO
-        - DYNAMIC_LEO
-        - DYNAMIC_OTHER_SAT
-        - NON_SATELLITE
-        type: string
-      - type: string
       description: Indicates the satellite backhaul used.
       title: SatelliteBackhaulCategory
+      type: string
     "5Qi":
       description: |
         Unsigned integer representing a 5G QoS Identifier (see clause 5.7.2.1 of 3GPP TS 23.501, within the range 0 to 255.
@@ -7143,7 +6873,7 @@ components:
     QosPara:
       description: The values of the QoS parameters.
       example:
-        rscType: NON_GBR
+        rscType: rscType
         gbrDl: gbrDl
         maxPlrDl: 335
         maxDataBurstVol: 2925
@@ -7179,7 +6909,12 @@ components:
           title: 5QiPriorityLevel
           type: integer
         rscType:
-          $ref: '#/components/schemas/QosResourceType'
+          description: "The enumeration QosResourceType indicates whether a QoS Flow\
+            \ is non-GBR, delay critical GBR, or non-delay critical GBR (see clauses\
+            \ 5.7.3.4 and 5.7.3.5 of 3GPP TS 23.501). It shall comply with the provisions\
+            \ defined in table 5.5.3.6-1. \n"
+          title: QosResourceType
+          type: string
         pdb:
           description: |
             Unsigned integer indicating Packet Delay Budget (see clauses 5.7.3.4 and 5.7.4 of 3GPP TS 23.501), expressed in milliseconds.
@@ -7260,7 +6995,7 @@ components:
               numOfRedMessages: 0
               numOfReq: 0
               numOfReqReject: 0
-              serviceName: nnrf-nfm
+              serviceName: serviceName
               numOfPosteriorReq: 0
         - tw:
             startTime: 2000-01-23T04:56:07.000+00:00
@@ -7271,7 +7006,7 @@ components:
               numOfRedMessages: 0
               numOfReq: 0
               numOfReqReject: 0
-              serviceName: nnrf-nfm
+              serviceName: serviceName
               numOfPosteriorReq: 0
         nfHeartbeatInfo:
           hbIntvl: 0
@@ -7311,7 +7046,7 @@ components:
             numOfRedMessages: 0
             numOfReq: 0
             numOfReqReject: 0
-            serviceName: nnrf-nfm
+            serviceName: serviceName
             numOfPosteriorReq: 0
       properties:
         tw:
@@ -7336,11 +7071,13 @@ components:
         numOfRedMessages: 0
         numOfReq: 0
         numOfReqReject: 0
-        serviceName: nnrf-nfm
+        serviceName: serviceName
         numOfPosteriorReq: 0
       properties:
         serviceName:
-          $ref: '#/components/schemas/ServiceName'
+          description: Service names known to NRF
+          title: ServiceName
+          type: string
         numOfReq:
           description: "Unsigned Integer, i.e. only value 0 and integers above 0 are\
             \ permissible."
@@ -7430,11 +7167,18 @@ components:
               ipv6Addr: 2001:db8:85a3::8a2e:370:7334
               ipv4Addr: 198.51.100.1
               ipv6Prefix: 2001:db8:abcd:12::0/64
-        afStatus: SUCCESS
+        afStatus: afStatus
         upBuffInd: true
       properties:
         afStatus:
-          $ref: '#/components/schemas/AfResultStatus'
+          description: "Represents the status of application handling result.  \n\
+            Possible values are:\n- SUCCESS: The application layer is ready or the\
+            \ relocation is completed.\n- TEMPORARY_CONGESTION: The application relocation\
+            \ fails due to temporary congestion.\n- RELOC_NO_ALLOWED: The application\
+            \ relocation fails because application relocation\n  is not allowed.\n\
+            - OTHER: The application relocation fails due to other reason.\n"
+          title: AfResultStatus
+          type: string
         trafficRoute:
           $ref: '#/components/schemas/RouteToLocation'
         upBuffInd:
@@ -7454,16 +7198,6 @@ components:
       title: AfResultInfo
       type: object
     AfResultStatus:
-      anyOf:
-      - enum:
-        - SUCCESS
-        - TEMPORARY_CONGESTION
-        - RELOC_NO_ALLOWED
-        - OTHER
-        type: string
-      - description: |
-          This string provides forward-compatibility with future extensions to the enumeration but is not used to encode content defined in the present version of this API.
-        type: string
       description: "Represents the status of application handling result.  \nPossible\
         \ values are:\n- SUCCESS: The application layer is ready or the relocation\
         \ is completed.\n- TEMPORARY_CONGESTION: The application relocation fails\
@@ -7471,6 +7205,7 @@ components:
         \ fails because application relocation\n  is not allowed.\n- OTHER: The application\
         \ relocation fails due to other reason.\n"
       title: AfResultStatus
+      type: string
     AddrFqdn:
       description: IP address and/or FQDN.
       example:
@@ -7684,8 +7419,6 @@ components:
           mcc: mcc
         n3IwfId: n3IwfId
         ngeNbId: SMacroNGeNB-34B89
-      nullable: true
-      oneOf: []
       properties:
         plmnId:
           $ref: '#/components/schemas/PlmnId'
@@ -7928,18 +7661,12 @@ components:
       title: 5QiPriorityLevel
       type: integer
     QosResourceType:
-      anyOf:
-      - enum:
-        - NON_GBR
-        - NON_CRITICAL_GBR
-        - CRITICAL_GBR
-        type: string
-      - type: string
       description: "The enumeration QosResourceType indicates whether a QoS Flow is\
         \ non-GBR, delay critical GBR, or non-delay critical GBR (see clauses 5.7.3.4\
         \ and 5.7.3.5 of 3GPP TS 23.501). It shall comply with the provisions defined\
         \ in table 5.5.3.6-1. \n"
       title: QosResourceType
+      type: string
     PacketDelBudget:
       description: |
         Unsigned integer indicating Packet Delay Budget (see clauses 5.7.3.4 and 5.7.4 of 3GPP TS 23.501), expressed in milliseconds.

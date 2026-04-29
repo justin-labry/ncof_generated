@@ -21,9 +21,8 @@ import json
 
 
 from importlib import import_module
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Union
-from nnef.models.supported_gad_shapes import SupportedGADShapes
 try:
     from typing import Self
 except ImportError:
@@ -33,7 +32,7 @@ class GADShape(BaseModel):
     """
     Common base type for GAD shapes.
     """ # noqa: E501
-    shape: SupportedGADShapes
+    shape: StrictStr = Field(description="Indicates supported GAD shapes.")
     __properties: ClassVar[List[str]] = ["shape"]
 
     model_config = {
@@ -90,9 +89,6 @@ class GADShape(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of shape
-        if self.shape:
-            _dict['shape'] = self.shape.to_dict()
         return _dict
 
     @classmethod

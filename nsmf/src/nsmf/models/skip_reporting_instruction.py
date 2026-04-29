@@ -20,11 +20,10 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nsmf.models.recur_time import RecurTime
-from nsmf.models.skip_reporting_condition import SkipReportingCondition
 from nsmf.models.threshold_cond import ThresholdCond
 try:
     from typing import Self
@@ -35,7 +34,7 @@ class SkipReportingInstruction(BaseModel):
     """
     Skip Reporting Instruction Information
     """ # noqa: E501
-    skip_report_cond: Annotated[List[SkipReportingCondition], Field(min_length=1)] = Field(alias="skipReportCond")
+    skip_report_cond: Annotated[List[StrictStr], Field(min_length=1)] = Field(alias="skipReportCond")
     validity_times: Optional[Annotated[List[RecurTime], Field(min_length=1)]] = Field(default=None, alias="validityTimes")
     threshold_cond: Optional[ThresholdCond] = Field(default=None, alias="thresholdCond")
     __properties: ClassVar[List[str]] = ["skipReportCond", "validityTimes", "thresholdCond"]
@@ -77,13 +76,6 @@ class SkipReportingInstruction(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in skip_report_cond (list)
-        _items = []
-        if self.skip_report_cond:
-            for _item in self.skip_report_cond:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['skipReportCond'] = _items
         # override the default output from pydantic by calling `to_dict()` of each item in validity_times (list)
         _items = []
         if self.validity_times:
@@ -106,7 +98,7 @@ class SkipReportingInstruction(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "skipReportCond": [SkipReportingCondition.from_dict(_item) for _item in obj.get("skipReportCond")] if obj.get("skipReportCond") is not None else None,
+            "skipReportCond": obj.get("skipReportCond"),
             "validityTimes": [RecurTime.from_dict(_item) for _item in obj.get("validityTimes")] if obj.get("validityTimes") is not None else None,
             "thresholdCond": ThresholdCond.from_dict(obj.get("thresholdCond")) if obj.get("thresholdCond") is not None else None
         })

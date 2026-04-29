@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from nupf.models.throughput_measurement import ThroughputMeasurement
 from nupf.models.volume_measurement import VolumeMeasurement
 try:

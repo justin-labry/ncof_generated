@@ -21,8 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Union
-from nsmf.models.pdu_session_status import PduSessionStatus
+from typing import Any, ClassVar, Dict, List, Optional
 try:
     from typing import Self
 except ImportError:
@@ -34,7 +33,7 @@ class PduSessionInfo(BaseModel):
     """ # noqa: E501
     n4_sess_id: Optional[StrictStr] = Field(default=None, description="The identifier of the N4 session for the reported PDU Session.", alias="n4SessId")
     sess_inactive_timer: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="sessInactiveTimer")
-    pdu_sess_status: Optional[PduSessionStatus] = Field(default=None, alias="pduSessStatus")
+    pdu_sess_status: Optional[StrictStr] = Field(default=None, description="Represents the status of the PDU Session.   Possible values are: - ACTIVATED: PDU Session status is activated. - DEACTIVATED: PDU Session status is deactivated.", alias="pduSessStatus")
     __properties: ClassVar[List[str]] = ["n4SessId", "sessInactiveTimer", "pduSessStatus"]
 
     model_config = {
@@ -74,9 +73,6 @@ class PduSessionInfo(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of pdu_sess_status
-        if self.pdu_sess_status:
-            _dict['pduSessStatus'] = self.pdu_sess_status.to_dict()
         return _dict
 
     @classmethod
@@ -91,7 +87,7 @@ class PduSessionInfo(BaseModel):
         _obj = cls.model_validate({
             "n4SessId": obj.get("n4SessId"),
             "sessInactiveTimer": obj.get("sessInactiveTimer"),
-            "pduSessStatus": PduSessionStatus.from_dict(obj.get("pduSessStatus")) if obj.get("pduSessStatus") is not None else None
+            "pduSessStatus": obj.get("pduSessStatus")
         })
         return _obj
 

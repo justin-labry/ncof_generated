@@ -22,7 +22,6 @@ import json
 
 from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional, Union
-from nncof.models.cell_power_state import CellPowerState
 try:
     from typing import Self
 except ImportError:
@@ -33,7 +32,7 @@ class CellPowerPara(BaseModel):
     The values of the cell power parameters.
     """ # noqa: E501
     param_set_id: Optional[StrictStr] = Field(default=None, description="Identifies the QoS parameter set.", alias="_paramSetId")
-    cell_power_state: Optional[CellPowerState] = Field(default=None, alias="_cellPowerState")
+    cell_power_state: Optional[StrictStr] = Field(default=None, description="Represents the preferred power state of cell.   Possible values are: - ACTIVE. - ACTIVE_UL. - ACTIVE_DL. - MICRO_SLEEP. - LIGHT_SLEEP.  - DEEP_SLEEP. ", alias="_cellPowerState")
     cell_tx_power: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="string with format 'float' as defined in OpenAPI.", alias="_cellTxPower")
     ss_pbch_block_power: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="string with format 'float' as defined in OpenAPI.", alias="_ssPbchBlockPower")
     si_block_power: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="string with format 'float' as defined in OpenAPI.", alias="_siBlockPower")
@@ -81,9 +80,6 @@ class CellPowerPara(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of cell_power_state
-        if self.cell_power_state:
-            _dict['_cellPowerState'] = self.cell_power_state.to_dict()
         return _dict
 
     @classmethod
@@ -97,7 +93,7 @@ class CellPowerPara(BaseModel):
 
         _obj = cls.model_validate({
             "_paramSetId": obj.get("_paramSetId"),
-            "_cellPowerState": CellPowerState.from_dict(obj.get("_cellPowerState")) if obj.get("_cellPowerState") is not None else None,
+            "_cellPowerState": obj.get("_cellPowerState"),
             "_cellTxPower": obj.get("_cellTxPower"),
             "_ssPbchBlockPower": obj.get("_ssPbchBlockPower"),
             "_siBlockPower": obj.get("_siBlockPower"),

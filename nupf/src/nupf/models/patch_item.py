@@ -21,8 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Union
-from nupf.models.patch_operation import PatchOperation
+from typing import Any, ClassVar, Dict, List, Optional
 try:
     from typing import Self
 except ImportError:
@@ -32,7 +31,7 @@ class PatchItem(BaseModel):
     """
     it contains information on data to be changed.
     """ # noqa: E501
-    op: PatchOperation
+    op: StrictStr = Field(description="Operations as defined in IETF RFC 6902.")
     path: StrictStr = Field(description="contains a JSON pointer value (as defined in IETF RFC 6901) that references a location of a resource on which the patch operation shall be performed. ")
     var_from: Optional[StrictStr] = Field(default=None, description="indicates the path of the source JSON element (according to JSON Pointer syntax) being moved or copied to the location indicated by the \"path\" attribute. ", alias="from")
     value: Optional[Any] = None
@@ -75,9 +74,6 @@ class PatchItem(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of op
-        if self.op:
-            _dict['op'] = self.op.to_dict()
         # set to None if value (nullable) is None
         # and model_fields_set contains the field
         if self.value is None and "value" in self.model_fields_set:
@@ -95,7 +91,7 @@ class PatchItem(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "op": PatchOperation.from_dict(obj.get("op")) if obj.get("op") is not None else None,
+            "op": obj.get("op"),
             "path": obj.get("path"),
             "from": obj.get("from"),
             "value": obj.get("value")

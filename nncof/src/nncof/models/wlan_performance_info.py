@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.network_area_info import NetworkAreaInfo
 from nncof.models.wlan_per_ss_id_performance_info import WlanPerSsIdPerformanceInfo
@@ -37,7 +37,7 @@ class WlanPerformanceInfo(BaseModel):
     """ # noqa: E501
     network_area: Optional[NetworkAreaInfo] = Field(default=None, alias="networkArea")
     wlan_per_ssid_infos: Annotated[List[WlanPerSsIdPerformanceInfo], Field(min_length=1)] = Field(alias="wlanPerSsidInfos")
-    wlan_per_ue_id_infos: Optional[Annotated[List[Optional[WlanPerUeIdPerformanceInfo]], Field(min_length=1)]] = Field(default=None, description="WLAN performance information for UE Id(s) of WLAN access points deployed in the Area of Interest. ", alias="wlanPerUeIdInfos")
+    wlan_per_ue_id_infos: Optional[Annotated[List[WlanPerUeIdPerformanceInfo], Field(min_length=1)]] = Field(default=None, description="WLAN performance information for UE Id(s) of WLAN access points deployed in the Area of Interest. ", alias="wlanPerUeIdInfos")
     __properties: ClassVar[List[str]] = ["networkArea", "wlanPerSsidInfos", "wlanPerUeIdInfos"]
 
     model_config = {

@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nsmf.models.nf_heartbeat_info import NfHeartbeatInfo
 from nsmf.models.nf_signalling_info_per_time_window import NfSignallingInfoPerTimeWindow

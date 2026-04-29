@@ -25,7 +25,6 @@ from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nnef.models.application_flow_description import ApplicationFlowDescription
-from nnef.models.event_record_type import EventRecordType
 from nnef.models.location_area5_g import LocationArea5G
 from nnef.models.snssai import Snssai
 from nnef.models.unidirectional_qo_s_specification import UnidirectionalQoSSpecification
@@ -38,7 +37,7 @@ class DynamicPolicyInvocationEvent(BaseModel):
     """
     A Dynamic Policy Invocation Event record.
     """ # noqa: E501
-    record_type: EventRecordType = Field(alias="recordType")
+    record_type: StrictStr = Field(description="Enumeration of event record types.", alias="recordType")
     record_timestamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="recordTimestamp")
     app_id: StrictStr = Field(description="String providing an application identifier.", alias="appId")
     provisioning_session_id: Optional[StrictStr] = Field(default=None, description="String chosen by the 5GMS AF to serve as an identifier in a resource URI.", alias="provisioningSessionId")
@@ -48,7 +47,7 @@ class DynamicPolicyInvocationEvent(BaseModel):
     slice_id: Optional[Snssai] = Field(default=None, alias="sliceId")
     ue_locations: Optional[Annotated[List[LocationArea5G], Field(min_length=0)]] = Field(default=None, description="The location of the UE when the data described by this record was sampled. Present only for individual data sample record type and only when exposure is permitted by the data exposure restrictions in force for the event in question.", alias="ueLocations")
     policy_template_id: StrictStr = Field(description="String chosen by the 5GMS AF to serve as an identifier in a resource URI.", alias="policyTemplateId")
-    application_flow_descriptions: Optional[Annotated[List[Optional[ApplicationFlowDescription]], Field(min_length=1)]] = Field(default=None, description="The set of Service Data Flows to which the Media Session Handler requested that the Policy Template be applied. At least a domain name or one packet filter shall be present.", alias="applicationFlowDescriptions")
+    application_flow_descriptions: Optional[Annotated[List[ApplicationFlowDescription], Field(min_length=1)]] = Field(default=None, description="The set of Service Data Flows to which the Media Session Handler requested that the Policy Template be applied. At least a domain name or one packet filter shall be present.", alias="applicationFlowDescriptions")
     requested_qo_s: Optional[UnidirectionalQoSSpecification] = Field(default=None, alias="requestedQoS")
     enforcement_method: Optional[StrictStr] = Field(default=None, description="The policy enforcement method chosen by the 5GMS AF.", alias="enforcementMethod")
     enforcement_bit_rate: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix \"K\" is used to represent the standard symbol \"k\". ", alias="enforcementBitRate")
@@ -101,9 +100,6 @@ class DynamicPolicyInvocationEvent(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of record_type
-        if self.record_type:
-            _dict['recordType'] = self.record_type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of slice_id
         if self.slice_id:
             _dict['sliceId'] = self.slice_id.to_dict()
@@ -136,7 +132,7 @@ class DynamicPolicyInvocationEvent(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "recordType": EventRecordType.from_dict(obj.get("recordType")) if obj.get("recordType") is not None else None,
+            "recordType": obj.get("recordType"),
             "recordTimestamp": obj.get("recordTimestamp"),
             "appId": obj.get("appId"),
             "provisioningSessionId": obj.get("provisioningSessionId"),

@@ -23,7 +23,6 @@ import json
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from nnef.models.cell_power_state import CellPowerState
 try:
     from typing import Self
 except ImportError:
@@ -39,7 +38,7 @@ class PowerEnergyConsData(BaseModel):
     min_power: Optional[StrictStr] = Field(default=None, alias="_minPower")
     peak_power: Optional[StrictStr] = Field(default=None, alias="_peakPower")
     energy: Optional[StrictStr] = Field(default=None, alias="_energy")
-    power_state: Optional[CellPowerState] = Field(default=None, alias="_powerState")
+    power_state: Optional[StrictStr] = Field(default=None, description="Represents the preferred power state of cell.   Possible values are: - ACTIVE. - ACTIVE_UL. - ACTIVE_DL. - MICRO_SLEEP. - LIGHT_SLEEP.  - DEEP_SLEEP. ", alias="_powerState")
     __properties: ClassVar[List[str]] = ["_startTime", "_duration", "_power", "_minPower", "_peakPower", "_energy", "_powerState"]
 
     model_config = {
@@ -79,9 +78,6 @@ class PowerEnergyConsData(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of power_state
-        if self.power_state:
-            _dict['_powerState'] = self.power_state.to_dict()
         return _dict
 
     @classmethod
@@ -100,7 +96,7 @@ class PowerEnergyConsData(BaseModel):
             "_minPower": obj.get("_minPower"),
             "_peakPower": obj.get("_peakPower"),
             "_energy": obj.get("_energy"),
-            "_powerState": CellPowerState.from_dict(obj.get("_powerState")) if obj.get("_powerState") is not None else None
+            "_powerState": obj.get("_powerState")
         })
         return _obj
 

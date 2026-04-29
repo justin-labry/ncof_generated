@@ -23,8 +23,6 @@ import json
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nnef.models.collective_behaviour_filter_type import CollectiveBehaviourFilterType
-from nnef.models.data_processing_type import DataProcessingType
 from nnef.models.per_ue_attribute import PerUeAttribute
 try:
     from typing import Self
@@ -35,10 +33,10 @@ class CollectiveBehaviourFilter(BaseModel):
     """
     Contains the collective behaviour filter information to be collected from UE.
     """ # noqa: E501
-    type: CollectiveBehaviourFilterType
+    type: StrictStr = Field(description="Represents the parameter type for collective behaviour information filtering.   Possible values are: - COLLECTIVE_ATTRIBUTE: Indicates that the parameter type is collective attributes. - DATA_PROCESSING: Indicates that the parameter type is data processing. ")
     value: StrictStr = Field(description="Value of the parameter type as in the type attribute.")
     coll_beh_attr: Optional[Annotated[List[PerUeAttribute], Field(min_length=1)]] = Field(default=None, description="Contains the values of collective behaviour attributes at least one of which shall match for an AF event to be sent. ", alias="collBehAttr")
-    data_proc_type: Optional[DataProcessingType] = Field(default=None, alias="dataProcType")
+    data_proc_type: Optional[StrictStr] = Field(default=None, description="Represents a type of data processing.", alias="dataProcType")
     list_of_ue_ind: Optional[StrictBool] = Field(default=None, description="Indicates whether request list of UE IDs that fulfill a collective behaviour within the area of interest. This attribute shall set to \"true\" if request the list of UE IDs, otherwise, set to \"false\". May only be present and sets to \"true\" if \"AfEvent\" sets to \"COLLECTIVE_BEHAVIOUR\". ", alias="listOfUeInd")
     __properties: ClassVar[List[str]] = ["type", "value", "collBehAttr", "dataProcType", "listOfUeInd"]
 
@@ -79,9 +77,6 @@ class CollectiveBehaviourFilter(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of type
-        if self.type:
-            _dict['type'] = self.type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in coll_beh_attr (list)
         _items = []
         if self.coll_beh_attr:
@@ -89,9 +84,6 @@ class CollectiveBehaviourFilter(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['collBehAttr'] = _items
-        # override the default output from pydantic by calling `to_dict()` of data_proc_type
-        if self.data_proc_type:
-            _dict['dataProcType'] = self.data_proc_type.to_dict()
         return _dict
 
     @classmethod
@@ -104,10 +96,10 @@ class CollectiveBehaviourFilter(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "type": CollectiveBehaviourFilterType.from_dict(obj.get("type")) if obj.get("type") is not None else None,
+            "type": obj.get("type"),
             "value": obj.get("value"),
             "collBehAttr": [PerUeAttribute.from_dict(_item) for _item in obj.get("collBehAttr")] if obj.get("collBehAttr") is not None else None,
-            "dataProcType": DataProcessingType.from_dict(obj.get("dataProcType")) if obj.get("dataProcType") is not None else None,
+            "dataProcType": obj.get("dataProcType"),
             "listOfUeInd": obj.get("listOfUeInd")
         })
         return _obj

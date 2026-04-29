@@ -34,7 +34,7 @@ class GNSSAssistDataInfo(BaseModel):
     Represents GNSS Assistance Data related information.
     """ # noqa: E501
     gnss_assist_data: StrictStr = Field(description="Represents GNSS Assistance Data encoded as specified in clause 6.5.2.1 of 3GPP TS 37.355 [31].", alias="gnssAssistData")
-    serv_area: Optional[GNSSServArea] = Field(alias="servArea")
+    serv_area: GNSSServArea = Field(alias="servArea")
     source_info: Optional[GeographicalCoordinates] = Field(default=None, alias="sourceInfo")
     __properties: ClassVar[List[str]] = ["gnssAssistData", "servArea", "sourceInfo"]
 
@@ -81,11 +81,6 @@ class GNSSAssistDataInfo(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of source_info
         if self.source_info:
             _dict['sourceInfo'] = self.source_info.to_dict()
-        # set to None if serv_area (nullable) is None
-        # and model_fields_set contains the field
-        if self.serv_area is None and "serv_area" in self.model_fields_set:
-            _dict['servArea'] = None
-
         return _dict
 
     @classmethod

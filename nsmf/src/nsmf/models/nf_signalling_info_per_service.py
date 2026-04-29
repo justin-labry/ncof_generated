@@ -20,10 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nsmf.models.service_name import ServiceName
 try:
     from typing import Self
 except ImportError:
@@ -33,7 +32,7 @@ class NfSignallingInfoPerService(BaseModel):
     """
     NF signalling information per service.
     """ # noqa: E501
-    service_name: ServiceName = Field(alias="serviceName")
+    service_name: StrictStr = Field(description="Service names known to NRF", alias="serviceName")
     num_of_req: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="numOfReq")
     num_of_req_unresp: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="numOfReqUnresp")
     num_of_req_reject: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="numOfReqReject")
@@ -78,9 +77,6 @@ class NfSignallingInfoPerService(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of service_name
-        if self.service_name:
-            _dict['serviceName'] = self.service_name.to_dict()
         return _dict
 
     @classmethod
@@ -93,7 +89,7 @@ class NfSignallingInfoPerService(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "serviceName": ServiceName.from_dict(obj.get("serviceName")) if obj.get("serviceName") is not None else None,
+            "serviceName": obj.get("serviceName"),
             "numOfReq": obj.get("numOfReq"),
             "numOfReqUnresp": obj.get("numOfReqUnresp"),
             "numOfReqReject": obj.get("numOfReqReject"),

@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.geo_distribution_info import GeoDistributionInfo
 from nncof.models.geographical_area import GeographicalArea
@@ -39,7 +39,7 @@ class LocationInfo(BaseModel):
     geo_loc: Optional[GeographicalArea] = Field(default=None, alias="geoLoc")
     ratio: Optional[Annotated[int, Field(le=100, strict=True, ge=1)]] = Field(default=None, description="Unsigned integer indicating Sampling Ratio (see clauses 4.15.1 of 3GPP TS 23.502), expressed in percent.  ")
     confidence: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.")
-    geo_distr_infos: Optional[Annotated[List[Optional[GeoDistributionInfo]], Field(min_length=1)]] = Field(default=None, alias="geoDistrInfos")
+    geo_distr_infos: Optional[Annotated[List[GeoDistributionInfo], Field(min_length=1)]] = Field(default=None, alias="geoDistrInfos")
     dist_threshold: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="distThreshold")
     __properties: ClassVar[List[str]] = ["loc", "geoLoc", "ratio", "confidence", "geoDistrInfos", "distThreshold"]
 

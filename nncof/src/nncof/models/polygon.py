@@ -20,12 +20,11 @@ import json
 
 
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List
 from typing_extensions import Annotated
 from nncof.models.gad_shape import GADShape
 from nncof.models.geographical_coordinates import GeographicalCoordinates
-from nncof.models.supported_gad_shapes import SupportedGADShapes
 try:
     from typing import Self
 except ImportError:
@@ -35,7 +34,7 @@ class Polygon(GADShape):
     """
     Polygon.
     """ # noqa: E501
-    shape: SupportedGADShapes
+    shape: StrictStr = Field(description="Indicates supported GAD shapes.")
     point_list: Annotated[List[GeographicalCoordinates], Field(min_length=3, max_length=15)] = Field(description="List of points.", alias="pointList")
     __properties: ClassVar[List[str]] = ["shape", "pointList"]
 
@@ -76,9 +75,6 @@ class Polygon(GADShape):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of shape
-        if self.shape:
-            _dict['shape'] = self.shape.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in point_list (list)
         _items = []
         if self.point_list:
@@ -98,7 +94,7 @@ class Polygon(GADShape):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "shape": SupportedGADShapes.from_dict(obj.get("shape")) if obj.get("shape") is not None else None,
+            "shape": obj.get("shape"),
             "pointList": [GeographicalCoordinates.from_dict(_item) for _item in obj.get("pointList")] if obj.get("pointList") is not None else None
         })
         return _obj

@@ -20,12 +20,10 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.data_volume import DataVolume
-from nncof.models.e2e_data_vol_trans_time_criterion import E2eDataVolTransTimeCriterion
-from nncof.models.matching_direction import MatchingDirection
 try:
     from typing import Self
 except ImportError:
@@ -35,8 +33,8 @@ class E2eDataVolTransTimeReq(BaseModel):
     """
     Represents other E2E data volume transfer time analytics requirements.
     """ # noqa: E501
-    criterion: Optional[E2eDataVolTransTimeCriterion] = None
-    order: Optional[MatchingDirection] = None
+    criterion: Optional[StrictStr] = Field(default=None, description="Represents the ordering criterion for the list of E2E data volume transfer time.   Possible values are:     - E2E_DATA_VOL_TRANS_TIME: The ordering criterion is the E2E data volume transfer time. ")
+    order: Optional[StrictStr] = Field(default=None, description="Represents the matching direction when crossing a threshold.   Possible values are: - ASCENDING: Threshold is crossed in ascending direction. - DESCENDING: Threshold is crossed in descending direction. - CROSSED: Threshold is crossed either in ascending or descending direction. ")
     high_trans_tm_thr: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="highTransTmThr")
     low_trans_tm_thr: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="lowTransTmThr")
     repeat_data_trans: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="repeatDataTrans")
@@ -82,12 +80,6 @@ class E2eDataVolTransTimeReq(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of criterion
-        if self.criterion:
-            _dict['criterion'] = self.criterion.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of order
-        if self.order:
-            _dict['order'] = self.order.to_dict()
         # override the default output from pydantic by calling `to_dict()` of data_volume
         if self.data_volume:
             _dict['dataVolume'] = self.data_volume.to_dict()
@@ -108,8 +100,8 @@ class E2eDataVolTransTimeReq(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "criterion": E2eDataVolTransTimeCriterion.from_dict(obj.get("criterion")) if obj.get("criterion") is not None else None,
-            "order": MatchingDirection.from_dict(obj.get("order")) if obj.get("order") is not None else None,
+            "criterion": obj.get("criterion"),
+            "order": obj.get("order"),
             "highTransTmThr": obj.get("highTransTmThr"),
             "lowTransTmThr": obj.get("lowTransTmThr"),
             "repeatDataTrans": obj.get("repeatDataTrans"),

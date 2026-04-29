@@ -21,9 +21,8 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nsmf.models.qos_resource_type import QosResourceType
 try:
     from typing import Self
 except ImportError:
@@ -36,7 +35,7 @@ class QosPara(BaseModel):
     qos_param_set_id: Optional[StrictStr] = Field(default=None, description="Identifies the QoS parameter set.", alias="qosParamSetId")
     var_5qi: Optional[Annotated[int, Field(le=255, strict=True, ge=0)]] = Field(default=None, description="Unsigned integer representing a 5G QoS Identifier (see clause 5.7.2.1 of 3GPP TS 23.501, within the range 0 to 255. ", alias="5qi")
     priority_lvl: Optional[Annotated[int, Field(le=127, strict=True, ge=1)]] = Field(default=None, description="Unsigned integer indicating the 5QI Priority Level (see clauses 5.7.3.3 and 5.7.4 of 3GPP TS 23.501, within the range 1 to 127.Values are ordered in decreasing order of priority,  i.e. with 1 as the highest priority and 127 as the lowest priority.  ", alias="priorityLvl")
-    rsc_type: Optional[QosResourceType] = Field(default=None, alias="rscType")
+    rsc_type: Optional[StrictStr] = Field(default=None, description="The enumeration QosResourceType indicates whether a QoS Flow is non-GBR, delay critical GBR, or non-delay critical GBR (see clauses 5.7.3.4 and 5.7.3.5 of 3GPP TS 23.501). It shall comply with the provisions defined in table 5.5.3.6-1.  ", alias="rscType")
     pdb: Optional[Annotated[int, Field(strict=True, ge=1)]] = Field(default=None, description="Unsigned integer indicating Packet Delay Budget (see clauses 5.7.3.4 and 5.7.4 of 3GPP TS 23.501), expressed in milliseconds. ")
     per: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String representing Packet Error Rate (see clause 5.7.3.5 and 5.7.4 of 3GPP TS 23.501, expressed as a \"scalar x 10-k\" where the scalar and the exponent k are each encoded as one decimal digit. ")
     gbr_ul: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix \"K\" is used to represent the standard symbol \"k\". ", alias="gbrUl")
@@ -136,9 +135,6 @@ class QosPara(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of rsc_type
-        if self.rsc_type:
-            _dict['rscType'] = self.rsc_type.to_dict()
         return _dict
 
     @classmethod
@@ -154,7 +150,7 @@ class QosPara(BaseModel):
             "qosParamSetId": obj.get("qosParamSetId"),
             "5qi": obj.get("5qi"),
             "priorityLvl": obj.get("priorityLvl"),
-            "rscType": QosResourceType.from_dict(obj.get("rscType")) if obj.get("rscType") is not None else None,
+            "rscType": obj.get("rscType"),
             "pdb": obj.get("pdb"),
             "per": obj.get("per"),
             "gbrUl": obj.get("gbrUl"),

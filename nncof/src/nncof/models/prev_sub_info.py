@@ -21,9 +21,8 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nncof.models.ncof_event import NcofEvent
 from nncof.models.ue_analytics_context_descriptor import UeAnalyticsContextDescriptor
 try:
     from typing import Self
@@ -37,7 +36,7 @@ class PrevSubInfo(BaseModel):
     producer_id: Optional[StrictStr] = Field(default=None, description="String uniquely identifying a NF instance. The format of the NF Instance ID shall be a  Universally Unique Identifier (UUID) version 4.  ", alias="producerId")
     producer_set_id: Optional[StrictStr] = Field(default=None, description="NF Set Identifier (see clause 28.12 of 3GPP TS 23.003), formatted as the following string \"set<Set ID>.<nftype>set.5gc.mnc<MNC>.mcc<MCC>\", or  \"set<SetID>.<NFType>set.5gc.nid<NID>.mnc<MNC>.mcc<MCC>\" with  <MCC> encoded as defined in clause 5.4.2 (\"Mcc\" data type definition)  <MNC> encoding the Mobile Network Code part of the PLMN, comprising 3 digits.    If there are only 2 significant digits in the MNC, one \"0\" digit shall be inserted    at the left side to fill the 3 digits coding of MNC.  Pattern: '^[0-9]{3}$' <NFType> encoded as a value defined in Table 6.1.6.3.3-1 of 3GPP TS 29.510 but    with lower case characters <Set ID> encoded as a string of characters consisting of    alphabetic characters (A-Z and a-z), digits (0-9) and/or the hyphen (-) and that    shall end with either an alphabetic character or a digit.  ", alias="producerSetId")
     subscription_id: StrictStr = Field(description="The identifier of a subscription.", alias="subscriptionId")
-    nf_ana_events: Optional[Annotated[List[NcofEvent], Field(min_length=1)]] = Field(default=None, alias="nfAnaEvents")
+    nf_ana_events: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="nfAnaEvents")
     ue_ana_events: Optional[Annotated[List[UeAnalyticsContextDescriptor], Field(min_length=1)]] = Field(default=None, alias="ueAnaEvents")
     __properties: ClassVar[List[str]] = ["producerId", "producerSetId", "subscriptionId", "nfAnaEvents", "ueAnaEvents"]
 
@@ -78,13 +77,6 @@ class PrevSubInfo(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in nf_ana_events (list)
-        _items = []
-        if self.nf_ana_events:
-            for _item in self.nf_ana_events:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['nfAnaEvents'] = _items
         # override the default output from pydantic by calling `to_dict()` of each item in ue_ana_events (list)
         _items = []
         if self.ue_ana_events:
@@ -107,7 +99,7 @@ class PrevSubInfo(BaseModel):
             "producerId": obj.get("producerId"),
             "producerSetId": obj.get("producerSetId"),
             "subscriptionId": obj.get("subscriptionId"),
-            "nfAnaEvents": [NcofEvent.from_dict(_item) for _item in obj.get("nfAnaEvents")] if obj.get("nfAnaEvents") is not None else None,
+            "nfAnaEvents": obj.get("nfAnaEvents"),
             "ueAnaEvents": [UeAnalyticsContextDescriptor.from_dict(_item) for _item in obj.get("ueAnaEvents")] if obj.get("ueAnaEvents") is not None else None
         })
         return _obj

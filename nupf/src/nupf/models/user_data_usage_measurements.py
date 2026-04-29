@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from nupf.models.application_related_information import ApplicationRelatedInformation
 from nupf.models.flow_information import FlowInformation
 from nupf.models.throughput_measurement import ThroughputMeasurement

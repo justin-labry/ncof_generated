@@ -100,11 +100,6 @@ class PerformanceDataInfo(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of perf_data
         if self.perf_data:
             _dict['perfData'] = self.perf_data.to_dict()
-        # set to None if ue_ip_addr (nullable) is None
-        # and model_fields_set contains the field
-        if self.ue_ip_addr is None and "ue_ip_addr" in self.model_fields_set:
-            _dict['ueIpAddr'] = None
-
         return _dict
 
     @classmethod

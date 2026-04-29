@@ -21,10 +21,9 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nsmf.models.eth_flow_description import EthFlowDescription
-from nsmf.models.flow_direction import FlowDirection
 from nsmf.models.mpx_media_info import MpxMediaInfo
 try:
     from typing import Self
@@ -42,7 +41,7 @@ class FlowInformation(BaseModel):
     tos_traffic_class: Optional[StrictStr] = Field(default=None, description="Contains the Ipv4 Type-of-Service and mask field or the Ipv6 Traffic-Class field and  mask field. ", alias="tosTrafficClass")
     spi: Optional[StrictStr] = Field(default=None, description="the security parameter index of the IPSec packet.")
     flow_label: Optional[StrictStr] = Field(default=None, description="the Ipv6 flow label header field.", alias="flowLabel")
-    flow_direction: Optional[FlowDirection] = Field(default=None, alias="flowDirection")
+    flow_direction: Optional[StrictStr] = Field(default=None, description="Indicates the direction of the service data flow.   Possible values are: - DOWNLINK: The corresponding filter applies for traffic to the UE. - UPLINK: The corresponding filter applies for traffic from the UE. - BIDIRECTIONAL: The corresponding filter applies for traffic both to and from the UE. - UNSPECIFIED: The corresponding filter applies for traffic to the UE (downlink), but has no specific direction declared. The service data flow detection shall apply the filter for uplink traffic as if the filter was bidirectional. The PCF shall not use the value UNSPECIFIED in filters created by the network in NW-initiated procedures. The PCF shall only include the value UNSPECIFIED in filters in UE-initiated procedures if the same value is received from the SMF. ", alias="flowDirection")
     mpx_media_ul_infos: Optional[Annotated[List[Optional[MpxMediaInfo]], Field(min_length=1)]] = Field(default=None, description="Multiplexed media information for the Uplink IP flow.", alias="mpxMediaUlInfos")
     mpx_media_dl_infos: Optional[Annotated[List[Optional[MpxMediaInfo]], Field(min_length=1)]] = Field(default=None, description="Multiplexed media information for the Downlink IP flow.", alias="mpxMediaDlInfos")
     __properties: ClassVar[List[str]] = ["flowDescription", "ethFlowDescription", "packFiltId", "packetFilterUsage", "tosTrafficClass", "spi", "flowLabel", "flowDirection", "mpxMediaUlInfos", "mpxMediaDlInfos"]
@@ -87,9 +86,6 @@ class FlowInformation(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of eth_flow_description
         if self.eth_flow_description:
             _dict['ethFlowDescription'] = self.eth_flow_description.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of flow_direction
-        if self.flow_direction:
-            _dict['flowDirection'] = self.flow_direction.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in mpx_media_ul_infos (list)
         _items = []
         if self.mpx_media_ul_infos:
@@ -119,11 +115,6 @@ class FlowInformation(BaseModel):
         if self.flow_label is None and "flow_label" in self.model_fields_set:
             _dict['flowLabel'] = None
 
-        # set to None if flow_direction (nullable) is None
-        # and model_fields_set contains the field
-        if self.flow_direction is None and "flow_direction" in self.model_fields_set:
-            _dict['flowDirection'] = None
-
         return _dict
 
     @classmethod
@@ -143,7 +134,7 @@ class FlowInformation(BaseModel):
             "tosTrafficClass": obj.get("tosTrafficClass"),
             "spi": obj.get("spi"),
             "flowLabel": obj.get("flowLabel"),
-            "flowDirection": FlowDirection.from_dict(obj.get("flowDirection")) if obj.get("flowDirection") is not None else None,
+            "flowDirection": obj.get("flowDirection"),
             "mpxMediaUlInfos": [MpxMediaInfo.from_dict(_item) for _item in obj.get("mpxMediaUlInfos")] if obj.get("mpxMediaUlInfos") is not None else None,
             "mpxMediaDlInfos": [MpxMediaInfo.from_dict(_item) for _item in obj.get("mpxMediaDlInfos")] if obj.get("mpxMediaDlInfos") is not None else None
         })

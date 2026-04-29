@@ -21,8 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Union
-from nupf.models.header_handling_action import HeaderHandlingAction
+from typing import Any, ClassVar, Dict, List, Optional
 try:
     from typing import Self
 except ImportError:
@@ -34,7 +33,7 @@ class HandlingOfPayloadHeader(BaseModel):
     """ # noqa: E501
     header_info: StrictStr = Field(alias="headerInfo")
     header_value_before: Optional[StrictStr] = Field(default=None, alias="headerValueBefore")
-    header_action: HeaderHandlingAction = Field(alias="headerAction")
+    header_action: StrictStr = Field(description="Represents the type of header handling actions. Possible values are: - DETECT: Indicates that the request is for the detection of a header field. - REMOVE: Indicates that the request is for the removal of a header field. - REPLACE: Indicates that the request is for the replacement of information in a header   field. - INSERT: Indicates that the request is for the addition of a header field. ", alias="headerAction")
     header_value_after: Optional[StrictStr] = Field(default=None, alias="headerValueAfter")
     __properties: ClassVar[List[str]] = ["headerInfo", "headerValueBefore", "headerAction", "headerValueAfter"]
 
@@ -75,9 +74,6 @@ class HandlingOfPayloadHeader(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of header_action
-        if self.header_action:
-            _dict['headerAction'] = self.header_action.to_dict()
         return _dict
 
     @classmethod
@@ -92,7 +88,7 @@ class HandlingOfPayloadHeader(BaseModel):
         _obj = cls.model_validate({
             "headerInfo": obj.get("headerInfo"),
             "headerValueBefore": obj.get("headerValueBefore"),
-            "headerAction": HeaderHandlingAction.from_dict(obj.get("headerAction")) if obj.get("headerAction") is not None else None,
+            "headerAction": obj.get("headerAction"),
             "headerValueAfter": obj.get("headerValueAfter")
         })
         return _obj

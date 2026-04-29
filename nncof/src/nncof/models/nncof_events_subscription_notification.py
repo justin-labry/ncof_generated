@@ -20,8 +20,10 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict
-from typing import Any, ClassVar, Dict, List
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
+from typing_extensions import Annotated
+from nncof.models.event_notification import EventNotification
 try:
     from typing import Self
 except ImportError:
@@ -29,9 +31,16 @@ except ImportError:
 
 class NncofEventsSubscriptionNotification(BaseModel):
     """
-    NncofEventsSubscriptionNotification
+    Represents an Individual NCOF Event Subscription Notification resource.
     """ # noqa: E501
-    __properties: ClassVar[List[str]] = []
+    event_notifications: Optional[Annotated[List[EventNotification], Field(min_length=1)]] = Field(default=None, description="Notifications about Individual Events", alias="eventNotifications")
+    subscription_id: StrictStr = Field(description="String identifying a subscription to the Nncof_EventsSubscription Service", alias="subscriptionId")
+    notif_corr_id: Optional[StrictStr] = Field(default=None, description="Notification correlation identifier.", alias="notifCorrId")
+    old_subscription_id: Optional[StrictStr] = Field(default=None, description="Subscription ID which was allocated by the source NCOF. This parameter shall be present if the notification is for informing the assignment of a new Subscription Id by the target NCOF. ", alias="oldSubscriptionId")
+    resource_uri: Optional[StrictStr] = Field(default=None, description="String providing an URI formatted according to RFC 3986.", alias="resourceUri")
+    term_cause: Optional[StrictStr] = Field(default=None, description="Represents the cause for the analytics subscription termination request.   Possible values are:     - USER_CONSENT_REVOKED: The user consent has been revoked.   - NCOF_OVERLOAD: The NCOF is overloaded.   - UE_LEFT_AREA: The UE has moved out of the NCOF serving area. ", alias="termCause")
+    trans_events: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="transEvents")
+    __properties: ClassVar[List[str]] = ["eventNotifications", "subscriptionId", "notifCorrId", "oldSubscriptionId", "resourceUri", "termCause", "transEvents"]
 
     model_config = {
         "populate_by_name": True,
@@ -70,6 +79,13 @@ class NncofEventsSubscriptionNotification(BaseModel):
             },
             exclude_none=True,
         )
+        # override the default output from pydantic by calling `to_dict()` of each item in event_notifications (list)
+        _items = []
+        if self.event_notifications:
+            for _item in self.event_notifications:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['eventNotifications'] = _items
         return _dict
 
     @classmethod
@@ -82,6 +98,13 @@ class NncofEventsSubscriptionNotification(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "eventNotifications": [EventNotification.from_dict(_item) for _item in obj.get("eventNotifications")] if obj.get("eventNotifications") is not None else None,
+            "subscriptionId": obj.get("subscriptionId"),
+            "notifCorrId": obj.get("notifCorrId"),
+            "oldSubscriptionId": obj.get("oldSubscriptionId"),
+            "resourceUri": obj.get("resourceUri"),
+            "termCause": obj.get("termCause"),
+            "transEvents": obj.get("transEvents")
         })
         return _obj
 

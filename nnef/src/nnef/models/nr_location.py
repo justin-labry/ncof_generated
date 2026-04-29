@@ -117,11 +117,6 @@ class NrLocation(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of ntn_tai_info
         if self.ntn_tai_info:
             _dict['ntnTaiInfo'] = self.ntn_tai_info.to_dict()
-        # set to None if global_gnb_id (nullable) is None
-        # and model_fields_set contains the field
-        if self.global_gnb_id is None and "global_gnb_id" in self.model_fields_set:
-            _dict['globalGnbId'] = None
-
         return _dict
 
     @classmethod

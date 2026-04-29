@@ -20,10 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List
 from typing_extensions import Annotated
-from nncof.models.ncof_event import NcofEvent
 try:
     from typing import Self
 except ImportError:
@@ -34,7 +33,7 @@ class UeAnalyticsContextDescriptor(BaseModel):
     Contains information about available UE related analytics contexts.
     """ # noqa: E501
     supi: Annotated[str, Field(strict=True)] = Field(description="String identifying a Supi that shall contain either an IMSI, a network specific identifier, a Global Cable Identifier (GCI) or a Global Line Identifier (GLI) as specified in clause  2.2A of 3GPP TS 23.003. It shall be formatted as follows  - for an IMSI \"imsi-<imsi>\", where <imsi> shall be formatted according to clause 2.2    of 3GPP TS 23.003 that describes an IMSI.  - for a network specific identifier \"nai-<nai>, where <nai> shall be formatted    according to clause 28.7.2 of 3GPP TS 23.003 that describes an NAI.  - for a GCI \"gci-<gci>\", where <gci> shall be formatted according to clause 28.15.2    of 3GPP TS 23.003.  - for a GLI \"gli-<gli>\", where <gli> shall be formatted according to clause 28.16.2 of    3GPP TS 23.003.To enable that the value is used as part of an URI, the string shall    only contain characters allowed according to the \"lower-with-hyphen\" naming convention    defined in 3GPP TS 29.501. ")
-    ana_types: Annotated[List[NcofEvent], Field(min_length=1)] = Field(description="List of analytics types for which UE related analytics contexts can be retrieved. ", alias="anaTypes")
+    ana_types: Annotated[List[StrictStr], Field(min_length=1)] = Field(description="List of analytics types for which UE related analytics contexts can be retrieved. ", alias="anaTypes")
     __properties: ClassVar[List[str]] = ["supi", "anaTypes"]
 
     @field_validator('supi')
@@ -81,13 +80,6 @@ class UeAnalyticsContextDescriptor(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in ana_types (list)
-        _items = []
-        if self.ana_types:
-            for _item in self.ana_types:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['anaTypes'] = _items
         return _dict
 
     @classmethod
@@ -101,7 +93,7 @@ class UeAnalyticsContextDescriptor(BaseModel):
 
         _obj = cls.model_validate({
             "supi": obj.get("supi"),
-            "anaTypes": [NcofEvent.from_dict(_item) for _item in obj.get("anaTypes")] if obj.get("anaTypes") is not None else None
+            "anaTypes": obj.get("anaTypes")
         })
         return _obj
 

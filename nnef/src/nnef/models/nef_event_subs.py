@@ -20,9 +20,8 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from nnef.models.nef_event import NefEvent
 from nnef.models.nef_event_filter import NefEventFilter
 from nnef.models.reporting_information import ReportingInformation
 try:
@@ -34,7 +33,7 @@ class NefEventSubs(BaseModel):
     """
     Represents an event to be subscribed and the related event filter information.
     """ # noqa: E501
-    event: NefEvent
+    event: StrictStr = Field(description="Represents a Network Exposure Event.   Possible values are: - SVC_EXPERIENCE: Indicates that the subscribed/notified event is service experience   information for an application. - UE_MOBILITY: Indicates that the subscribed/notified event is UE mobility information. - UE_COMM: Indicates that the subscribed/notified event is UE communication information. - EXCEPTIONS: Indicates that the subscribed/notified event is exceptions information. - USER_DATA_CONGESTION: Indicates that the subscribed/notified event is user data congestion   analytics related information. - PERF_DATA: Indicates that the subscribed/notified event is performance data information. - DISPERSION: Indicates that the subscribed/notified event is dispersion information. - COLLECTIVE_BEHAVIOUR: Indicates that the subscribed/notified event is collective behaviour   information. - MS_QOE_METRICS: Indicates that the subscribed/notified event is Media Streaming QoE   metrics. - MS_CONSUMPTION: Indicates that the subscribed/notified event is Media Streaming   consumption reports. - MS_NET_ASSIST_INVOCATION: Indicates that the subscribed/notified event is Media Streaming   network assistance invocation. - MS_DYN_POLICY_INVOCATION: Indicates that the subscribed/notified event is Media Streaming   dynamic policy invocation. - MS_ACCESS_ACTIVITY: Indicates that the subscribed/notified event is Media Streaming access   activity. - GNSS_ASSISTANCE_DATA: Indicates that the subscribed/notified event is GNSS Assistance Data   Collection. - DATA_VOLUME_TRANSFER_TIME: Indicates that the event subscribed is data volume transfer    time information. - APP_ACTIVE_TIME: Indicates that the event subscribed is application activation time   information. - SIGNALLING_INFO: Indicates that the event subscribed/notified is signalling information. ")
     event_filter: Optional[NefEventFilter] = Field(default=None, alias="eventFilter")
     event_rep_info: Optional[ReportingInformation] = Field(default=None, alias="eventRepInfo")
     __properties: ClassVar[List[str]] = ["event", "eventFilter", "eventRepInfo"]
@@ -76,9 +75,6 @@ class NefEventSubs(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of event
-        if self.event:
-            _dict['event'] = self.event.to_dict()
         # override the default output from pydantic by calling `to_dict()` of event_filter
         if self.event_filter:
             _dict['eventFilter'] = self.event_filter.to_dict()
@@ -97,7 +93,7 @@ class NefEventSubs(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "event": NefEvent.from_dict(obj.get("event")) if obj.get("event") is not None else None,
+            "event": obj.get("event"),
             "eventFilter": NefEventFilter.from_dict(obj.get("eventFilter")) if obj.get("eventFilter") is not None else None,
             "eventRepInfo": ReportingInformation.from_dict(obj.get("eventRepInfo")) if obj.get("eventRepInfo") is not None else None
         })

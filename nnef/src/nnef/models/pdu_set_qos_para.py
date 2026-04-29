@@ -20,10 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nnef.models.pdu_set_handling_info import PduSetHandlingInfo
 try:
     from typing import Self
 except ImportError:
@@ -35,7 +34,7 @@ class PduSetQosPara(BaseModel):
     """ # noqa: E501
     pdu_set_delay_budget: Optional[Annotated[int, Field(strict=True, ge=1)]] = Field(default=None, description="Unsigned integer indicating Packet Delay Budget (see clauses 5.7.3.4 and 5.7.4 of 3GPP TS 23.501 [8])), expressed in 0.01 milliseconds. ", alias="pduSetDelayBudget")
     pdu_set_err_rate: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String representing Packet Error Rate (see clause 5.7.3.5 and 5.7.4 of 3GPP TS 23.501, expressed as a \"scalar x 10-k\" where the scalar and the exponent k are each encoded as one decimal digit. ", alias="pduSetErrRate")
-    pdu_set_handling_info: Optional[PduSetHandlingInfo] = Field(default=None, alias="pduSetHandlingInfo")
+    pdu_set_handling_info: Optional[StrictStr] = Field(default=None, description="Possible values are: - \"ALL_PDUS_NEEDED\": All PDUs of the PDU Set are needed - \"ALL_PDUS_NOT_NEEDED\": All PDUs of the PDU Set are not needed ", alias="pduSetHandlingInfo")
     __properties: ClassVar[List[str]] = ["pduSetDelayBudget", "pduSetErrRate", "pduSetHandlingInfo"]
 
     @field_validator('pdu_set_err_rate')
@@ -85,9 +84,6 @@ class PduSetQosPara(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of pdu_set_handling_info
-        if self.pdu_set_handling_info:
-            _dict['pduSetHandlingInfo'] = self.pdu_set_handling_info.to_dict()
         return _dict
 
     @classmethod
@@ -102,7 +98,7 @@ class PduSetQosPara(BaseModel):
         _obj = cls.model_validate({
             "pduSetDelayBudget": obj.get("pduSetDelayBudget"),
             "pduSetErrRate": obj.get("pduSetErrRate"),
-            "pduSetHandlingInfo": PduSetHandlingInfo.from_dict(obj.get("pduSetHandlingInfo")) if obj.get("pduSetHandlingInfo") is not None else None
+            "pduSetHandlingInfo": obj.get("pduSetHandlingInfo")
         })
         return _obj
 

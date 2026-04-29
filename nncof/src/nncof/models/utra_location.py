@@ -22,7 +22,7 @@ import json
 
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.cell_global_id import CellGlobalId
 from nncof.models.location_area_id import LocationAreaId

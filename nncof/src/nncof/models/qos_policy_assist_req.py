@@ -20,13 +20,10 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt
+from pydantic import BaseModel, ConfigDict, Field, StrictFloat, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional, Union
 from typing_extensions import Annotated
-from nncof.models.matching_direction import MatchingDirection
 from nncof.models.qos_para import QosPara
-from nncof.models.qos_pol_order_criterion import QosPolOrderCriterion
-from nncof.models.rat_type import RatType
 try:
     from typing import Self
 except ImportError:
@@ -36,10 +33,10 @@ class QosPolicyAssistReq(BaseModel):
     """
     The QoS and policy assistance analytics requirement information.
     """ # noqa: E501
-    order_criterion: Optional[QosPolOrderCriterion] = Field(default=None, alias="orderCriterion")
-    order_direction: Optional[MatchingDirection] = Field(default=None, alias="orderDirection")
+    order_criterion: Optional[StrictStr] = Field(default=None, description="Possible values are:    - QOE: Indicates the order is the QoE.   - USAGE_DURATION: Indicates the order is the QoS Flow Usage Duration.   - NUMBER_OF_USAGES: Indicates the order is the number of usages of the QoS Flow.", alias="orderCriterion")
+    order_direction: Optional[StrictStr] = Field(default=None, description="Represents the matching direction when crossing a threshold.   Possible values are: - ASCENDING: Threshold is crossed in ascending direction. - DESCENDING: Threshold is crossed in descending direction. - CROSSED: Threshold is crossed either in ascending or descending direction. ", alias="orderDirection")
     freqs: Optional[Annotated[List[Annotated[int, Field(le=3279165, strict=True, ge=0)]], Field(min_length=1)]] = None
-    rat_types: Optional[Annotated[List[RatType], Field(min_length=1)]] = Field(default=None, alias="ratTypes")
+    rat_types: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="ratTypes")
     qos_param_sets: Annotated[List[QosPara], Field(min_length=1)] = Field(alias="qosParamSets")
     requested_qoe: Optional[Union[StrictFloat, StrictInt]] = Field(default=None, description="string with format 'float' as defined in OpenAPI.", alias="requestedQoe")
     __properties: ClassVar[List[str]] = ["orderCriterion", "orderDirection", "freqs", "ratTypes", "qosParamSets", "requestedQoe"]
@@ -81,19 +78,6 @@ class QosPolicyAssistReq(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of order_criterion
-        if self.order_criterion:
-            _dict['orderCriterion'] = self.order_criterion.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of order_direction
-        if self.order_direction:
-            _dict['orderDirection'] = self.order_direction.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in rat_types (list)
-        _items = []
-        if self.rat_types:
-            for _item in self.rat_types:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['ratTypes'] = _items
         # override the default output from pydantic by calling `to_dict()` of each item in qos_param_sets (list)
         _items = []
         if self.qos_param_sets:
@@ -113,10 +97,10 @@ class QosPolicyAssistReq(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "orderCriterion": QosPolOrderCriterion.from_dict(obj.get("orderCriterion")) if obj.get("orderCriterion") is not None else None,
-            "orderDirection": MatchingDirection.from_dict(obj.get("orderDirection")) if obj.get("orderDirection") is not None else None,
+            "orderCriterion": obj.get("orderCriterion"),
+            "orderDirection": obj.get("orderDirection"),
             "freqs": obj.get("freqs"),
-            "ratTypes": [RatType.from_dict(_item) for _item in obj.get("ratTypes")] if obj.get("ratTypes") is not None else None,
+            "ratTypes": obj.get("ratTypes"),
             "qosParamSets": [QosPara.from_dict(_item) for _item in obj.get("qosParamSets")] if obj.get("qosParamSets") is not None else None,
             "requestedQoe": obj.get("requestedQoe")
         })

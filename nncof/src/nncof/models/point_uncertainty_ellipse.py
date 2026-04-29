@@ -20,12 +20,11 @@ import json
 
 
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List
 from typing_extensions import Annotated
 from nncof.models.gad_shape import GADShape
 from nncof.models.geographical_coordinates import GeographicalCoordinates
-from nncof.models.supported_gad_shapes import SupportedGADShapes
 from nncof.models.uncertainty_ellipse import UncertaintyEllipse
 try:
     from typing import Self
@@ -36,7 +35,7 @@ class PointUncertaintyEllipse(GADShape):
     """
     Ellipsoid point with uncertainty ellipse.
     """ # noqa: E501
-    shape: SupportedGADShapes
+    shape: StrictStr = Field(description="Indicates supported GAD shapes.")
     point: GeographicalCoordinates
     uncertainty_ellipse: UncertaintyEllipse = Field(alias="uncertaintyEllipse")
     confidence: Annotated[int, Field(le=100, strict=True, ge=0)] = Field(description="Indicates value of confidence.")
@@ -79,9 +78,6 @@ class PointUncertaintyEllipse(GADShape):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of shape
-        if self.shape:
-            _dict['shape'] = self.shape.to_dict()
         # override the default output from pydantic by calling `to_dict()` of point
         if self.point:
             _dict['point'] = self.point.to_dict()
@@ -100,7 +96,7 @@ class PointUncertaintyEllipse(GADShape):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "shape": SupportedGADShapes.from_dict(obj.get("shape")) if obj.get("shape") is not None else None,
+            "shape": obj.get("shape"),
             "point": GeographicalCoordinates.from_dict(obj.get("point")) if obj.get("point") is not None else None,
             "uncertaintyEllipse": UncertaintyEllipse.from_dict(obj.get("uncertaintyEllipse")) if obj.get("uncertaintyEllipse") is not None else None,
             "confidence": obj.get("confidence")

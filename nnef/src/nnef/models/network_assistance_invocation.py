@@ -36,7 +36,7 @@ class NetworkAssistanceInvocation(BaseModel):
     Common properties of a single Network Assistance invocation.
     """ # noqa: E501
     policy_template_id: Optional[StrictStr] = Field(default=None, description="String chosen by the 5GMS AF to serve as an identifier in a resource URI.", alias="policyTemplateId")
-    application_flow_descriptions: Optional[Annotated[List[Optional[ApplicationFlowDescription]], Field(min_length=1)]] = Field(default=None, alias="applicationFlowDescriptions")
+    application_flow_descriptions: Optional[Annotated[List[ApplicationFlowDescription], Field(min_length=1)]] = Field(default=None, alias="applicationFlowDescriptions")
     requested_qo_s: Optional[UnidirectionalQoSSpecification] = Field(default=None, alias="requestedQoS")
     recommended_qo_s: Optional[NetworkAssistanceInvocationRecommendedQoS] = Field(default=None, alias="recommendedQoS")
     __properties: ClassVar[List[str]] = ["policyTemplateId", "applicationFlowDescriptions", "requestedQoS", "recommendedQoS"]

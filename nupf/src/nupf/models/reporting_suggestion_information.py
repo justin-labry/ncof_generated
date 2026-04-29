@@ -20,9 +20,8 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictInt
-from typing import Any, ClassVar, Dict, List, Optional, Union
-from nupf.models.reporting_urgency import ReportingUrgency
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 try:
     from typing import Self
 except ImportError:
@@ -32,7 +31,7 @@ class ReportingSuggestionInformation(BaseModel):
     """
     Reporting Suggestion Information
     """ # noqa: E501
-    reporting_urgency: ReportingUrgency = Field(alias="reportingUrgency")
+    reporting_urgency: StrictStr = Field(description="Reporting Urgency", alias="reportingUrgency")
     reporting_time_info: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="reportingTimeInfo")
     __properties: ClassVar[List[str]] = ["reportingUrgency", "reportingTimeInfo"]
 
@@ -73,9 +72,6 @@ class ReportingSuggestionInformation(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of reporting_urgency
-        if self.reporting_urgency:
-            _dict['reportingUrgency'] = self.reporting_urgency.to_dict()
         return _dict
 
     @classmethod
@@ -88,7 +84,7 @@ class ReportingSuggestionInformation(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "reportingUrgency": ReportingUrgency.from_dict(obj.get("reportingUrgency")) if obj.get("reportingUrgency") is not None else None,
+            "reportingUrgency": obj.get("reportingUrgency"),
             "reportingTimeInfo": obj.get("reportingTimeInfo")
         })
         return _obj

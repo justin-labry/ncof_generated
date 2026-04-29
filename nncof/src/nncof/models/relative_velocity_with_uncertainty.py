@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from nncof.models.angular_velocity import AngularVelocity
 from nncof.models.radial_velocity import RadialVelocity
 try:

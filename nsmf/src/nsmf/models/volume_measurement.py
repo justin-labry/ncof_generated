@@ -21,7 +21,7 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 try:
     from typing import Self
@@ -35,9 +35,9 @@ class VolumeMeasurement(BaseModel):
     total_volume: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String representing a Traffic Volume measured in bytes; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers. ", alias="totalVolume")
     ul_volume: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String representing a Traffic Volume measured in bytes; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers. ", alias="ulVolume")
     dl_volume: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="String representing a Traffic Volume measured in bytes; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers. ", alias="dlVolume")
-    total_nb_of_packets: Optional[Annotated[int, Field(le=-1, strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 64-bit integer. ", alias="totalNbOfPackets")
-    ul_nb_of_packets: Optional[Annotated[int, Field(le=-1, strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 64-bit integer. ", alias="ulNbOfPackets")
-    dl_nb_of_packets: Optional[Annotated[int, Field(le=-1, strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 64-bit integer. ", alias="dlNbOfPackets")
+    total_nb_of_packets: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 64-bit integer. ", alias="totalNbOfPackets")
+    ul_nb_of_packets: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 64-bit integer. ", alias="ulNbOfPackets")
+    dl_nb_of_packets: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 64-bit integer. ", alias="dlNbOfPackets")
     __properties: ClassVar[List[str]] = ["totalVolume", "ulVolume", "dlVolume", "totalNbOfPackets", "ulNbOfPackets", "dlNbOfPackets"]
 
     @field_validator('total_volume')

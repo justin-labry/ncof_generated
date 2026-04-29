@@ -132,11 +132,6 @@ class PowerEnergyConsumptionInfo(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of power_energy_cons_data
         if self.power_energy_cons_data:
             _dict['_powerEnergyConsData'] = self.power_energy_cons_data.to_dict()
-        # set to None if ue_ip_addr (nullable) is None
-        # and model_fields_set contains the field
-        if self.ue_ip_addr is None and "ue_ip_addr" in self.model_fields_set:
-            _dict['_ueIpAddr'] = None
-
         return _dict
 
     @classmethod

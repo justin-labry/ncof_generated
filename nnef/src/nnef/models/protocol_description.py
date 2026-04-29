@@ -20,11 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nnef.models.media_transport_proto import MediaTransportProto
-from nnef.models.mri_transfer_method import MriTransferMethod
 from nnef.models.rtp_header_ext_info import RtpHeaderExtInfo
 from nnef.models.rtp_payload_info import RtpPayloadInfo
 try:
@@ -36,11 +34,11 @@ class ProtocolDescription(BaseModel):
     """
     ProtocolDescription contains information to derive PDU set information.
     """ # noqa: E501
-    transport_proto: Optional[MediaTransportProto] = Field(default=None, alias="transportProto")
+    transport_proto: Optional[StrictStr] = Field(default=None, description="The enumeration MediaTransportProto indicates the transport protocol used for a media flow. ", alias="transportProto")
     rtp_header_ext_info: Optional[RtpHeaderExtInfo] = Field(default=None, alias="rtpHeaderExtInfo")
     add_rtp_header_ext_info: Optional[Annotated[List[RtpHeaderExtInfo], Field(min_length=1)]] = Field(default=None, alias="addRtpHeaderExtInfo")
     rtp_payload_info_list: Optional[Annotated[List[RtpPayloadInfo], Field(min_length=1)]] = Field(default=None, alias="rtpPayloadInfoList")
-    mri_transfer_info: Optional[MriTransferMethod] = Field(default=None, alias="mriTransferInfo")
+    mri_transfer_info: Optional[StrictStr] = Field(default=None, description="This data type indicates the method used for transferring Media Related Information.   ", alias="mriTransferInfo")
     __properties: ClassVar[List[str]] = ["transportProto", "rtpHeaderExtInfo", "addRtpHeaderExtInfo", "rtpPayloadInfoList", "mriTransferInfo"]
 
     model_config = {
@@ -80,9 +78,6 @@ class ProtocolDescription(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of transport_proto
-        if self.transport_proto:
-            _dict['transportProto'] = self.transport_proto.to_dict()
         # override the default output from pydantic by calling `to_dict()` of rtp_header_ext_info
         if self.rtp_header_ext_info:
             _dict['rtpHeaderExtInfo'] = self.rtp_header_ext_info.to_dict()
@@ -100,9 +95,6 @@ class ProtocolDescription(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['rtpPayloadInfoList'] = _items
-        # override the default output from pydantic by calling `to_dict()` of mri_transfer_info
-        if self.mri_transfer_info:
-            _dict['mriTransferInfo'] = self.mri_transfer_info.to_dict()
         return _dict
 
     @classmethod
@@ -115,11 +107,11 @@ class ProtocolDescription(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "transportProto": MediaTransportProto.from_dict(obj.get("transportProto")) if obj.get("transportProto") is not None else None,
+            "transportProto": obj.get("transportProto"),
             "rtpHeaderExtInfo": RtpHeaderExtInfo.from_dict(obj.get("rtpHeaderExtInfo")) if obj.get("rtpHeaderExtInfo") is not None else None,
             "addRtpHeaderExtInfo": [RtpHeaderExtInfo.from_dict(_item) for _item in obj.get("addRtpHeaderExtInfo")] if obj.get("addRtpHeaderExtInfo") is not None else None,
             "rtpPayloadInfoList": [RtpPayloadInfo.from_dict(_item) for _item in obj.get("rtpPayloadInfoList")] if obj.get("rtpPayloadInfoList") is not None else None,
-            "mriTransferInfo": MriTransferMethod.from_dict(obj.get("mriTransferInfo")) if obj.get("mriTransferInfo") is not None else None
+            "mriTransferInfo": obj.get("mriTransferInfo")
         })
         return _obj
 

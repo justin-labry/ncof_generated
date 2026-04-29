@@ -28,7 +28,6 @@ from nncof.models.location_info import LocationInfo
 from nncof.models.network_area_info import NetworkAreaInfo
 from nncof.models.pdu_session_info import PduSessionInfo
 from nncof.models.rat_freq_information import RatFreqInformation
-from nncof.models.service_experience_type import ServiceExperienceType
 from nncof.models.snssai import Snssai
 from nncof.models.svc_experience import SvcExperience
 from nncof.models.upf_information import UpfInformation
@@ -46,7 +45,7 @@ class ServiceExperienceInfo(BaseModel):
     supis: Optional[Annotated[List[Annotated[str, Field(strict=True)]], Field(min_length=1)]] = None
     snssai: Optional[Snssai] = None
     app_id: Optional[StrictStr] = Field(default=None, description="String providing an application identifier.", alias="appId")
-    srv_expc_type: Optional[ServiceExperienceType] = Field(default=None, alias="srvExpcType")
+    srv_expc_type: Optional[StrictStr] = Field(default=None, description="Represents the type of the service experience analytics.   Possible values are:   - VOICE: Indicates that the service experience analytics is for voice service. - VIDEO: Indicates that the service experience analytics is for video service. - OTHER: Indicates that the service experience analytics is for other service. ", alias="srvExpcType")
     ue_locs: Optional[Annotated[List[LocationInfo], Field(min_length=1)]] = Field(default=None, alias="ueLocs")
     upf_info: Optional[UpfInformation] = Field(default=None, alias="upfInfo")
     dnai: Optional[StrictStr] = Field(default=None, description="DNAI (Data network access identifier), see clause 5.6.7 of 3GPP TS 23.501.")
@@ -103,9 +102,6 @@ class ServiceExperienceInfo(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of snssai
         if self.snssai:
             _dict['snssai'] = self.snssai.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of srv_expc_type
-        if self.srv_expc_type:
-            _dict['srvExpcType'] = self.srv_expc_type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in ue_locs (list)
         _items = []
         if self.ue_locs:
@@ -145,7 +141,7 @@ class ServiceExperienceInfo(BaseModel):
             "supis": obj.get("supis"),
             "snssai": Snssai.from_dict(obj.get("snssai")) if obj.get("snssai") is not None else None,
             "appId": obj.get("appId"),
-            "srvExpcType": ServiceExperienceType.from_dict(obj.get("srvExpcType")) if obj.get("srvExpcType") is not None else None,
+            "srvExpcType": obj.get("srvExpcType"),
             "ueLocs": [LocationInfo.from_dict(_item) for _item in obj.get("ueLocs")] if obj.get("ueLocs") is not None else None,
             "upfInfo": UpfInformation.from_dict(obj.get("upfInfo")) if obj.get("upfInfo") is not None else None,
             "dnai": obj.get("dnai"),

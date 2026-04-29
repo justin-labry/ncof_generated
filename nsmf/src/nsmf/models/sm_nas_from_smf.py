@@ -23,7 +23,6 @@ import json
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr
 from typing import Any, ClassVar, Dict, List
-from nsmf.models.applied_smcc_type import AppliedSmccType
 try:
     from typing import Self
 except ImportError:
@@ -36,7 +35,7 @@ class SmNasFromSmf(BaseModel):
     sm_nas_type: StrictStr = Field(alias="smNasType")
     time_stamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="timeStamp")
     backoff_timer: StrictInt = Field(description="indicating a time in seconds.", alias="backoffTimer")
-    applied_smcc_type: AppliedSmccType = Field(alias="appliedSmccType")
+    applied_smcc_type: StrictStr = Field(description="Represents the type of applied SM congestion control.   Possible values are: - DNN_CC: Indicates the DNN based congestion control. - SNSSAI_CC: Indicates the S-NSSAI based congestion control. ", alias="appliedSmccType")
     __properties: ClassVar[List[str]] = ["smNasType", "timeStamp", "backoffTimer", "appliedSmccType"]
 
     model_config = {
@@ -76,9 +75,6 @@ class SmNasFromSmf(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of applied_smcc_type
-        if self.applied_smcc_type:
-            _dict['appliedSmccType'] = self.applied_smcc_type.to_dict()
         return _dict
 
     @classmethod
@@ -94,7 +90,7 @@ class SmNasFromSmf(BaseModel):
             "smNasType": obj.get("smNasType"),
             "timeStamp": obj.get("timeStamp"),
             "backoffTimer": obj.get("backoffTimer"),
-            "appliedSmccType": AppliedSmccType.from_dict(obj.get("appliedSmccType")) if obj.get("appliedSmccType") is not None else None
+            "appliedSmccType": obj.get("appliedSmccType")
         })
         return _obj
 

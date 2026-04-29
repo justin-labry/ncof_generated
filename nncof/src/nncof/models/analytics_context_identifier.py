@@ -21,9 +21,8 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nncof.models.ncof_event import NcofEvent
 from nncof.models.ue_analytics_context_descriptor import UeAnalyticsContextDescriptor
 try:
     from typing import Self
@@ -35,7 +34,7 @@ class AnalyticsContextIdentifier(BaseModel):
     Contains information about available analytics contexts.
     """ # noqa: E501
     subscription_id: Optional[StrictStr] = Field(default=None, description="The identifier of a subscription.", alias="subscriptionId")
-    nf_ana_ctxts: Optional[Annotated[List[NcofEvent], Field(min_length=1)]] = Field(default=None, description="List of analytics types for which NF related analytics contexts can be retrieved. ", alias="nfAnaCtxts")
+    nf_ana_ctxts: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, description="List of analytics types for which NF related analytics contexts can be retrieved. ", alias="nfAnaCtxts")
     ue_ana_ctxts: Optional[Annotated[List[UeAnalyticsContextDescriptor], Field(min_length=1)]] = Field(default=None, description="List of objects that indicate for which SUPI and analytics types combinations analytics context can be retrieved. ", alias="ueAnaCtxts")
     __properties: ClassVar[List[str]] = ["subscriptionId", "nfAnaCtxts", "ueAnaCtxts"]
 
@@ -76,13 +75,6 @@ class AnalyticsContextIdentifier(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in nf_ana_ctxts (list)
-        _items = []
-        if self.nf_ana_ctxts:
-            for _item in self.nf_ana_ctxts:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['nfAnaCtxts'] = _items
         # override the default output from pydantic by calling `to_dict()` of each item in ue_ana_ctxts (list)
         _items = []
         if self.ue_ana_ctxts:
@@ -103,7 +95,7 @@ class AnalyticsContextIdentifier(BaseModel):
 
         _obj = cls.model_validate({
             "subscriptionId": obj.get("subscriptionId"),
-            "nfAnaCtxts": [NcofEvent.from_dict(_item) for _item in obj.get("nfAnaCtxts")] if obj.get("nfAnaCtxts") is not None else None,
+            "nfAnaCtxts": obj.get("nfAnaCtxts"),
             "ueAnaCtxts": [UeAnalyticsContextDescriptor.from_dict(_item) for _item in obj.get("ueAnaCtxts")] if obj.get("ueAnaCtxts") is not None else None
         })
         return _obj

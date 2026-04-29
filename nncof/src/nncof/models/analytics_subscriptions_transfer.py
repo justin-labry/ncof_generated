@@ -20,10 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nncof.models.ncof_event import NcofEvent
 from nncof.models.subscription_transfer_info import SubscriptionTransferInfo
 try:
     from typing import Self
@@ -35,7 +34,7 @@ class AnalyticsSubscriptionsTransfer(BaseModel):
     Contains information about a request to transfer analytics subscriptions.
     """ # noqa: E501
     subs_trans_infos: Annotated[List[SubscriptionTransferInfo], Field(min_length=1)] = Field(alias="subsTransInfos")
-    fail_trans_event_reports: Optional[Annotated[List[NcofEvent], Field(min_length=1)]] = Field(default=None, alias="failTransEventReports")
+    fail_trans_event_reports: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="failTransEventReports")
     __properties: ClassVar[List[str]] = ["subsTransInfos", "failTransEventReports"]
 
     model_config = {
@@ -82,13 +81,6 @@ class AnalyticsSubscriptionsTransfer(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['subsTransInfos'] = _items
-        # override the default output from pydantic by calling `to_dict()` of each item in fail_trans_event_reports (list)
-        _items = []
-        if self.fail_trans_event_reports:
-            for _item in self.fail_trans_event_reports:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['failTransEventReports'] = _items
         return _dict
 
     @classmethod
@@ -102,7 +94,7 @@ class AnalyticsSubscriptionsTransfer(BaseModel):
 
         _obj = cls.model_validate({
             "subsTransInfos": [SubscriptionTransferInfo.from_dict(_item) for _item in obj.get("subsTransInfos")] if obj.get("subsTransInfos") is not None else None,
-            "failTransEventReports": [NcofEvent.from_dict(_item) for _item in obj.get("failTransEventReports")] if obj.get("failTransEventReports") is not None else None
+            "failTransEventReports": obj.get("failTransEventReports")
         })
         return _obj
 

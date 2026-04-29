@@ -21,10 +21,9 @@ import json
 
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nupf.models.recur_type import RecurType
 from nupf.models.valid_time_period import ValidTimePeriod
 try:
     from typing import Self
@@ -36,7 +35,7 @@ class RecurTime(BaseModel):
     Contains the recurring time period
     """ # noqa: E501
     recur_time_window: Optional[ValidTimePeriod] = Field(default=None, alias="recurTimeWindow")
-    recur_type: Optional[RecurType] = Field(default=None, alias="recurType")
+    recur_type: Optional[StrictStr] = Field(default=None, description="Indicates the recurrence applicable to a time window.", alias="recurType")
     recur_month: Optional[Annotated[List[Annotated[int, Field(le=12, strict=True, ge=1)]], Field(min_length=1)]] = Field(default=None, alias="recurMonth")
     recur_week: Optional[Annotated[List[Annotated[int, Field(le=64, strict=True, ge=1)]], Field(min_length=1)]] = Field(default=None, alias="recurWeek")
     recur_day: Optional[Annotated[List[Annotated[int, Field(le=7, strict=True, ge=1)]], Field(min_length=1)]] = Field(default=None, alias="recurDay")
@@ -84,9 +83,6 @@ class RecurTime(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of recur_time_window
         if self.recur_time_window:
             _dict['recurTimeWindow'] = self.recur_time_window.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of recur_type
-        if self.recur_type:
-            _dict['recurType'] = self.recur_type.to_dict()
         return _dict
 
     @classmethod
@@ -100,7 +96,7 @@ class RecurTime(BaseModel):
 
         _obj = cls.model_validate({
             "recurTimeWindow": ValidTimePeriod.from_dict(obj.get("recurTimeWindow")) if obj.get("recurTimeWindow") is not None else None,
-            "recurType": RecurType.from_dict(obj.get("recurType")) if obj.get("recurType") is not None else None,
+            "recurType": obj.get("recurType"),
             "recurMonth": obj.get("recurMonth"),
             "recurWeek": obj.get("recurWeek"),
             "recurDay": obj.get("recurDay"),

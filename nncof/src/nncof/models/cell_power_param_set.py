@@ -20,12 +20,11 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.cell_power_para import CellPowerPara
 from nncof.models.network_area_info import NetworkAreaInfo
-from nncof.models.rat_type import RatType
 from nncof.models.time_window import TimeWindow
 try:
     from typing import Self
@@ -39,7 +38,7 @@ class CellPowerParamSet(BaseModel):
     cell_power_param_set: Optional[CellPowerPara] = Field(default=None, alias="_cellPowerParamSet")
     ctrl_time_win: Optional[TimeWindow] = Field(default=None, alias="_ctrlTimeWin")
     freqs: Optional[Annotated[List[Annotated[int, Field(le=3279165, strict=True, ge=0)]], Field(min_length=1)]] = Field(default=None, alias="_freqs")
-    rat_types: Optional[Annotated[List[RatType], Field(min_length=1)]] = Field(default=None, alias="_ratTypes")
+    rat_types: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="_ratTypes")
     validity_period: Optional[TimeWindow] = Field(default=None, alias="_validityPeriod")
     spatial_validity: Optional[NetworkAreaInfo] = Field(default=None, alias="_spatialValidity")
     __properties: ClassVar[List[str]] = ["_cellPowerParamSet", "_ctrlTimeWin", "_freqs", "_ratTypes", "_validityPeriod", "_spatialValidity"]
@@ -87,13 +86,6 @@ class CellPowerParamSet(BaseModel):
         # override the default output from pydantic by calling `to_dict()` of ctrl_time_win
         if self.ctrl_time_win:
             _dict['_ctrlTimeWin'] = self.ctrl_time_win.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in rat_types (list)
-        _items = []
-        if self.rat_types:
-            for _item in self.rat_types:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['_ratTypes'] = _items
         # override the default output from pydantic by calling `to_dict()` of validity_period
         if self.validity_period:
             _dict['_validityPeriod'] = self.validity_period.to_dict()
@@ -115,7 +107,7 @@ class CellPowerParamSet(BaseModel):
             "_cellPowerParamSet": CellPowerPara.from_dict(obj.get("_cellPowerParamSet")) if obj.get("_cellPowerParamSet") is not None else None,
             "_ctrlTimeWin": TimeWindow.from_dict(obj.get("_ctrlTimeWin")) if obj.get("_ctrlTimeWin") is not None else None,
             "_freqs": obj.get("_freqs"),
-            "_ratTypes": [RatType.from_dict(_item) for _item in obj.get("_ratTypes")] if obj.get("_ratTypes") is not None else None,
+            "_ratTypes": obj.get("_ratTypes"),
             "_validityPeriod": TimeWindow.from_dict(obj.get("_validityPeriod")) if obj.get("_validityPeriod") is not None else None,
             "_spatialValidity": NetworkAreaInfo.from_dict(obj.get("_spatialValidity")) if obj.get("_spatialValidity") is not None else None
         })

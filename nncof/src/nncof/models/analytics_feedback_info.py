@@ -21,10 +21,9 @@ import json
 
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictBool
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nncof.models.ncof_event import NcofEvent
 try:
     from typing import Self
 except ImportError:
@@ -35,7 +34,7 @@ class AnalyticsFeedbackInfo(BaseModel):
     Analytics feedback information.
     """ # noqa: E501
     action_times: Annotated[List[datetime], Field(min_length=1)] = Field(description="The times at which an action was taken.", alias="actionTimes")
-    used_ana_types: Optional[Annotated[List[NcofEvent], Field(min_length=1)]] = Field(default=None, description="The analytics types that were used to take the action.", alias="usedAnaTypes")
+    used_ana_types: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, description="The analytics types that were used to take the action.", alias="usedAnaTypes")
     impact_ind: Optional[StrictBool] = Field(default=None, description="Indication about the impact of an action on the ground truth data.", alias="impactInd")
     __properties: ClassVar[List[str]] = ["actionTimes", "usedAnaTypes", "impactInd"]
 
@@ -76,13 +75,6 @@ class AnalyticsFeedbackInfo(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in used_ana_types (list)
-        _items = []
-        if self.used_ana_types:
-            for _item in self.used_ana_types:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['usedAnaTypes'] = _items
         return _dict
 
     @classmethod
@@ -96,7 +88,7 @@ class AnalyticsFeedbackInfo(BaseModel):
 
         _obj = cls.model_validate({
             "actionTimes": obj.get("actionTimes"),
-            "usedAnaTypes": [NcofEvent.from_dict(_item) for _item in obj.get("usedAnaTypes")] if obj.get("usedAnaTypes") is not None else None,
+            "usedAnaTypes": obj.get("usedAnaTypes"),
             "impactInd": obj.get("impactInd")
         })
         return _obj

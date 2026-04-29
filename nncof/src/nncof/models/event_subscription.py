@@ -21,28 +21,20 @@ import json
 
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.accuracy_req import AccuracyReq
 from nncof.models.addr_fqdn import AddrFqdn
 from nncof.models.analytics_feedback_info import AnalyticsFeedbackInfo
-from nncof.models.analytics_subset import AnalyticsSubset
 from nncof.models.bw_requirement import BwRequirement
 from nncof.models.cell_power_ctrl_opt_req import CellPowerCtrlOptReq
 from nncof.models.e2e_data_vol_trans_time_req import E2eDataVolTransTimeReq
 from nncof.models.event_reporting_requirement import EventReportingRequirement
 from nncof.models.exception import Exception
-from nncof.models.expected_analytics_type import ExpectedAnalyticsType
 from nncof.models.expected_ue_behaviour_data import ExpectedUeBehaviourData
 from nncof.models.geo_location import GeoLocation
 from nncof.models.geographical_area import GeographicalArea
-from nncof.models.loc_info_granularity import LocInfoGranularity
-from nncof.models.location_orientation import LocationOrientation
-from nncof.models.matching_direction import MatchingDirection
-from nncof.models.ncof_event import NcofEvent
 from nncof.models.network_area_info import NetworkAreaInfo
-from nncof.models.nf_type import NFType
-from nncof.models.notification_method import NotificationMethod
 from nncof.models.nsi_id_info import NsiIdInfo
 from nncof.models.pdu_session_info import PduSessionInfo
 from nncof.models.qos_policy_assist_req import QosPolicyAssistReq
@@ -54,7 +46,6 @@ from nncof.models.snssai import Snssai
 from nncof.models.target_ue_information import TargetUeInformation
 from nncof.models.threshold_level import ThresholdLevel
 from nncof.models.upf_information import UpfInformation
-from nncof.models.user_data_con_order_crit import UserDataConOrderCrit
 from nncof.models.wlan_performance_req import WlanPerformanceReq
 try:
     from typing import Self
@@ -70,16 +61,16 @@ class EventSubscription(BaseModel):
     deviations: Optional[Annotated[List[Annotated[int, Field(strict=True, ge=0)]], Field(min_length=1)]] = None
     dnns: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, description="Identification(s) of DNN to which the subscription applies.")
     dnais: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = None
-    event: NcofEvent
+    event: StrictStr = Field(description="Describes the NCOF Events.   Possible values are: - SLICE_LOAD_LEVEL: Indicates that the event subscribed is load level information of Network   Slice. - NETWORK_PERFORMANCE: Indicates that the event subscribed is network performance   information. - NF_LOAD: Indicates that the event subscribed is load level and status of one or several   Network Functions. - SERVICE_EXPERIENCE: Indicates that the event subscribed is service experience. - UE_MOBILITY: Indicates that the event subscribed is UE mobility information. - UE_COMMUNICATION: Indicates that the event subscribed is UE communication information. - QOS_SUSTAINABILITY: Indicates that the event subscribed is QoS sustainability. - ABNORMAL_BEHAVIOUR: Indicates that the event subscribed is abnormal behaviour. - USER_DATA_CONGESTION: Indicates that the event subscribed is user data congestion   information. - NSI_LOAD_LEVEL: Indicates that the event subscribed is load level information of Network   Slice and the optionally associated Network Slice Instance. - DN_PERFORMANCE: Indicates that the event subscribed is DN performance information. - DISPERSION: Indicates that the event subscribed is dispersion information. - RED_TRANS_EXP: Indicates that the event subscribed is redundant transmission experience. - WLAN_PERFORMANCE: Indicates that the event subscribed is WLAN performance. - SM_CONGESTION: Indicates the Session Management Congestion Control Experience information   for specific DNN and/or S-NSSAI. - PFD_DETERMINATION: Indicates that the event subscribed is the PFD Determination nformation   for known application identifier(s). - PDU_SESSION_TRAFFIC: Indicates that the event subscribed is the PDU Session traffic   information. - E2E_DATA_VOL_TRANS_TIME: Indicates that the event subscribed is of E2E data volume    transfer time. - MOVEMENT_BEHAVIOUR: Indicates that the event subscribed is the Movement Behaviour   information. - LOC_ACCURACY: Indicates that the event subscribed is of location accuracy. - RELATIVE_PROXIMITY: Indicates that the event subscribed is the Relative Proximity   information. - SIGNALLING_STORM: Indicates that the event subscribed is the Signalling Storm information. - QOS_POLICY_ASSIST: Indicates that the event subscribed is the QoS and Policy   Assistance information. ")
     extra_report_req: Optional[EventReportingRequirement] = Field(default=None, alias="extraReportReq")
     ladn_dnns: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, description="Identification(s) of LADN DNN to indicate the LADN service area as the AOI.", alias="ladnDnns")
     load_level_threshold: Optional[StrictInt] = Field(default=None, description="Indicates that the NCOF shall report the corresponding network slice load level to the NF service consumer where the load level of the network slice identified by snssais is reached. ", alias="loadLevelThreshold")
-    notification_method: Optional[NotificationMethod] = Field(default=None, alias="notificationMethod")
-    matching_dir: Optional[MatchingDirection] = Field(default=None, alias="matchingDir")
+    notification_method: Optional[StrictStr] = Field(default=None, description="Represents the notification methods for the subscribed events.   Possible values are: - PERIODIC: The notification of the subscribed NCOF Event is periodical. The period   between the notifications is identified by repetitionPeriod and represents time in   seconds. - THRESHOLD: The subscribe of NCOF Event is upon threshold exceeded. ", alias="notificationMethod")
+    matching_dir: Optional[StrictStr] = Field(default=None, description="Represents the matching direction when crossing a threshold.   Possible values are: - ASCENDING: Threshold is crossed in ascending direction. - DESCENDING: Threshold is crossed in descending direction. - CROSSED: Threshold is crossed either in ascending or descending direction. ", alias="matchingDir")
     nf_load_lvl_thds: Optional[Annotated[List[ThresholdLevel], Field(min_length=1)]] = Field(default=None, description="Shall be supplied in order to start reporting when an average load level is reached. ", alias="nfLoadLvlThds")
     nf_instance_ids: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="nfInstanceIds")
     nf_set_ids: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="nfSetIds")
-    nf_types: Optional[Annotated[List[NFType], Field(min_length=1)]] = Field(default=None, alias="nfTypes")
+    nf_types: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="nfTypes")
     network_area: Optional[NetworkAreaInfo] = Field(default=None, alias="networkArea")
     location: Optional[GeoLocation] = None
     temporal_gran_size: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="temporalGranSize")
@@ -92,7 +83,7 @@ class EventSubscription(BaseModel):
     nsi_id_infos: Optional[Annotated[List[NsiIdInfo], Field(min_length=1)]] = Field(default=None, alias="nsiIdInfos")
     nsi_level_thrds: Optional[Annotated[List[Annotated[int, Field(strict=True, ge=0)]], Field(min_length=1)]] = Field(default=None, alias="nsiLevelThrds")
     qos_requ: Optional[QosRequirement] = Field(default=None, alias="qosRequ")
-    qos_flow_ret_thds: Optional[Annotated[List[Optional[RetainabilityThreshold]], Field(min_length=1)]] = Field(default=None, alias="qosFlowRetThds")
+    qos_flow_ret_thds: Optional[Annotated[List[RetainabilityThreshold], Field(min_length=1)]] = Field(default=None, alias="qosFlowRetThds")
     ran_ue_throu_thds: Optional[Annotated[List[Annotated[str, Field(strict=True)]], Field(min_length=1)]] = Field(default=None, alias="ranUeThrouThds")
     e2e_delay_thds: Optional[Annotated[List[Annotated[int, Field(strict=True, ge=1)]], Field(min_length=1)]] = Field(default=None, alias="e2eDelayThds")
     repetition_period: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="repetitionPeriod")
@@ -100,21 +91,21 @@ class EventSubscription(BaseModel):
     tgt_ue: Optional[TargetUeInformation] = Field(default=None, alias="tgtUe")
     roaming_info: Optional[RoamingInfo] = Field(default=None, alias="roamingInfo")
     cong_thresholds: Optional[Annotated[List[ThresholdLevel], Field(min_length=1)]] = Field(default=None, alias="congThresholds")
-    user_data_con_order_cri: Optional[UserDataConOrderCrit] = Field(default=None, alias="userDataConOrderCri")
+    user_data_con_order_cri: Optional[StrictStr] = Field(default=None, description="Represents the cause for requesting to terminate an analytics subscription.   Possible values are:     - APPLICABLE_TIME_WINDOW: The ordering criterion is the Applicable Time Window.   - NETWORK_STATUS_INDICATION: The ordering criterion is the network status indication.    ", alias="userDataConOrderCri")
     bw_requs: Optional[Annotated[List[BwRequirement], Field(min_length=1)]] = Field(default=None, alias="bwRequs")
     excep_requs: Optional[Annotated[List[Exception], Field(min_length=1)]] = Field(default=None, alias="excepRequs")
-    expt_ana_type: Optional[ExpectedAnalyticsType] = Field(default=None, alias="exptAnaType")
+    expt_ana_type: Optional[StrictStr] = Field(default=None, description="Represents the expected UE analytics type.   Possible values are: - MOBILITY: Mobility related abnormal behaviour analytics is expected by the consumer. - COMMUN: Communication related abnormal behaviour analytics is expected by the consumer. - MOBILITY_AND_COMMUN: Both mobility and communication related abnormal behaviour analytics   is expected by the consumer. ", alias="exptAnaType")
     expt_ue_behav: Optional[ExpectedUeBehaviourData] = Field(default=None, alias="exptUeBehav")
     rat_freqs: Optional[Annotated[List[RatFreqInformation], Field(min_length=1)]] = Field(default=None, alias="ratFreqs")
-    list_of_ana_subsets: Optional[Annotated[List[AnalyticsSubset], Field(min_length=1)]] = Field(default=None, alias="listOfAnaSubsets")
+    list_of_ana_subsets: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="listOfAnaSubsets")
     wlan_reqs: Optional[Annotated[List[WlanPerformanceReq], Field(min_length=1)]] = Field(default=None, alias="wlanReqs")
     upf_info: Optional[UpfInformation] = Field(default=None, alias="upfInfo")
     app_server_addrs: Optional[Annotated[List[AddrFqdn], Field(min_length=1)]] = Field(default=None, alias="appServerAddrs")
     pdu_ses_infos: Optional[Annotated[List[PduSessionInfo], Field(min_length=1)]] = Field(default=None, alias="pduSesInfos")
     use_case_cxt: Optional[StrictStr] = Field(default=None, description="Indicates the context of usage of the analytics. The value and format of this parameter are not standardized. ", alias="useCaseCxt")
-    loc_granularity: Optional[LocInfoGranularity] = Field(default=None, alias="locGranularity")
-    loc_orientation: Optional[LocationOrientation] = Field(default=None, alias="locOrientation")
-    data_vl_trns_tm_rqs: Optional[Annotated[List[Optional[E2eDataVolTransTimeReq]], Field(min_length=1)]] = Field(default=None, alias="dataVlTrnsTmRqs")
+    loc_granularity: Optional[StrictStr] = Field(default=None, description="Represents the preferred granularity of location information.   Possible values are:     - TA_LEVEL: Indicates location granularity of TA level.   - CELL_LEVEL: Indicates location granularity of Cell level.   - LON_AND_LAT_LEVEL: Indicates location granularity of longitude and latitude level. ", alias="locGranularity")
+    loc_orientation: Optional[StrictStr] = Field(default=None, description="Possible values are:     - HORIZONTAL: Indicates horizontal orientation.   - VERTICAL: Indicates vertical orientation.   - HOR_AND_VER: Indicates both horizontal and vertical orientation. ", alias="locOrientation")
+    data_vl_trns_tm_rqs: Optional[Annotated[List[E2eDataVolTransTimeReq], Field(min_length=1)]] = Field(default=None, alias="dataVlTrnsTmRqs")
     accu_req: Optional[AccuracyReq] = Field(default=None, alias="accuReq")
     pause_flg: Optional[StrictBool] = Field(default=None, description="Pause analytics consumption flag. Set to \"true\" to indicate the NCOF to stop sending the notifications of analytics. Default value is \"false\" if omitted. ", alias="pauseFlg")
     resume_flg: Optional[StrictBool] = Field(default=None, description="Resume analytics consumption flag. Set to \"true\" to indicate the NCOF to resume sending the notifications of analytics. Default value is \"false\" if omitted. ", alias="resumeFlg")
@@ -162,18 +153,9 @@ class EventSubscription(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of event
-        if self.event:
-            _dict['event'] = self.event.to_dict()
         # override the default output from pydantic by calling `to_dict()` of extra_report_req
         if self.extra_report_req:
             _dict['extraReportReq'] = self.extra_report_req.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of notification_method
-        if self.notification_method:
-            _dict['notificationMethod'] = self.notification_method.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of matching_dir
-        if self.matching_dir:
-            _dict['matchingDir'] = self.matching_dir.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in nf_load_lvl_thds (list)
         _items = []
         if self.nf_load_lvl_thds:
@@ -181,13 +163,6 @@ class EventSubscription(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['nfLoadLvlThds'] = _items
-        # override the default output from pydantic by calling `to_dict()` of each item in nf_types (list)
-        _items = []
-        if self.nf_types:
-            for _item in self.nf_types:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['nfTypes'] = _items
         # override the default output from pydantic by calling `to_dict()` of network_area
         if self.network_area:
             _dict['networkArea'] = self.network_area.to_dict()
@@ -245,9 +220,6 @@ class EventSubscription(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['congThresholds'] = _items
-        # override the default output from pydantic by calling `to_dict()` of user_data_con_order_cri
-        if self.user_data_con_order_cri:
-            _dict['userDataConOrderCri'] = self.user_data_con_order_cri.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in bw_requs (list)
         _items = []
         if self.bw_requs:
@@ -262,9 +234,6 @@ class EventSubscription(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['excepRequs'] = _items
-        # override the default output from pydantic by calling `to_dict()` of expt_ana_type
-        if self.expt_ana_type:
-            _dict['exptAnaType'] = self.expt_ana_type.to_dict()
         # override the default output from pydantic by calling `to_dict()` of expt_ue_behav
         if self.expt_ue_behav:
             _dict['exptUeBehav'] = self.expt_ue_behav.to_dict()
@@ -275,13 +244,6 @@ class EventSubscription(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['ratFreqs'] = _items
-        # override the default output from pydantic by calling `to_dict()` of each item in list_of_ana_subsets (list)
-        _items = []
-        if self.list_of_ana_subsets:
-            for _item in self.list_of_ana_subsets:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['listOfAnaSubsets'] = _items
         # override the default output from pydantic by calling `to_dict()` of each item in wlan_reqs (list)
         _items = []
         if self.wlan_reqs:
@@ -306,12 +268,6 @@ class EventSubscription(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['pduSesInfos'] = _items
-        # override the default output from pydantic by calling `to_dict()` of loc_granularity
-        if self.loc_granularity:
-            _dict['locGranularity'] = self.loc_granularity.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of loc_orientation
-        if self.loc_orientation:
-            _dict['locOrientation'] = self.loc_orientation.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in data_vl_trns_tm_rqs (list)
         _items = []
         if self.data_vl_trns_tm_rqs:
@@ -344,11 +300,6 @@ class EventSubscription(BaseModel):
         if self.location is None and "location" in self.model_fields_set:
             _dict['location'] = None
 
-        # set to None if qos_requ (nullable) is None
-        # and model_fields_set contains the field
-        if self.qos_requ is None and "qos_requ" in self.model_fields_set:
-            _dict['qosRequ'] = None
-
         return _dict
 
     @classmethod
@@ -366,16 +317,16 @@ class EventSubscription(BaseModel):
             "deviations": obj.get("deviations"),
             "dnns": obj.get("dnns"),
             "dnais": obj.get("dnais"),
-            "event": NcofEvent.from_dict(obj.get("event")) if obj.get("event") is not None else None,
+            "event": obj.get("event"),
             "extraReportReq": EventReportingRequirement.from_dict(obj.get("extraReportReq")) if obj.get("extraReportReq") is not None else None,
             "ladnDnns": obj.get("ladnDnns"),
             "loadLevelThreshold": obj.get("loadLevelThreshold"),
-            "notificationMethod": NotificationMethod.from_dict(obj.get("notificationMethod")) if obj.get("notificationMethod") is not None else None,
-            "matchingDir": MatchingDirection.from_dict(obj.get("matchingDir")) if obj.get("matchingDir") is not None else None,
+            "notificationMethod": obj.get("notificationMethod"),
+            "matchingDir": obj.get("matchingDir"),
             "nfLoadLvlThds": [ThresholdLevel.from_dict(_item) for _item in obj.get("nfLoadLvlThds")] if obj.get("nfLoadLvlThds") is not None else None,
             "nfInstanceIds": obj.get("nfInstanceIds"),
             "nfSetIds": obj.get("nfSetIds"),
-            "nfTypes": [NFType.from_dict(_item) for _item in obj.get("nfTypes")] if obj.get("nfTypes") is not None else None,
+            "nfTypes": obj.get("nfTypes"),
             "networkArea": NetworkAreaInfo.from_dict(obj.get("networkArea")) if obj.get("networkArea") is not None else None,
             "location": GeoLocation.from_dict(obj.get("location")) if obj.get("location") is not None else None,
             "temporalGranSize": obj.get("temporalGranSize"),
@@ -396,20 +347,20 @@ class EventSubscription(BaseModel):
             "tgtUe": TargetUeInformation.from_dict(obj.get("tgtUe")) if obj.get("tgtUe") is not None else None,
             "roamingInfo": RoamingInfo.from_dict(obj.get("roamingInfo")) if obj.get("roamingInfo") is not None else None,
             "congThresholds": [ThresholdLevel.from_dict(_item) for _item in obj.get("congThresholds")] if obj.get("congThresholds") is not None else None,
-            "userDataConOrderCri": UserDataConOrderCrit.from_dict(obj.get("userDataConOrderCri")) if obj.get("userDataConOrderCri") is not None else None,
+            "userDataConOrderCri": obj.get("userDataConOrderCri"),
             "bwRequs": [BwRequirement.from_dict(_item) for _item in obj.get("bwRequs")] if obj.get("bwRequs") is not None else None,
             "excepRequs": [Exception.from_dict(_item) for _item in obj.get("excepRequs")] if obj.get("excepRequs") is not None else None,
-            "exptAnaType": ExpectedAnalyticsType.from_dict(obj.get("exptAnaType")) if obj.get("exptAnaType") is not None else None,
+            "exptAnaType": obj.get("exptAnaType"),
             "exptUeBehav": ExpectedUeBehaviourData.from_dict(obj.get("exptUeBehav")) if obj.get("exptUeBehav") is not None else None,
             "ratFreqs": [RatFreqInformation.from_dict(_item) for _item in obj.get("ratFreqs")] if obj.get("ratFreqs") is not None else None,
-            "listOfAnaSubsets": [AnalyticsSubset.from_dict(_item) for _item in obj.get("listOfAnaSubsets")] if obj.get("listOfAnaSubsets") is not None else None,
+            "listOfAnaSubsets": obj.get("listOfAnaSubsets"),
             "wlanReqs": [WlanPerformanceReq.from_dict(_item) for _item in obj.get("wlanReqs")] if obj.get("wlanReqs") is not None else None,
             "upfInfo": UpfInformation.from_dict(obj.get("upfInfo")) if obj.get("upfInfo") is not None else None,
             "appServerAddrs": [AddrFqdn.from_dict(_item) for _item in obj.get("appServerAddrs")] if obj.get("appServerAddrs") is not None else None,
             "pduSesInfos": [PduSessionInfo.from_dict(_item) for _item in obj.get("pduSesInfos")] if obj.get("pduSesInfos") is not None else None,
             "useCaseCxt": obj.get("useCaseCxt"),
-            "locGranularity": LocInfoGranularity.from_dict(obj.get("locGranularity")) if obj.get("locGranularity") is not None else None,
-            "locOrientation": LocationOrientation.from_dict(obj.get("locOrientation")) if obj.get("locOrientation") is not None else None,
+            "locGranularity": obj.get("locGranularity"),
+            "locOrientation": obj.get("locOrientation"),
             "dataVlTrnsTmRqs": [E2eDataVolTransTimeReq.from_dict(_item) for _item in obj.get("dataVlTrnsTmRqs")] if obj.get("dataVlTrnsTmRqs") is not None else None,
             "accuReq": AccuracyReq.from_dict(obj.get("accuReq")) if obj.get("accuReq") is not None else None,
             "pauseFlg": obj.get("pauseFlg"),

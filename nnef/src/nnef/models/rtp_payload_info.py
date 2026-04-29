@@ -20,10 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nnef.models.rtp_payload_format import RtpPayloadFormat
 try:
     from typing import Self
 except ImportError:
@@ -34,7 +33,7 @@ class RtpPayloadInfo(BaseModel):
     RtpPayloadInfo contains Rtp payload type and format.
     """ # noqa: E501
     rtp_payload_type_list: Optional[Annotated[List[Annotated[int, Field(le=127, strict=True, ge=0)]], Field(min_length=1)]] = Field(default=None, alias="rtpPayloadTypeList")
-    rtp_payload_format: Optional[RtpPayloadFormat] = Field(default=None, alias="rtpPayloadFormat")
+    rtp_payload_format: Optional[StrictStr] = Field(default=None, description="The enumeration RtpPayloadFormat indicates the RTP Payload format  ", alias="rtpPayloadFormat")
     __properties: ClassVar[List[str]] = ["rtpPayloadTypeList", "rtpPayloadFormat"]
 
     model_config = {
@@ -74,9 +73,6 @@ class RtpPayloadInfo(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of rtp_payload_format
-        if self.rtp_payload_format:
-            _dict['rtpPayloadFormat'] = self.rtp_payload_format.to_dict()
         return _dict
 
     @classmethod
@@ -90,7 +86,7 @@ class RtpPayloadInfo(BaseModel):
 
         _obj = cls.model_validate({
             "rtpPayloadTypeList": obj.get("rtpPayloadTypeList"),
-            "rtpPayloadFormat": RtpPayloadFormat.from_dict(obj.get("rtpPayloadFormat")) if obj.get("rtpPayloadFormat") is not None else None
+            "rtpPayloadFormat": obj.get("rtpPayloadFormat")
         })
         return _obj
 

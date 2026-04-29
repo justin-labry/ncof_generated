@@ -20,10 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nupf.models.dn_protocol import DnProtocol
 try:
     from typing import Self
 except ImportError:
@@ -34,7 +33,7 @@ class DomainInformation(BaseModel):
     Domain Information
     """ # noqa: E501
     domain_name: Annotated[str, Field(min_length=4, strict=True, max_length=253)] = Field(description="Fully Qualified Domain Name", alias="domainName")
-    domain_name_protocol: Optional[DnProtocol] = Field(default=None, alias="domainNameProtocol")
+    domain_name_protocol: Optional[StrictStr] = Field(default=None, description="Domain Name Protocol", alias="domainNameProtocol")
     __properties: ClassVar[List[str]] = ["domainName", "domainNameProtocol"]
 
     @field_validator('domain_name')
@@ -81,9 +80,6 @@ class DomainInformation(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of domain_name_protocol
-        if self.domain_name_protocol:
-            _dict['domainNameProtocol'] = self.domain_name_protocol.to_dict()
         return _dict
 
     @classmethod
@@ -97,7 +93,7 @@ class DomainInformation(BaseModel):
 
         _obj = cls.model_validate({
             "domainName": obj.get("domainName"),
-            "domainNameProtocol": DnProtocol.from_dict(obj.get("domainNameProtocol")) if obj.get("domainNameProtocol") is not None else None
+            "domainNameProtocol": obj.get("domainNameProtocol")
         })
         return _obj
 

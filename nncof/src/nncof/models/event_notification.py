@@ -21,15 +21,13 @@ import json
 
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.accuracy_info import AccuracyInfo
 from nncof.models.analytics_metadata_info import AnalyticsMetadataInfo
 from nncof.models.cell_power_ctrl_info import CellPowerCtrlInfo
 from nncof.models.e2e_data_vol_trans_time_info import E2eDataVolTransTimeInfo
-from nncof.models.ncof_event import NcofEvent
-from nncof.models.ncof_failure_code import NcofFailureCode
 from nncof.models.qos_policy_assist_info import QosPolicyAssistInfo
 from nncof.models.service_experience_info import ServiceExperienceInfo
 from nncof.models.wlan_performance_info import WlanPerformanceInfo
@@ -42,11 +40,11 @@ class EventNotification(BaseModel):
     """
     Represents a notification on events that occurred.
     """ # noqa: E501
-    event: NcofEvent
+    event: StrictStr = Field(description="Describes the NCOF Events.   Possible values are: - SLICE_LOAD_LEVEL: Indicates that the event subscribed is load level information of Network   Slice. - NETWORK_PERFORMANCE: Indicates that the event subscribed is network performance   information. - NF_LOAD: Indicates that the event subscribed is load level and status of one or several   Network Functions. - SERVICE_EXPERIENCE: Indicates that the event subscribed is service experience. - UE_MOBILITY: Indicates that the event subscribed is UE mobility information. - UE_COMMUNICATION: Indicates that the event subscribed is UE communication information. - QOS_SUSTAINABILITY: Indicates that the event subscribed is QoS sustainability. - ABNORMAL_BEHAVIOUR: Indicates that the event subscribed is abnormal behaviour. - USER_DATA_CONGESTION: Indicates that the event subscribed is user data congestion   information. - NSI_LOAD_LEVEL: Indicates that the event subscribed is load level information of Network   Slice and the optionally associated Network Slice Instance. - DN_PERFORMANCE: Indicates that the event subscribed is DN performance information. - DISPERSION: Indicates that the event subscribed is dispersion information. - RED_TRANS_EXP: Indicates that the event subscribed is redundant transmission experience. - WLAN_PERFORMANCE: Indicates that the event subscribed is WLAN performance. - SM_CONGESTION: Indicates the Session Management Congestion Control Experience information   for specific DNN and/or S-NSSAI. - PFD_DETERMINATION: Indicates that the event subscribed is the PFD Determination nformation   for known application identifier(s). - PDU_SESSION_TRAFFIC: Indicates that the event subscribed is the PDU Session traffic   information. - E2E_DATA_VOL_TRANS_TIME: Indicates that the event subscribed is of E2E data volume    transfer time. - MOVEMENT_BEHAVIOUR: Indicates that the event subscribed is the Movement Behaviour   information. - LOC_ACCURACY: Indicates that the event subscribed is of location accuracy. - RELATIVE_PROXIMITY: Indicates that the event subscribed is the Relative Proximity   information. - SIGNALLING_STORM: Indicates that the event subscribed is the Signalling Storm information. - QOS_POLICY_ASSIST: Indicates that the event subscribed is the QoS and Policy   Assistance information. ")
     start: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.")
     expiry: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.")
     time_stamp_gen: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="timeStampGen")
-    fail_notify_code: Optional[NcofFailureCode] = Field(default=None, alias="failNotifyCode")
+    fail_notify_code: Optional[StrictStr] = Field(default=None, description="Represents the failure reason.   Possible values are: - UNAVAILABLE_DATA: Indicates the requested statistics information for the event is rejected   since necessary data to perform the service is unavailable. - BOTH_STAT_PRED_NOT_ALLOWED: Indicates the requested analysis information for the event is   rejected since the start time is in the past and the end time is in the future, which   means the NF service consumer requested both statistics and prediction for the analytics. - PREDICTION_NOT_ALLOWED: Indicates that the request for the prediction of the analytics   event is not allowed. - UNSATISFIED_REQUESTED_ANALYTICS_TIME: Indicates that the requested event is rejected since   the analytics information is not ready when the time indicated by the \"timeAnaNeeded\"   attribute (as provided during the creation or modification of subscription) is reached. - NO_ROAMING_SUPPORT: Indicates that the request shall be rejected because roaming analytics   or data are required and the NCOF neither supports roaming exchange capabilitiy nor can   it forward the request to another NCOF. - OTHER: Indicates the requested analysis information for the event is rejected due to other   reasons. ", alias="failNotifyCode")
     rv_wait_time: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="rvWaitTime")
     ana_meta_info: Optional[AnalyticsMetadataInfo] = Field(default=None, alias="anaMetaInfo")
     svc_exps: Optional[Annotated[List[ServiceExperienceInfo], Field(min_length=1)]] = Field(default=None, alias="svcExps")
@@ -98,12 +96,6 @@ class EventNotification(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of event
-        if self.event:
-            _dict['event'] = self.event.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of fail_notify_code
-        if self.fail_notify_code:
-            _dict['failNotifyCode'] = self.fail_notify_code.to_dict()
         # override the default output from pydantic by calling `to_dict()` of ana_meta_info
         if self.ana_meta_info:
             _dict['anaMetaInfo'] = self.ana_meta_info.to_dict()
@@ -157,11 +149,11 @@ class EventNotification(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "event": NcofEvent.from_dict(obj.get("event")) if obj.get("event") is not None else None,
+            "event": obj.get("event"),
             "start": obj.get("start"),
             "expiry": obj.get("expiry"),
             "timeStampGen": obj.get("timeStampGen"),
-            "failNotifyCode": NcofFailureCode.from_dict(obj.get("failNotifyCode")) if obj.get("failNotifyCode") is not None else None,
+            "failNotifyCode": obj.get("failNotifyCode"),
             "rvWaitTime": obj.get("rvWaitTime"),
             "anaMetaInfo": AnalyticsMetadataInfo.from_dict(obj.get("anaMetaInfo")) if obj.get("anaMetaInfo") is not None else None,
             "svcExps": [ServiceExperienceInfo.from_dict(_item) for _item in obj.get("svcExps")] if obj.get("svcExps") is not None else None,

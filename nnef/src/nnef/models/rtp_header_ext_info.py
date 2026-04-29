@@ -20,10 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field, StrictBool
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
-from nnef.models.rtp_header_ext_type import RtpHeaderExtType
 try:
     from typing import Self
 except ImportError:
@@ -33,7 +32,7 @@ class RtpHeaderExtInfo(BaseModel):
     """
     RTP Header Extension information
     """ # noqa: E501
-    rtp_header_ext_type: Optional[RtpHeaderExtType] = Field(default=None, alias="rtpHeaderExtType")
+    rtp_header_ext_type: Optional[StrictStr] = Field(default=None, description="The enumeration indicates the type of Rtp Header Extension type  ", alias="rtpHeaderExtType")
     rtp_header_ext_id: Optional[Annotated[int, Field(le=255, strict=True, ge=1)]] = Field(default=None, alias="rtpHeaderExtId")
     long_format: Optional[StrictBool] = Field(default=None, alias="longFormat")
     pdu_set_size_active: Optional[StrictBool] = Field(default=None, alias="pduSetSizeActive")
@@ -77,9 +76,6 @@ class RtpHeaderExtInfo(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of rtp_header_ext_type
-        if self.rtp_header_ext_type:
-            _dict['rtpHeaderExtType'] = self.rtp_header_ext_type.to_dict()
         return _dict
 
     @classmethod
@@ -92,7 +88,7 @@ class RtpHeaderExtInfo(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "rtpHeaderExtType": RtpHeaderExtType.from_dict(obj.get("rtpHeaderExtType")) if obj.get("rtpHeaderExtType") is not None else None,
+            "rtpHeaderExtType": obj.get("rtpHeaderExtType"),
             "rtpHeaderExtId": obj.get("rtpHeaderExtId"),
             "longFormat": obj.get("longFormat"),
             "pduSetSizeActive": obj.get("pduSetSizeActive"),

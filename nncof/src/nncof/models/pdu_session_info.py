@@ -20,12 +20,10 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nncof.models.access_type import AccessType
-from nncof.models.pdu_session_type import PduSessionType
-from nncof.models.ssc_mode import SscMode
 try:
     from typing import Self
 except ImportError:
@@ -35,8 +33,8 @@ class PduSessionInfo(BaseModel):
     """
     Represents combination of PDU Session parameter(s) information.
     """ # noqa: E501
-    pdu_sess_type: Optional[PduSessionType] = Field(default=None, alias="pduSessType")
-    ssc_mode: Optional[SscMode] = Field(default=None, alias="sscMode")
+    pdu_sess_type: Optional[StrictStr] = Field(default=None, description="PduSessionType indicates the type of a PDU session. It shall comply with the provisions defined in table 5.4.3.3-1.  ", alias="pduSessType")
+    ssc_mode: Optional[StrictStr] = Field(default=None, description="represents the service and session continuity mode It shall comply with the provisions defined in table 5.4.3.6-1.  ", alias="sscMode")
     access_types: Optional[Annotated[List[AccessType], Field(min_length=1)]] = Field(default=None, alias="accessTypes")
     __properties: ClassVar[List[str]] = ["pduSessType", "sscMode", "accessTypes"]
 
@@ -77,12 +75,6 @@ class PduSessionInfo(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of pdu_sess_type
-        if self.pdu_sess_type:
-            _dict['pduSessType'] = self.pdu_sess_type.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of ssc_mode
-        if self.ssc_mode:
-            _dict['sscMode'] = self.ssc_mode.to_dict()
         return _dict
 
     @classmethod
@@ -95,8 +87,8 @@ class PduSessionInfo(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "pduSessType": PduSessionType.from_dict(obj.get("pduSessType")) if obj.get("pduSessType") is not None else None,
-            "sscMode": SscMode.from_dict(obj.get("sscMode")) if obj.get("sscMode") is not None else None,
+            "pduSessType": obj.get("pduSessType"),
+            "sscMode": obj.get("sscMode"),
             "accessTypes": obj.get("accessTypes")
         })
         return _obj

@@ -22,7 +22,7 @@ import json
 
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nsmf.models.event_notification import EventNotification
 from nsmf.models.event_subscription import EventSubscription
@@ -30,10 +30,6 @@ from nsmf.models.guami import Guami
 from nsmf.models.ipv6_addr import Ipv6Addr
 from nsmf.models.muting_exception_instructions import MutingExceptionInstructions
 from nsmf.models.muting_notifications_settings import MutingNotificationsSettings
-from nsmf.models.notification_flag import NotificationFlag
-from nsmf.models.notification_method import NotificationMethod
-from nsmf.models.partitioning_criteria import PartitioningCriteria
-from nsmf.models.service_name import ServiceName
 from nsmf.models.snssai import Snssai
 try:
     from typing import Self
@@ -65,17 +61,17 @@ class NsmfEventExposure(BaseModel):
     event_subs: Annotated[List[EventSubscription], Field(min_length=1)] = Field(description="Subscribed events", alias="eventSubs")
     event_notifs: Optional[Annotated[List[EventNotification], Field(min_length=1)]] = Field(default=None, alias="eventNotifs")
     imme_rep: Optional[StrictBool] = Field(default=None, alias="ImmeRep")
-    notif_method: Optional[NotificationMethod] = Field(default=None, alias="notifMethod")
+    notif_method: Optional[StrictStr] = Field(default=None, description="Represents the notification methods that can be subscribed.   Possible values are: - PERIODIC: The notification is periodically sent. - ONE_TIME: The notification is only sent one time. - ON_EVENT_DETECTION: The notification is sent each time the event is detected. ", alias="notifMethod")
     max_report_nbr: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="maxReportNbr")
     expiry: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.")
     rep_period: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="repPeriod")
     guami: Optional[Guami] = None
-    servive_name: Optional[ServiceName] = Field(default=None, alias="serviveName")
+    servive_name: Optional[StrictStr] = Field(default=None, description="Service names known to NRF", alias="serviveName")
     supported_features: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, description="A string used to indicate the features supported by an API that is used as defined in clause  6.6 in 3GPP TS 29.500. The string shall contain a bitmask indicating supported features in  hexadecimal representation Each character in the string shall take a value of \"0\" to \"9\",  \"a\" to \"f\" or \"A\" to \"F\" and shall represent the support of 4 features as described in  table 5.2.2-3. The most significant character representing the highest-numbered features shall  appear first in the string, and the character representing features 1 to 4 shall appear last  in the string. The list of features and their numbering (starting with 1) are defined  separately for each API. If the string contains a lower number of characters than there are  defined features for an API, all features that would be represented by characters that are not  present in the string are not supported. ", alias="supportedFeatures")
     samp_ratio: Optional[Annotated[int, Field(le=100, strict=True, ge=1)]] = Field(default=None, description="Unsigned integer indicating Sampling Ratio (see clauses 4.15.1 of 3GPP TS 23.502), expressed in percent.  ", alias="sampRatio")
-    partition_criteria: Optional[Annotated[List[PartitioningCriteria], Field(min_length=1)]] = Field(default=None, description="Criteria for partitioning the UEs before applying the sampling ratio.", alias="partitionCriteria")
+    partition_criteria: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, description="Criteria for partitioning the UEs before applying the sampling ratio.", alias="partitionCriteria")
     grp_rep_time: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="grpRepTime")
-    notif_flag: Optional[NotificationFlag] = Field(default=None, alias="notifFlag")
+    notif_flag: Optional[StrictStr] = Field(default=None, description="Possible values are: - ACTIVATE: The event notification is activated. - DEACTIVATE: The event notification is deactivated and shall be muted. The available    event(s) shall be stored. - RETRIEVAL: The event notification shall be sent to the NF service consumer(s),   after that, is muted again.  ", alias="notifFlag")
     notif_flag_instruct: Optional[MutingExceptionInstructions] = Field(default=None, alias="notifFlagInstruct")
     muting_setting: Optional[MutingNotificationsSettings] = Field(default=None, alias="mutingSetting")
     def_qos_supp: Optional[StrictBool] = Field(default=None, description="Indicates whether the NF service consumer requests to receive QoS Flow performance information for the QoS Flow associated with the default QoS rule if there are no measurements available for the provided Application Identifier included in the appIds attribute. Set to \"true\" if NF service consumer requests to receive QoS Flow performance information for the QoS Flow associated with the default QoS rule, otherwise Set to \"false\" to indicate if NF service consumer does not request to receive QoS Flow Performance information for the QoS Flow associated with the default QoS rule. Default value is \"false\" if omitted. ", alias="defQosSupp")
@@ -184,25 +180,9 @@ class NsmfEventExposure(BaseModel):
                 if _item:
                     _items.append(_item.to_dict())
             _dict['eventNotifs'] = _items
-        # override the default output from pydantic by calling `to_dict()` of notif_method
-        if self.notif_method:
-            _dict['notifMethod'] = self.notif_method.to_dict()
         # override the default output from pydantic by calling `to_dict()` of guami
         if self.guami:
             _dict['guami'] = self.guami.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of servive_name
-        if self.servive_name:
-            _dict['serviveName'] = self.servive_name.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in partition_criteria (list)
-        _items = []
-        if self.partition_criteria:
-            for _item in self.partition_criteria:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['partitionCriteria'] = _items
-        # override the default output from pydantic by calling `to_dict()` of notif_flag
-        if self.notif_flag:
-            _dict['notifFlag'] = self.notif_flag.to_dict()
         # override the default output from pydantic by calling `to_dict()` of notif_flag_instruct
         if self.notif_flag_instruct:
             _dict['notifFlagInstruct'] = self.notif_flag_instruct.to_dict()
@@ -242,17 +222,17 @@ class NsmfEventExposure(BaseModel):
             "eventSubs": [EventSubscription.from_dict(_item) for _item in obj.get("eventSubs")] if obj.get("eventSubs") is not None else None,
             "eventNotifs": [EventNotification.from_dict(_item) for _item in obj.get("eventNotifs")] if obj.get("eventNotifs") is not None else None,
             "ImmeRep": obj.get("ImmeRep"),
-            "notifMethod": NotificationMethod.from_dict(obj.get("notifMethod")) if obj.get("notifMethod") is not None else None,
+            "notifMethod": obj.get("notifMethod"),
             "maxReportNbr": obj.get("maxReportNbr"),
             "expiry": obj.get("expiry"),
             "repPeriod": obj.get("repPeriod"),
             "guami": Guami.from_dict(obj.get("guami")) if obj.get("guami") is not None else None,
-            "serviveName": ServiceName.from_dict(obj.get("serviveName")) if obj.get("serviveName") is not None else None,
+            "serviveName": obj.get("serviveName"),
             "supportedFeatures": obj.get("supportedFeatures"),
             "sampRatio": obj.get("sampRatio"),
-            "partitionCriteria": [PartitioningCriteria.from_dict(_item) for _item in obj.get("partitionCriteria")] if obj.get("partitionCriteria") is not None else None,
+            "partitionCriteria": obj.get("partitionCriteria"),
             "grpRepTime": obj.get("grpRepTime"),
-            "notifFlag": NotificationFlag.from_dict(obj.get("notifFlag")) if obj.get("notifFlag") is not None else None,
+            "notifFlag": obj.get("notifFlag"),
             "notifFlagInstruct": MutingExceptionInstructions.from_dict(obj.get("notifFlagInstruct")) if obj.get("notifFlagInstruct") is not None else None,
             "mutingSetting": MutingNotificationsSettings.from_dict(obj.get("mutingSetting")) if obj.get("mutingSetting") is not None else None,
             "defQosSupp": obj.get("defQosSupp"),

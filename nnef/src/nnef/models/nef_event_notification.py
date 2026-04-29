@@ -21,7 +21,7 @@ import json
 
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing_extensions import Annotated
 from nnef.models.app_active_time_info import AppActiveTimeInfo
@@ -34,7 +34,6 @@ from nnef.models.gnss_assist_data_info import GNSSAssistDataInfo
 from nnef.models.media_streaming_accesses_collection import MediaStreamingAccessesCollection
 from nnef.models.ms_consumption_collection import MsConsumptionCollection
 from nnef.models.ms_qoe_metrics_collection import MsQoeMetricsCollection
-from nnef.models.nef_event import NefEvent
 from nnef.models.network_assistance_invocations_collection import NetworkAssistanceInvocationsCollection
 from nnef.models.nf_signalling_info import NfSignallingInfo
 from nnef.models.performance_data_info import PerformanceDataInfo
@@ -54,15 +53,15 @@ class NefEventNotification(BaseModel):
     """
     Represents information related to an event to be reported.
     """ # noqa: E501
-    event: NefEvent
+    event: StrictStr = Field(description="Represents a Network Exposure Event.   Possible values are: - SVC_EXPERIENCE: Indicates that the subscribed/notified event is service experience   information for an application. - UE_MOBILITY: Indicates that the subscribed/notified event is UE mobility information. - UE_COMM: Indicates that the subscribed/notified event is UE communication information. - EXCEPTIONS: Indicates that the subscribed/notified event is exceptions information. - USER_DATA_CONGESTION: Indicates that the subscribed/notified event is user data congestion   analytics related information. - PERF_DATA: Indicates that the subscribed/notified event is performance data information. - DISPERSION: Indicates that the subscribed/notified event is dispersion information. - COLLECTIVE_BEHAVIOUR: Indicates that the subscribed/notified event is collective behaviour   information. - MS_QOE_METRICS: Indicates that the subscribed/notified event is Media Streaming QoE   metrics. - MS_CONSUMPTION: Indicates that the subscribed/notified event is Media Streaming   consumption reports. - MS_NET_ASSIST_INVOCATION: Indicates that the subscribed/notified event is Media Streaming   network assistance invocation. - MS_DYN_POLICY_INVOCATION: Indicates that the subscribed/notified event is Media Streaming   dynamic policy invocation. - MS_ACCESS_ACTIVITY: Indicates that the subscribed/notified event is Media Streaming access   activity. - GNSS_ASSISTANCE_DATA: Indicates that the subscribed/notified event is GNSS Assistance Data   Collection. - DATA_VOLUME_TRANSFER_TIME: Indicates that the event subscribed is data volume transfer    time information. - APP_ACTIVE_TIME: Indicates that the event subscribed is application activation time   information. - SIGNALLING_INFO: Indicates that the event subscribed/notified is signalling information. ")
     time_stamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="timeStamp")
     svc_exprc_infos: Optional[Annotated[List[ServiceExperienceInfo], Field(min_length=1)]] = Field(default=None, alias="svcExprcInfos")
     ue_mobility_infos: Optional[Annotated[List[UeMobilityInfo], Field(min_length=1)]] = Field(default=None, alias="ueMobilityInfos")
     ue_comm_infos: Optional[Annotated[List[UeCommunicationInfo], Field(min_length=1)]] = Field(default=None, alias="ueCommInfos")
-    congestion_infos: Optional[Annotated[List[Optional[UserDataCongestionCollection]], Field(min_length=1)]] = Field(default=None, alias="congestionInfos")
+    congestion_infos: Optional[Annotated[List[UserDataCongestionCollection], Field(min_length=1)]] = Field(default=None, alias="congestionInfos")
     perf_data_infos: Optional[Annotated[List[PerformanceDataInfo], Field(min_length=1)]] = Field(default=None, alias="perfDataInfos")
-    dispersion_infos: Optional[Annotated[List[Optional[DispersionCollection]], Field(min_length=1)]] = Field(default=None, alias="dispersionInfos")
-    coll_bhvr_infs: Optional[Annotated[List[Optional[CollectiveBehaviourInfo]], Field(min_length=1)]] = Field(default=None, alias="collBhvrInfs")
+    dispersion_infos: Optional[Annotated[List[DispersionCollection], Field(min_length=1)]] = Field(default=None, alias="dispersionInfos")
+    coll_bhvr_infs: Optional[Annotated[List[CollectiveBehaviourInfo], Field(min_length=1)]] = Field(default=None, alias="collBhvrInfs")
     ms_qoe_metr_infos: Optional[Annotated[List[MsQoeMetricsCollection], Field(min_length=1)]] = Field(default=None, alias="msQoeMetrInfos")
     ms_qoe_metrics: Optional[Annotated[List[QoEMetricsCollection], Field(min_length=1)]] = Field(default=None, description="Represents the Media Streaming QoE metrics event notification.", alias="msQoeMetrics")
     ms_consump_infos: Optional[Annotated[List[MsConsumptionCollection], Field(min_length=1)]] = Field(default=None, alias="msConsumpInfos")
@@ -115,9 +114,6 @@ class NefEventNotification(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of event
-        if self.event:
-            _dict['event'] = self.event.to_dict()
         # override the default output from pydantic by calling `to_dict()` of each item in svc_exprc_infos (list)
         _items = []
         if self.svc_exprc_infos:
@@ -266,7 +262,7 @@ class NefEventNotification(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "event": NefEvent.from_dict(obj.get("event")) if obj.get("event") is not None else None,
+            "event": obj.get("event"),
             "timeStamp": obj.get("timeStamp"),
             "svcExprcInfos": [ServiceExperienceInfo.from_dict(_item) for _item in obj.get("svcExprcInfos")] if obj.get("svcExprcInfos") is not None else None,
             "ueMobilityInfos": [UeMobilityInfo.from_dict(_item) for _item in obj.get("ueMobilityInfos")] if obj.get("ueMobilityInfos") is not None else None,

@@ -20,10 +20,9 @@ import json
 
 
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 from typing import Any, ClassVar, Dict, List
 from typing_extensions import Annotated
-from nncof.models.units_angular_velocity import UnitsAngularVelocity
 try:
     from typing import Self
 except ImportError:
@@ -33,7 +32,7 @@ class AngularVelocity(BaseModel):
     """
     Rate of change of an angle.
     """ # noqa: E501
-    units_angular_velocity: UnitsAngularVelocity = Field(alias="unitsAngularVelocity")
+    units_angular_velocity: StrictStr = Field(description="The units of angular velocity.", alias="unitsAngularVelocity")
     angular_velocity: Annotated[int, Field(le=1023, strict=True, ge=-1024)] = Field(description="Indicates rate of change of an angle.", alias="angularVelocity")
     a_velocity_uncertainty: Annotated[int, Field(le=255, strict=True, ge=0)] = Field(description="Indicates uncertainty for rate of change of an angle.", alias="aVelocityUncertainty")
     __properties: ClassVar[List[str]] = ["unitsAngularVelocity", "angularVelocity", "aVelocityUncertainty"]
@@ -75,9 +74,6 @@ class AngularVelocity(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of units_angular_velocity
-        if self.units_angular_velocity:
-            _dict['unitsAngularVelocity'] = self.units_angular_velocity.to_dict()
         return _dict
 
     @classmethod
@@ -90,7 +86,7 @@ class AngularVelocity(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "unitsAngularVelocity": UnitsAngularVelocity.from_dict(obj.get("unitsAngularVelocity")) if obj.get("unitsAngularVelocity") is not None else None,
+            "unitsAngularVelocity": obj.get("unitsAngularVelocity"),
             "angularVelocity": obj.get("angularVelocity"),
             "aVelocityUncertainty": obj.get("aVelocityUncertainty")
         })
