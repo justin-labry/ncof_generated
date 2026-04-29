@@ -10,6 +10,7 @@ import traceback
 from fastapi import FastAPI, Body
 from fastapi.responses import JSONResponse, Response
 from pydantic import ValidationError
+from pydantic import BaseModel
 
 # Suppress ALL Pydantic serializer warnings (anyOf/oneOf Literal field noise)
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
@@ -76,8 +77,20 @@ def pretty_json(obj, status_code=200):
     )
 
 
-def validate_and_respond(model_class, data: dict):
-    """Validate using from_dict (handles anyOf enums correctly). Return pretty JSON."""
+def _to_plain_data(data):
+    """Convert pydantic models (or nested lists) into plain dict/list data."""
+    if isinstance(data, list):
+        return [_to_plain_data(item) for item in data]
+    if isinstance(data, BaseModel):
+        # openapi-generator models expose to_dict(); fallback to model_dump for safety
+        if hasattr(data, "to_dict"):
+            return data.to_dict()
+        return data.model_dump(by_alias=True, exclude_none=True)
+    return data
+
+
+def validate_and_respond(model_class, data):
+    """Validate with generated model helpers and return pretty JSON."""
     from datetime import datetime, date
     def _default(o):
         if isinstance(o, (datetime, date)):
@@ -85,7 +98,12 @@ def validate_and_respond(model_class, data: dict):
         return str(o)
 
     try:
-        result = model_class.from_dict(data)
+        plain_data = _to_plain_data(data)
+        if isinstance(plain_data, dict):
+            result = model_class.from_dict(plain_data)
+        else:
+            # For list/union-like payloads, validate through pydantic directly.
+            result = model_class.model_validate(plain_data)
         # Try multiple serialization methods, use first non-empty result
         result_data = result.to_dict()
         if not result_data:
@@ -95,7 +113,7 @@ def validate_and_respond(model_class, data: dict):
                 pass
         if not result_data:
             # Fallback: return original input (validation passed, just serialization issue)
-            result_data = data
+            result_data = plain_data
         resp = {"status": "PASS", "data": result_data}
         # Print pretty JSON to server console
         print("\n" + "=" * 60)
@@ -146,7 +164,7 @@ def validate_and_respond(model_class, data: dict):
 @app.post("/validate/nncof-events-subscription",
     tags=["1,2 - NncofEventsSubscription"],
     summary="JSON #1,2: NncofEventsSubscription (PCF/RICF -> NCOF)")
-async def validate_nncof_events_subscription(data: dict = Body(...)):
+async def validate_nncof_events_subscription(data: NncofEventsSubscription = Body(...)):
     return validate_and_respond(NncofEventsSubscription, data)
 
 
@@ -160,28 +178,28 @@ async def validate_nsmf_event_exposure(data: dict = Body(...)):
 @app.post("/validate/nef-event-exposure-subsc",
     tags=["4,5,6 - NefEventExposureSubsc"],
     summary="JSON #4,5,6: NefEventExposureSubsc (NCOF -> AF/RICF)")
-async def validate_nef_event_exposure_subsc(data: dict = Body(...)):
+async def validate_nef_event_exposure_subsc(data: NefEventExposureSubsc = Body(...)):
     return validate_and_respond(NefEventExposureSubsc, data)
 
 
 @app.post("/validate/notification-data",
     tags=["8 - NotificationData"],
     summary="JSON #8: NotificationData (UPF -> NCOF)")
-async def validate_notification_data(data: dict = Body(...)):
+async def validate_notification_data(data: NotificationData = Body(...)):
     return validate_and_respond(NotificationData, data)
 
 
 @app.post("/validate/nef-event-exposure-notif",
     tags=["9,10 - NefEventExposureNotif"],
     summary="JSON #9,10: NefEventExposureNotif (AF/RICF -> NCOF)")
-async def validate_nef_event_exposure_notif(data: dict = Body(...)):
+async def validate_nef_event_exposure_notif(data: NefEventExposureNotif = Body(...)):
     return validate_and_respond(NefEventExposureNotif, data)
 
 
 @app.post("/validate/nncof-events-subscription-notification",
     tags=["11,12 - NncofEventsSubscriptionNotification"],
     summary="JSON #11,12: NncofEventsSubscriptionNotification (NCOF -> PCF/RICF)")
-async def validate_nncof_notification(data: dict = Body(...)):
+async def validate_nncof_notification(data: NncofEventsSubscriptionNotification = Body(...)):
     return validate_and_respond(NncofEventsSubscriptionNotification, data)
 
 
