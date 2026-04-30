@@ -20,4 +20,3 @@ class SubscriptionEchoImpl(BaseSubscriptionsCollectionApi):
             subscriptionId="https://example.com/api/nupf/subscriptions/sub-001",
             supportedFeatures=create_event_subscription.supported_features,
         )
-

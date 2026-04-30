@@ -15,4 +15,3 @@ class SubscriptionEchoImpl(BaseSubscriptionsCollectionApi):
         print(json.dumps(payload, ensure_ascii=False, indent=2, default=str))
         print("===== END =====\n")
         return nsmf_event_exposure
-
