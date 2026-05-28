@@ -54,7 +54,7 @@ class NsmfEventExposure(BaseModel):
     nf_id: Optional[StrictStr] = Field(default=None, description="String uniquely identifying a NF instance. The format of the NF Instance ID shall be a  Universally Unique Identifier (UUID) version 4.  ", alias="nfId")
     sub_id: Optional[StrictStr] = Field(default=None, description="Identifies an Individual SMF Notification Subscription. To enable that the value is used as part of a URI, the string shall only contain characters allowed according to the \"lower-with-hyphen\" naming convention defined in 3GPP TS 29.501. In an OpenAPI schema, the format shall be designated as \"SubId\". ", alias="subId")
     notif_id: StrictStr = Field(description="Notification Correlation ID assigned by the NF service consumer.", alias="notifId")
-    notif_uri: StrictStr = Field(description="String providing an URI formatted according to RFC 3986.", alias="notifUri")
+    notif_uri: StrictStr = Field(description="string providing an URI formatted according to IETF RFC 3986.", alias="notifUri")
     alt_notif_ipv4_addrs: Optional[Annotated[List[Annotated[str, Field(strict=True)]], Field(min_length=1)]] = Field(default=None, description="Alternate or backup IPv4 address(es) where to send Notifications.", alias="altNotifIpv4Addrs")
     alt_notif_ipv6_addrs: Optional[Annotated[List[Ipv6Addr], Field(min_length=1)]] = Field(default=None, description="Alternate or backup IPv6 address(es) where to send Notifications.", alias="altNotifIpv6Addrs")
     alt_notif_fqdns: Optional[Annotated[List[Annotated[str, Field(min_length=4, strict=True, max_length=253)]], Field(min_length=1)]] = Field(default=None, description="Alternate or backup FQDN(s) where to send Notifications.", alias="altNotifFqdns")
@@ -63,7 +63,7 @@ class NsmfEventExposure(BaseModel):
     imme_rep: Optional[StrictBool] = Field(default=None, alias="ImmeRep")
     notif_method: Optional[StrictStr] = Field(default=None, description="Represents the notification methods that can be subscribed.   Possible values are: - PERIODIC: The notification is periodically sent. - ONE_TIME: The notification is only sent one time. - ON_EVENT_DETECTION: The notification is sent each time the event is detected. ", alias="notifMethod")
     max_report_nbr: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="maxReportNbr")
-    expiry: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.")
+    expiry: Optional[datetime] = Field(default=None, description="string with format \"date-time\" as defined in OpenAPI.")
     rep_period: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="repPeriod")
     guami: Optional[Guami] = None
     servive_name: Optional[StrictStr] = Field(default=None, description="Service names known to NRF", alias="serviveName")

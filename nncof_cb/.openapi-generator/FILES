@@ -1,6 +1,5 @@
 .flake8
 .gitignore
-.openapi-generator-ignore
 Dockerfile
 README.md
 docker-compose.yaml
@@ -49,6 +48,9 @@ src/nncof_cb/models/ip_addr.py
 src/nncof_cb/models/ip_eth_flow_description.py
 src/nncof_cb/models/ipv6_addr.py
 src/nncof_cb/models/ipv6_prefix.py
+src/nncof_cb/models/local2d_point_uncertainty_ellipse.py
+src/nncof_cb/models/local3d_point_uncertainty_ellipsoid.py
+src/nncof_cb/models/local_origin.py
 src/nncof_cb/models/location_area_id.py
 src/nncof_cb/models/location_info.py
 src/nncof_cb/models/n3ga_location.py
@@ -73,6 +75,7 @@ src/nncof_cb/models/qos_policy_assist_set.py
 src/nncof_cb/models/qos_policy_assist_sets_per_ts.py
 src/nncof_cb/models/rat_freq_information.py
 src/nncof_cb/models/redirect_response.py
+src/nncof_cb/models/relative_cartesian_location.py
 src/nncof_cb/models/routing_area_id.py
 src/nncof_cb/models/service_area_id.py
 src/nncof_cb/models/service_experience_info.py
@@ -85,6 +88,7 @@ src/nncof_cb/models/tnap_id.py
 src/nncof_cb/models/traffic_information.py
 src/nncof_cb/models/twap_id.py
 src/nncof_cb/models/uncertainty_ellipse.py
+src/nncof_cb/models/uncertainty_ellipsoid.py
 src/nncof_cb/models/upf_information.py
 src/nncof_cb/models/user_location.py
 src/nncof_cb/models/utra_location.py
@@ -94,4 +98,3 @@ src/nncof_cb/models/wlan_per_ue_id_performance_info.py
 src/nncof_cb/models/wlan_performance_info.py
 src/nncof_cb/security_api.py
 tests/conftest.py
-tests/test_ncof_events_subscription_notification_callback_receiver_api.py

@@ -34,7 +34,7 @@ class RfSignalData(BaseModel):
     """
     Contains RF signal Data.
     """ # noqa: E501
-    start_time: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="_startTime")
+    start_time: Optional[datetime] = Field(default=None, description="string with format \"date-time\" as defined in OpenAPI.", alias="_startTime")
     duration: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="_duration")
     ref_signal_measurements: Optional[Annotated[List[RefSignalMeasurements], Field(min_length=1)]] = Field(default=None, alias="_refSignalMeasurements")
     __properties: ClassVar[List[str]] = ["_startTime", "_duration", "_refSignalMeasurements"]

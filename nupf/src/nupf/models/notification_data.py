@@ -36,7 +36,7 @@ class NotificationData(BaseModel):
     notification_items: Annotated[List[Optional[NotificationItem]], Field(min_length=1)] = Field(alias="notificationItems")
     correlation_id: Optional[StrictStr] = Field(default=None, alias="correlationId")
     achieved_samp_ratio: Optional[Annotated[int, Field(le=100, strict=True, ge=1)]] = Field(default=None, description="Unsigned integer indicating Sampling Ratio (see clauses 4.15.1 of 3GPP TS 23.502), expressed in percent.  ", alias="achievedSampRatio")
-    event_notify_uri: Optional[StrictStr] = Field(default=None, description="String providing an URI formatted according to RFC 3986.", alias="eventNotifyUri")
+    event_notify_uri: Optional[StrictStr] = Field(default=None, description="string providing an URI formatted according to IETF RFC 3986.", alias="eventNotifyUri")
     __properties: ClassVar[List[str]] = ["notificationItems", "correlationId", "achievedSampRatio", "eventNotifyUri"]
 
     model_config = {

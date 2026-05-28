@@ -34,7 +34,7 @@ class QoEMetricsEventAllOfSamples(BaseModel):
     """
     QoEMetricsEventAllOfSamples
     """ # noqa: E501
-    sample_timestamp: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="sampleTimestamp")
+    sample_timestamp: Optional[datetime] = Field(default=None, description="string with format \"date-time\" as defined in OpenAPI.", alias="sampleTimestamp")
     sample_duration: Optional[StrictStr] = Field(default=None, description="String with format \"duration\" as defined by JSON Schema (referencing IETF RFC 3339, appendix A and, ultimately, ISO 8601).", alias="sampleDuration")
     media_timestamp: Optional[StrictStr] = Field(default=None, description="String with format \"duration\" as defined by JSON Schema (referencing IETF RFC 3339, appendix A and, ultimately, ISO 8601).", alias="mediaTimestamp")
     metrics: Annotated[List[QoEMetricsEventAllOfMetrics], Field(min_length=1)] = Field(description="A set of key–value pairs for the samples metrics associated with this QoE metric sample.")

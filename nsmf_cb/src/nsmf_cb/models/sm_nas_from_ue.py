@@ -33,7 +33,7 @@ class SmNasFromUe(BaseModel):
     Represents information on the SM NAS messages that SMF receives from UE for PDU Session. 
     """ # noqa: E501
     sm_nas_type: StrictStr = Field(alias="smNasType")
-    time_stamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="timeStamp")
+    time_stamp: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="timeStamp")
     __properties: ClassVar[List[str]] = ["smNasType", "timeStamp"]
 
     model_config = {

@@ -37,7 +37,7 @@ class PerUeAttribute(BaseModel):
     ue_dest: Optional[LocationArea5G] = Field(default=None, alias="ueDest")
     route: Optional[StrictStr] = None
     average_speed: Optional[VelocityEstimate] = Field(default=None, alias="averageSpeed")
-    time_of_arrival: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="timeOfArrival")
+    time_of_arrival: Optional[datetime] = Field(default=None, description="string with format \"date-time\" as defined in OpenAPI.", alias="timeOfArrival")
     __properties: ClassVar[List[str]] = ["ueDest", "route", "averageSpeed", "timeOfArrival"]
 
     model_config = {

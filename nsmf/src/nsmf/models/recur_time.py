@@ -40,7 +40,7 @@ class RecurTime(BaseModel):
     recur_week: Optional[Annotated[List[Annotated[int, Field(le=64, strict=True, ge=1)]], Field(min_length=1)]] = Field(default=None, alias="recurWeek")
     recur_day: Optional[Annotated[List[Annotated[int, Field(le=7, strict=True, ge=1)]], Field(min_length=1)]] = Field(default=None, alias="recurDay")
     recur_date: Optional[Annotated[List[datetime], Field(min_length=1)]] = Field(default=None, alias="recurDate")
-    recur_end_time: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="recurEndTime")
+    recur_end_time: Optional[datetime] = Field(default=None, description="string with format \"date-time\" as defined in OpenAPI.", alias="recurEndTime")
     __properties: ClassVar[List[str]] = ["recurTimeWindow", "recurType", "recurMonth", "recurWeek", "recurDay", "recurDate", "recurEndTime"]
 
     model_config = {

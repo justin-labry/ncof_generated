@@ -498,17 +498,17 @@ components:
       description: Abstract base data type describing a collection of event records
       properties:
         collectionTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         startTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         endTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -554,7 +554,7 @@ components:
           title: recordType
           type: string
         recordTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -1299,12 +1299,12 @@ components:
         ulVol: 0
       properties:
         startTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         endTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -2357,7 +2357,7 @@ components:
       title: DataAggregationFunctionType
       type: string
     DateTime:
-      description: string with format 'date-time' as defined in OpenAPI.
+      description: string with format "date-time" as defined in OpenAPI.
       format: date-time
       title: DateTime
       type: string
@@ -2419,7 +2419,7 @@ components:
         ueAddr:
           $ref: '#/components/schemas/IpAddr'
         timeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -4070,7 +4070,7 @@ components:
           title: ageOfLocationInformation
           type: integer
         ueLocationTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -4387,7 +4387,7 @@ components:
           title: ageOfLocationInformation
           type: integer
         ueLocationTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -4531,6 +4531,13 @@ components:
       - hfcNId
       title: HfcNodeId
       type: object
+    HorizAxesOrientation:
+      description: Horizontal axes orientation angle clockwise from northing in 0.1
+        degrees.
+      maximum: 3600
+      minimum: 0
+      title: HorizAxesOrientation
+      type: integer
     HorizontalSpeed:
       description: Indicates value of horizontal speed.
       format: float
@@ -4811,6 +4818,67 @@ components:
         - PON: Identifies a PON line
       title: w5gbanLineType
       type: string
+    Local2dPointUncertaintyEllipse:
+      allOf:
+      - $ref: '#/components/schemas/GADShape'
+      - properties:
+          localOrigin:
+            $ref: '#/components/schemas/LocalOrigin'
+          point:
+            $ref: '#/components/schemas/RelativeCartesianLocation'
+          uncertaintyEllipse:
+            $ref: '#/components/schemas/UncertaintyEllipse'
+          confidence:
+            $ref: '#/components/schemas/Confidence'
+        required:
+        - confidence
+        - localOrigin
+        - point
+        - uncertaintyEllipse
+        type: object
+      description: Local 2D point with uncertainty ellipse
+    Local3dPointUncertaintyEllipsoid:
+      allOf:
+      - $ref: '#/components/schemas/GADShape'
+      - properties:
+          localOrigin:
+            $ref: '#/components/schemas/LocalOrigin'
+          point:
+            $ref: '#/components/schemas/RelativeCartesianLocation'
+          uncertaintyEllipsoid:
+            $ref: '#/components/schemas/UncertaintyEllipsoid'
+          confidence:
+            $ref: '#/components/schemas/Confidence'
+          vConfidence:
+            $ref: '#/components/schemas/Confidence'
+        required:
+        - confidence
+        - localOrigin
+        - point
+        - uncertaintyEllipsoid
+        type: object
+      description: Local 3D point with uncertainty ellipsoid
+    LocalOrigin:
+      description: Indicates a Local origin in a reference system
+      properties:
+        coordinateId:
+          title: coordinateId
+          type: string
+        point:
+          $ref: '#/components/schemas/GeographicalCoordinates'
+        area:
+          $ref: '#/components/schemas/GeographicArea'
+        horizAxesOrientation:
+          description: Horizontal axes orientation angle clockwise from northing in
+            0.1 degrees.
+          maximum: 3600
+          minimum: 0
+          title: HorizAxesOrientation
+          type: integer
+      required:
+      - coordinateId
+      title: LocalOrigin
+      type: object
     LocationArea5G:
       description: Represents a user location area when the UE is attached to 5G.
       example:
@@ -39258,7 +39326,7 @@ components:
           title: NefEvent
           type: string
         timeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -41105,7 +41173,7 @@ components:
           title: ageOfLocationInformation
           type: integer
         ueLocationTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -41384,7 +41452,7 @@ components:
         averageSpeed:
           $ref: '#/components/schemas/VelocityEstimate'
         timeOfArrival:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -41781,7 +41849,7 @@ components:
         perfData:
           $ref: '#/components/schemas/PerformanceData'
         timeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -41791,8 +41859,7 @@ components:
       title: PerformanceDataInfo
       type: object
     PlmnId:
-      description: |
-        When PlmnId needs to be converted to string (e.g. when used in maps as key), the string  shall be composed of three digits "mcc" followed by "-" and two or three digits "mnc".
+      description: Represents the identifier of a PLMN.
       example:
         mnc: mnc
         mcc: mcc
@@ -43082,6 +43149,29 @@ components:
           type: string
       title: RedirectResponse
       type: object
+    RelativeCartesianLocation:
+      description: Relative Cartesian Location
+      properties:
+        x:
+          description: string with format 'float' as defined in OpenAPI.
+          format: float
+          title: Float
+          type: number
+        "y":
+          description: string with format 'float' as defined in OpenAPI.
+          format: float
+          title: Float
+          type: number
+        z:
+          description: string with format 'float' as defined in OpenAPI.
+          format: float
+          title: Float
+          type: number
+      required:
+      - x
+      - "y"
+      title: RelativeCartesianLocation
+      type: object
     RelativeDirection:
       description: "Represents an application's event.  \nPossible values are:\n-\
         \ ABOVE: Indicates that UE movement with respect to another UE is above.\n\
@@ -43507,12 +43597,12 @@ components:
         stopTime: 2000-01-23T04:56:07.000+00:00
       properties:
         startTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         stopTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -44303,7 +44393,7 @@ components:
         ts: 2000-01-23T04:56:07.000+00:00
       properties:
         ts:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -44490,7 +44580,7 @@ components:
         ts: 2000-01-23T04:56:07.000+00:00
       properties:
         ts:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -44573,6 +44663,40 @@ components:
       - semiMajor
       - semiMinor
       title: UncertaintyEllipse
+      type: object
+    UncertaintyEllipsoid:
+      description: Ellipsoid with uncertainty
+      properties:
+        semiMajor:
+          description: Indicates value of uncertainty.
+          format: float
+          minimum: 0
+          title: Uncertainty
+          type: number
+        semiMinor:
+          description: Indicates value of uncertainty.
+          format: float
+          minimum: 0
+          title: Uncertainty
+          type: number
+        vertical:
+          description: Indicates value of uncertainty.
+          format: float
+          minimum: 0
+          title: Uncertainty
+          type: number
+        orientationMajor:
+          description: Indicates value of orientation angle.
+          maximum: 180
+          minimum: 0
+          title: Orientation
+          type: integer
+      required:
+      - orientationMajor
+      - semiMajor
+      - semiMinor
+      - vertical
+      title: UncertaintyEllipsoid
       type: object
     UnidirectionalQoSSpecification:
       example:
@@ -44939,7 +45063,7 @@ components:
           title: ageOfLocationInformation
           type: integer
         ueLocationTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -45025,7 +45149,7 @@ components:
         _power: _power
       properties:
         _startTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -45310,7 +45434,7 @@ components:
             geodeticInformation: geodeticInformation
       properties:
         _timestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -45444,7 +45568,7 @@ components:
           _rsrq: _rsrq
       properties:
         _startTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -45728,7 +45852,7 @@ components:
             _rsrq: _rsrq
       properties:
         _timestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -45774,7 +45898,7 @@ components:
           $ref: '#/components/schemas/_RfSignalData'
       required:
       - _rfSignalData
-      - _timeStamp
+      - _timestamp
       title: _RfSignalInfo
       type: object
     MediaStreamingAccess_requestMessage:
@@ -45960,7 +46084,7 @@ components:
         sampleDuration: sampleDuration
       properties:
         sampleTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string

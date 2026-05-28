@@ -2534,7 +2534,7 @@ components:
           title: notifId
           type: string
         notifUri:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
         altNotifIpv4Addrs:
@@ -2588,7 +2588,7 @@ components:
           title: Uinteger
           type: integer
         expiry:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -3428,7 +3428,7 @@ components:
           title: eventNotifs
           type: array
         ackUri:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
       required:
@@ -3951,7 +3951,7 @@ components:
           title: Uint32
           type: integer
         bundledEventNotifyUri:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
         flowDescs:
@@ -4381,7 +4381,7 @@ components:
           title: Uint64
           type: integer
         timeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -4545,7 +4545,7 @@ components:
         dddTraDescriptor:
           $ref: '#/components/schemas/DddTrafficDescriptor'
         maxWaitTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -4692,12 +4692,12 @@ components:
           title: bssId
           type: string
         startWlan:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         endWlan:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -4948,7 +4948,7 @@ components:
           title: smNasType
           type: string
         timeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -4970,7 +4970,7 @@ components:
           title: smNasType
           type: string
         timeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -5388,7 +5388,7 @@ components:
       description: Provides additional information in an error response.
       properties:
         type:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
         title:
@@ -5403,7 +5403,7 @@ components:
           title: detail
           type: string
         instance:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
         cause:
@@ -5440,7 +5440,7 @@ components:
       title: ProblemDetails
       type: object
     Uri:
-      description: String providing an URI formatted according to RFC 3986.
+      description: string providing an URI formatted according to IETF RFC 3986.
       title: Uri
       type: string
     InvalidParam:
@@ -5486,11 +5486,11 @@ components:
           title: cause
           type: string
         targetScp:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
         targetSepp:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
       title: RedirectResponse
@@ -5601,7 +5601,7 @@ components:
       title: Uinteger
       type: integer
     DateTime:
-      description: string with format 'date-time' as defined in OpenAPI.
+      description: string with format "date-time" as defined in OpenAPI.
       format: date-time
       title: DateTime
       type: string
@@ -5939,23 +5939,18 @@ components:
         startTime:
           description: string with format "date-time" as defined in OpenAPI.
           format: date-time
-          title: DateTime_1
+          title: DateTime
           type: string
         stopTime:
           description: string with format "date-time" as defined in OpenAPI.
           format: date-time
-          title: DateTime_1
+          title: DateTime
           type: string
       required:
       - startTime
       - stopTime
       title: TimeWindow
       type: object
-    DateTime_1:
-      description: string with format "date-time" as defined in OpenAPI.
-      format: date-time
-      title: DateTime_1
-      type: string
     IpAddr:
       description: Contains an IP adresse.
       example:
@@ -6614,7 +6609,7 @@ components:
           title: recurDate
           type: array
         recurEndTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -6627,12 +6622,12 @@ components:
         endTime: 2000-01-23T04:56:07.000+00:00
       properties:
         startTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         endTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -7232,12 +7227,12 @@ components:
         uplinkVolume: 7
       properties:
         startTimeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         endTimeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -7323,8 +7318,7 @@ components:
       title: Ecgi
       type: object
     PlmnId:
-      description: |
-        When PlmnId needs to be converted to string (e.g. when used in maps as key), the string  shall be composed of three digits "mcc" followed by "-" and two or three digits "mnc".
+      description: Represents the identifier of a PLMN.
       example:
         mnc: mnc
         mcc: mcc

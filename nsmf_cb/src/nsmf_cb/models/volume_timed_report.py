@@ -32,8 +32,8 @@ class VolumeTimedReport(BaseModel):
     """
     Contains Usage data information.
     """ # noqa: E501
-    start_time_stamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="startTimeStamp")
-    end_time_stamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="endTimeStamp")
+    start_time_stamp: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="startTimeStamp")
+    end_time_stamp: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="endTimeStamp")
     downlink_volume: StrictInt = Field(description="string with format 'int64' as defined in OpenAPI.", alias="downlinkVolume")
     uplink_volume: StrictInt = Field(description="string with format 'int64' as defined in OpenAPI.", alias="uplinkVolume")
     __properties: ClassVar[List[str]] = ["startTimeStamp", "endTimeStamp", "downlinkVolume", "uplinkVolume"]

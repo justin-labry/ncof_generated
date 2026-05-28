@@ -34,7 +34,7 @@ class QosPolicyAssistSetsPerTS(BaseModel):
     """
     The QoS and policy assistance parameter sets per Time Slot.
     """ # noqa: E501
-    ts_start: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="tsStart")
+    ts_start: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="tsStart")
     ts_duration: StrictInt = Field(description="indicating a time in seconds.", alias="tsDuration")
     qos_pol_assist_sets: Annotated[List[Optional[QosPolicyAssistSet]], Field(min_length=1)] = Field(alias="qosPolAssistSets")
     confidence: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.")

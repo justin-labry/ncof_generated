@@ -32,8 +32,8 @@ class TimeWindow(BaseModel):
     """
     Represents a time window identified by a start time and a stop time.
     """ # noqa: E501
-    start_time: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="startTime")
-    stop_time: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="stopTime")
+    start_time: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="startTime")
+    stop_time: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="stopTime")
     __properties: ClassVar[List[str]] = ["startTime", "stopTime"]
 
     model_config = {
