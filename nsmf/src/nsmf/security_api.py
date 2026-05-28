@@ -16,6 +16,8 @@ from fastapi.security import (  # noqa: F401
 )
 from fastapi.security.api_key import APIKeyCookie, APIKeyHeader, APIKeyQuery  # noqa: F401
 
+oauth2_ = OAuth2PasswordBearer(tokenUrl="/oauth2/token", auto_error=False)
+
 from nsmf.models.extra_models import TokenModel
 
 
