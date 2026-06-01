@@ -1,0 +1,6 @@
+
+@baseUrl = http://localhost:8000
+POST {{baseUrl}}/subscriptions
+Content-Type: application/json
+
+< ./subscription_pcf_to_ncof.json

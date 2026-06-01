@@ -1,0 +1,4876 @@
+openapi: 3.0.0
+info:
+  description: "UPF Event Exposure Service.  \n© 2025, 3GPP Organizational Partners\
+    \ (ARIB, ATIS, CCSA, ETSI, TSDSI, TTA, TTC).  \nAll rights reserved.\n"
+  title: UPF Event Exposure Service
+  version: 1.2.0-alpha.4
+externalDocs:
+  description: 3GPP TS 29.564 V19.4.0; 5G System; User Plane Function Services; Stage
+    3.
+  url: https://www.3gpp.org/ftp/Specs/archive/29_series/29.564/
+servers:
+- description: SwaggerHub API Auto Mocking
+  url: https://virtserver.swaggerhub.com/ETRI_INRS_TEAM/TS29564_Nupf_EventExposure_PoC_ETRI_DoDo1/1.2.0-alpha.4
+- url: "{apiRoot}/nupf-ee/v1"
+  variables:
+    apiRoot:
+      default: https://example.com
+      description: apiRoot as defined in clause 4.4 of 3GPP TS 29.501
+security:
+- {}
+- oAuth2ClientCredentials:
+  - nupf-ee
+paths:
+  /ee-subscriptions:
+    post:
+      callbacks:
+        eeNotification:
+          '{eventNotificationUri}':
+            post:
+              operationId: ee_notification_event_notification_uri_post
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: "#/components/schemas/ExtNotificationData"
+                required: true
+              responses:
+                "204":
+                  description: "No Content, Notification was succesfull"
+                "307":
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/RedirectResponse"
+                  description: Temporary Redirect
+                  headers:
+                    Location:
+                      description: The URI pointing to the resource located on the
+                        redirect target NF service consumer
+                      explode: false
+                      required: true
+                      schema:
+                        type: string
+                      style: simple
+                "308":
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/RedirectResponse"
+                  description: Permanent Redirect
+                  headers:
+                    Location:
+                      description: The URI pointing to the resource located on the
+                        redirect target NF service consumer
+                      explode: false
+                      required: true
+                      schema:
+                        type: string
+                      style: simple
+                "400":
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: "#/components/schemas/ProblemDetails"
+                  description: Bad request
+                "401":
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: "#/components/schemas/ProblemDetails"
+                  description: Unauthorized
+                "403":
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: "#/components/schemas/ProblemDetails"
+                  description: Forbidden
+                "404":
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: "#/components/schemas/ProblemDetails"
+                  description: Not Found
+                "411":
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: "#/components/schemas/ProblemDetails"
+                  description: Length Required
+                "413":
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: "#/components/schemas/ProblemDetails"
+                  description: Content Too Large
+                "415":
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: "#/components/schemas/ProblemDetails"
+                  description: Unsupported Media Type
+                "429":
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: "#/components/schemas/ProblemDetails"
+                  description: Too Many Requests
+                "500":
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: "#/components/schemas/ProblemDetails"
+                  description: Internal Server Error
+                "502":
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: "#/components/schemas/ProblemDetails"
+                  description: Bad Gateway
+                "503":
+                  content:
+                    application/problem+json:
+                      schema:
+                        $ref: "#/components/schemas/ProblemDetails"
+                  description: Service Unavailable
+                default:
+                  description: Generic Error
+              x-callback-request: true
+      operationId: CreateSubscription
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEventSubscription"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatedEventSubscription"
+          description: Successful creation of an UPF Event Subscription
+          headers:
+            Location:
+              description: "Contains the URI of the newly created resource, according\
+                \ to the structure: {apiRoot}/nupf-ee/<apiVersion>/ee-subscriptions/{subscriptionId}"
+              explode: false
+              required: true
+              schema:
+                type: string
+              style: simple
+        "307":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RedirectResponse"
+          description: Temporary Redirect
+          headers:
+            Location:
+              description: The URI pointing to the resource located on the redirect
+                target
+              required: true
+              schema:
+                type: string
+            "3gpp-Sbi-Target-Nf-Id":
+              description: |
+                'Identifier of target NF (service) instance towards which the request is redirected'
+              schema:
+                type: string
+        "308":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RedirectResponse"
+          description: Permanent Redirect
+          headers:
+            Location:
+              description: The URI pointing to the resource located on the redirect
+                target
+              required: true
+              schema:
+                type: string
+            "3gpp-Sbi-Target-Nf-Id":
+              description: |
+                'Identifier of target NF (service) instance towards which the request is redirected'
+              schema:
+                type: string
+        "400":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Bad request
+        "401":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Not Found
+        "411":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Length Required
+        "413":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Content Too Large
+        "415":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Unsupported Media Type
+        "429":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Too Many Requests
+        "500":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Internal Server Error
+        "501":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Not Implemented
+        "502":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Bad Gateway
+        "503":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Service Unavailable
+        default:
+          description: Generic Error
+      summary: Nupf_EventExposure Subscribe service Operation
+      tags:
+      - Subscriptions (Collection)
+  /ee-subscriptions/{subscriptionId}:
+    delete:
+      operationId: DeleteSubscription
+      parameters:
+      - description: Unique ID of the subscription to be deleted
+        explode: false
+        in: path
+        name: subscriptionId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Subsription deleted successfully
+        "307":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RedirectResponse"
+          description: Temporary Redirect
+          headers:
+            Location:
+              description: The URI pointing to the resource located on the redirect
+                target
+              required: true
+              schema:
+                type: string
+            "3gpp-Sbi-Target-Nf-Id":
+              description: |
+                'Identifier of target NF (service) instance towards which the request is redirected'
+              schema:
+                type: string
+        "308":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RedirectResponse"
+          description: Permanent Redirect
+          headers:
+            Location:
+              description: The URI pointing to the resource located on the redirect
+                target
+              required: true
+              schema:
+                type: string
+            "3gpp-Sbi-Target-Nf-Id":
+              description: |
+                'Identifier of target NF (service) instance towards which the request is redirected'
+              schema:
+                type: string
+        "400":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Bad request
+        "401":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Not Found
+        "411":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Length Required
+        "413":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Content Too Large
+        "415":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Unsupported Media Type
+        "429":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Too Many Requests
+        "500":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Internal Server Error
+        "502":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Bad Gateway
+        "503":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Service Unavailable
+        default:
+          description: Generic Error
+      summary: Nupf_EventExposure UnSubscribe service Operation
+    patch:
+      operationId: ModifySubscription
+      parameters:
+      - description: Unique ID of the subscription to be modified
+        explode: false
+        in: path
+        name: subscriptionId
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json-patch+json:
+            schema:
+              items:
+                $ref: "#/components/schemas/PatchItem"
+              minItems: 1
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatchResult"
+          description: Expected response to a valid request
+        "204":
+          description: Successful response
+        "307":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RedirectResponse"
+          description: Temporary Redirect
+          headers:
+            Location:
+              description: The URI pointing to the resource located on the redirect
+                target
+              required: true
+              schema:
+                type: string
+            "3gpp-Sbi-Target-Nf-Id":
+              description: |
+                'Identifier of target NF (service) instance towards which the request is redirected'
+              schema:
+                type: string
+        "308":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RedirectResponse"
+          description: Permanent Redirect
+          headers:
+            Location:
+              description: The URI pointing to the resource located on the redirect
+                target
+              required: true
+              schema:
+                type: string
+            "3gpp-Sbi-Target-Nf-Id":
+              description: |
+                'Identifier of target NF (service) instance towards which the request is redirected'
+              schema:
+                type: string
+        "400":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Bad request
+        "401":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Unauthorized
+        "403":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Forbidden
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Not Found
+        "411":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Length Required
+        "413":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Content Too Large
+        "415":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Unsupported Media Type
+        "429":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Too Many Requests
+        "500":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Internal Server Error
+        "502":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Bad Gateway
+        "503":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetails"
+          description: Service Unavailable
+        default:
+          description: Generic Error
+      summary: Nupf_EventExposure Subscribe Modify service Operation
+components:
+  responses:
+    "307":
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RedirectResponse"
+      description: Temporary Redirect
+      headers:
+        Location:
+          description: The URI pointing to the resource located on the redirect target
+          required: true
+          schema:
+            type: string
+        "3gpp-Sbi-Target-Nf-Id":
+          description: |
+            'Identifier of target NF (service) instance towards which the request is redirected'
+          schema:
+            type: string
+    "308":
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RedirectResponse"
+      description: Permanent Redirect
+      headers:
+        Location:
+          description: The URI pointing to the resource located on the redirect target
+          required: true
+          schema:
+            type: string
+        "3gpp-Sbi-Target-Nf-Id":
+          description: |
+            'Identifier of target NF (service) instance towards which the request is redirected'
+          schema:
+            type: string
+    "400":
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Bad request
+    "401":
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Unauthorized
+    "403":
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Forbidden
+    "404":
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Not Found
+    "411":
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Length Required
+    "413":
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Content Too Large
+    "415":
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Unsupported Media Type
+    "429":
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Too Many Requests
+    "500":
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Internal Server Error
+    "501":
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Not Implemented
+    "502":
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Bad Gateway
+    "503":
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+      description: Service Unavailable
+    default:
+      description: Generic Error
+  schemas:
+    NotificationData:
+      description: the list of NotificationItems
+      example:
+        eventNotifyUri: eventNotifyUri
+        correlationId: correlationId
+        notificationItems:
+        - snssai:
+            sd: sd
+            sst: 26
+          ueMacAddr: ueMacAddr
+          dnn: dnn
+          handlingOfPayloadHeadersInfo:
+          - headerValueAfter: headerValueAfter
+            headerInfo: headerInfo
+            headerValueBefore: headerValueBefore
+            headerAction: DETECT
+          - headerValueAfter: headerValueAfter
+            headerInfo: headerInfo
+            headerValueBefore: headerValueBefore
+            headerAction: DETECT
+          skippedReportInfo:
+          - null
+          - null
+          tscMngtInfo:
+            pmics:
+            - portNum: 0
+              portManCont: portManCont
+            - portNum: 0
+              portManCont: portManCont
+            umic:
+              bridgeManCont: bridgeManCont
+          userDataUsageMeasurements:
+          - volumeMeasurement:
+              totalVolume: totalVolume
+              dlVolume: dlVolume
+              dlNbOfPackets: 2147483647
+              ulNbOfPackets: 2147483647
+              ulVolume: ulVolume
+              totalNbOfPackets: 2147483647
+            appId: appId
+            throughputMeasurement:
+              dlThroughput: dlThroughput
+              ulPacketThroughput: ulPacketThroughput
+              dlPacketThroughput: dlPacketThroughput
+              ulThroughput: ulThroughput
+            throughputStatisticsMeasurement:
+              dlPeakThroughPut: dlPeakThroughPut
+              ulPeakThroughput: ulPeakThroughput
+              dlAverageThroughput: dlAverageThroughput
+              ulAverageThroughput: ulAverageThroughput
+              dlAveragePacketThroughput: dlAveragePacketThroughput
+              ulAveragePacketThroughput: ulAveragePacketThroughput
+              ulPeakPacketThroughput: ulPeakPacketThroughput
+              dlPeakPacketThroughput: dlPeakPacketThroughput
+            applicationRelatedInformation:
+              urls:
+              - null
+              - null
+              domainInfoList:
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+            flowInfo:
+              flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+          - volumeMeasurement:
+              totalVolume: totalVolume
+              dlVolume: dlVolume
+              dlNbOfPackets: 2147483647
+              ulNbOfPackets: 2147483647
+              ulVolume: ulVolume
+              totalNbOfPackets: 2147483647
+            appId: appId
+            throughputMeasurement:
+              dlThroughput: dlThroughput
+              ulPacketThroughput: ulPacketThroughput
+              dlPacketThroughput: dlPacketThroughput
+              ulThroughput: ulThroughput
+            throughputStatisticsMeasurement:
+              dlPeakThroughPut: dlPeakThroughPut
+              ulPeakThroughput: ulPeakThroughput
+              dlAverageThroughput: dlAverageThroughput
+              ulAverageThroughput: ulAverageThroughput
+              dlAveragePacketThroughput: dlAveragePacketThroughput
+              ulAveragePacketThroughput: ulAveragePacketThroughput
+              ulPeakPacketThroughput: ulPeakPacketThroughput
+              dlPeakPacketThroughput: dlPeakPacketThroughput
+            applicationRelatedInformation:
+              urls:
+              - null
+              - null
+              domainInfoList:
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+            flowInfo:
+              flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+          ueIpv6Prefix: 2001:db8:abcd:12::0/64
+          ratType: null
+          eventType: null
+          supi: supi
+          gpsi: gpsi
+          timeStamp: 2000-01-23T04:56:07.000+00:00
+          ueIpv4Addr: 198.51.100.1
+          terminationCause: N4_SESSION_RELEASE
+          startTime: 2000-01-23T04:56:07.000+00:00
+          qosMonitoringMeasurement:
+            _dlMinPacketDelay: 2147483647
+            dlCongestion: 4965
+            _rtrMaxPacketDelay: 2147483647
+            _jitter: 6.965118
+            dlPacketDelay: 2147483647
+            ulCongestion: 5025
+            defaultQosFlowInd: false
+            dlAvailableBitrate: dlAvailableBitrate
+            _rtrMinPacketDelay: 2147483647
+            ulPacketDelay: 2147483647
+            measureFailure: true
+            ulAvailableBitrate: ulAvailableBitrate
+            _packetLossRate: 355
+            _dlMaxPacketDelay: 2147483647
+            _ulMaxPacketDelay: 2147483647
+            dlAveThroughput: dlAveThroughput
+            _ulMinPacketDelay: 2147483647
+            ulAveThroughput: ulAveThroughput
+            rtrPacketDelay: 503831554
+          ueNatMappingInfo:
+            natMappingList:
+            - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+              remotePortNumber: 44421
+              transportProtocol: UDP
+              ipv4Addr: 198.51.100.1
+              portNumber: 18901
+            - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+              remotePortNumber: 44421
+              transportProtocol: UDP
+              ipv4Addr: 198.51.100.1
+              portNumber: 18901
+        - snssai:
+            sd: sd
+            sst: 26
+          ueMacAddr: ueMacAddr
+          dnn: dnn
+          handlingOfPayloadHeadersInfo:
+          - headerValueAfter: headerValueAfter
+            headerInfo: headerInfo
+            headerValueBefore: headerValueBefore
+            headerAction: DETECT
+          - headerValueAfter: headerValueAfter
+            headerInfo: headerInfo
+            headerValueBefore: headerValueBefore
+            headerAction: DETECT
+          skippedReportInfo:
+          - null
+          - null
+          tscMngtInfo:
+            pmics:
+            - portNum: 0
+              portManCont: portManCont
+            - portNum: 0
+              portManCont: portManCont
+            umic:
+              bridgeManCont: bridgeManCont
+          userDataUsageMeasurements:
+          - volumeMeasurement:
+              totalVolume: totalVolume
+              dlVolume: dlVolume
+              dlNbOfPackets: 2147483647
+              ulNbOfPackets: 2147483647
+              ulVolume: ulVolume
+              totalNbOfPackets: 2147483647
+            appId: appId
+            throughputMeasurement:
+              dlThroughput: dlThroughput
+              ulPacketThroughput: ulPacketThroughput
+              dlPacketThroughput: dlPacketThroughput
+              ulThroughput: ulThroughput
+            throughputStatisticsMeasurement:
+              dlPeakThroughPut: dlPeakThroughPut
+              ulPeakThroughput: ulPeakThroughput
+              dlAverageThroughput: dlAverageThroughput
+              ulAverageThroughput: ulAverageThroughput
+              dlAveragePacketThroughput: dlAveragePacketThroughput
+              ulAveragePacketThroughput: ulAveragePacketThroughput
+              ulPeakPacketThroughput: ulPeakPacketThroughput
+              dlPeakPacketThroughput: dlPeakPacketThroughput
+            applicationRelatedInformation:
+              urls:
+              - null
+              - null
+              domainInfoList:
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+            flowInfo:
+              flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+          - volumeMeasurement:
+              totalVolume: totalVolume
+              dlVolume: dlVolume
+              dlNbOfPackets: 2147483647
+              ulNbOfPackets: 2147483647
+              ulVolume: ulVolume
+              totalNbOfPackets: 2147483647
+            appId: appId
+            throughputMeasurement:
+              dlThroughput: dlThroughput
+              ulPacketThroughput: ulPacketThroughput
+              dlPacketThroughput: dlPacketThroughput
+              ulThroughput: ulThroughput
+            throughputStatisticsMeasurement:
+              dlPeakThroughPut: dlPeakThroughPut
+              ulPeakThroughput: ulPeakThroughput
+              dlAverageThroughput: dlAverageThroughput
+              ulAverageThroughput: ulAverageThroughput
+              dlAveragePacketThroughput: dlAveragePacketThroughput
+              ulAveragePacketThroughput: ulAveragePacketThroughput
+              ulPeakPacketThroughput: ulPeakPacketThroughput
+              dlPeakPacketThroughput: dlPeakPacketThroughput
+            applicationRelatedInformation:
+              urls:
+              - null
+              - null
+              domainInfoList:
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+            flowInfo:
+              flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+          ueIpv6Prefix: 2001:db8:abcd:12::0/64
+          ratType: null
+          eventType: null
+          supi: supi
+          gpsi: gpsi
+          timeStamp: 2000-01-23T04:56:07.000+00:00
+          ueIpv4Addr: 198.51.100.1
+          terminationCause: N4_SESSION_RELEASE
+          startTime: 2000-01-23T04:56:07.000+00:00
+          qosMonitoringMeasurement:
+            _dlMinPacketDelay: 2147483647
+            dlCongestion: 4965
+            _rtrMaxPacketDelay: 2147483647
+            _jitter: 6.965118
+            dlPacketDelay: 2147483647
+            ulCongestion: 5025
+            defaultQosFlowInd: false
+            dlAvailableBitrate: dlAvailableBitrate
+            _rtrMinPacketDelay: 2147483647
+            ulPacketDelay: 2147483647
+            measureFailure: true
+            ulAvailableBitrate: ulAvailableBitrate
+            _packetLossRate: 355
+            _dlMaxPacketDelay: 2147483647
+            _ulMaxPacketDelay: 2147483647
+            dlAveThroughput: dlAveThroughput
+            _ulMinPacketDelay: 2147483647
+            ulAveThroughput: ulAveThroughput
+            rtrPacketDelay: 503831554
+          ueNatMappingInfo:
+            natMappingList:
+            - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+              remotePortNumber: 44421
+              transportProtocol: UDP
+              ipv4Addr: 198.51.100.1
+              portNumber: 18901
+            - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+              remotePortNumber: 44421
+              transportProtocol: UDP
+              ipv4Addr: 198.51.100.1
+              portNumber: 18901
+        achievedSampRatio: 8
+      properties:
+        notificationItems:
+          items:
+            $ref: "#/components/schemas/NotificationItem"
+          minItems: 1
+          title: notificationItems
+          type: array
+        correlationId:
+          title: correlationId
+          type: string
+        achievedSampRatio:
+          description: "Unsigned integer indicating Sampling Ratio (see clauses 4.15.1\
+            \ of 3GPP TS 23.502), expressed in percent. \n"
+          maximum: 100
+          minimum: 1
+          title: SamplingRatio
+          type: integer
+        eventNotifyUri:
+          description: String providing an URI formatted according to RFC 3986.
+          title: Uri
+          type: string
+      required:
+      - notificationItems
+      title: NotificationData
+      type: object
+    NotificationItem:
+      anyOf: []
+      description: represents a report on one subscribed event
+      example:
+        snssai:
+          sd: sd
+          sst: 26
+        ueMacAddr: ueMacAddr
+        dnn: dnn
+        handlingOfPayloadHeadersInfo:
+        - headerValueAfter: headerValueAfter
+          headerInfo: headerInfo
+          headerValueBefore: headerValueBefore
+          headerAction: DETECT
+        - headerValueAfter: headerValueAfter
+          headerInfo: headerInfo
+          headerValueBefore: headerValueBefore
+          headerAction: DETECT
+        skippedReportInfo:
+        - null
+        - null
+        tscMngtInfo:
+          pmics:
+          - portNum: 0
+            portManCont: portManCont
+          - portNum: 0
+            portManCont: portManCont
+          umic:
+            bridgeManCont: bridgeManCont
+        userDataUsageMeasurements:
+        - volumeMeasurement:
+            totalVolume: totalVolume
+            dlVolume: dlVolume
+            dlNbOfPackets: 2147483647
+            ulNbOfPackets: 2147483647
+            ulVolume: ulVolume
+            totalNbOfPackets: 2147483647
+          appId: appId
+          throughputMeasurement:
+            dlThroughput: dlThroughput
+            ulPacketThroughput: ulPacketThroughput
+            dlPacketThroughput: dlPacketThroughput
+            ulThroughput: ulThroughput
+          throughputStatisticsMeasurement:
+            dlPeakThroughPut: dlPeakThroughPut
+            ulPeakThroughput: ulPeakThroughput
+            dlAverageThroughput: dlAverageThroughput
+            ulAverageThroughput: ulAverageThroughput
+            dlAveragePacketThroughput: dlAveragePacketThroughput
+            ulAveragePacketThroughput: ulAveragePacketThroughput
+            ulPeakPacketThroughput: ulPeakPacketThroughput
+            dlPeakPacketThroughput: dlPeakPacketThroughput
+          applicationRelatedInformation:
+            urls:
+            - null
+            - null
+            domainInfoList:
+            - domainName: domainName
+              domainNameProtocol: DNS_QNAME
+            - domainName: domainName
+              domainNameProtocol: DNS_QNAME
+          flowInfo:
+            flowLabel: flowLabel
+            packFiltId: packFiltId
+            flowDirection: DOWNLINK
+            packetFilterUsage: true
+            tosTrafficClass: tosTrafficClass
+            mpxMediaDlInfos:
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            spi: spi
+            flowDescription: flowDescription
+            ethFlowDescription:
+              destMacAddr: destMacAddr
+              destMacAddrEnd: destMacAddrEnd
+              sourceMacAddr: sourceMacAddr
+              fDir: DOWNLINK
+              ethType: ethType
+              fDesc: fDesc
+              vlanTags:
+              - vlanTags
+              - vlanTags
+              srcMacAddrEnd: srcMacAddrEnd
+            mpxMediaUlInfos:
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+        - volumeMeasurement:
+            totalVolume: totalVolume
+            dlVolume: dlVolume
+            dlNbOfPackets: 2147483647
+            ulNbOfPackets: 2147483647
+            ulVolume: ulVolume
+            totalNbOfPackets: 2147483647
+          appId: appId
+          throughputMeasurement:
+            dlThroughput: dlThroughput
+            ulPacketThroughput: ulPacketThroughput
+            dlPacketThroughput: dlPacketThroughput
+            ulThroughput: ulThroughput
+          throughputStatisticsMeasurement:
+            dlPeakThroughPut: dlPeakThroughPut
+            ulPeakThroughput: ulPeakThroughput
+            dlAverageThroughput: dlAverageThroughput
+            ulAverageThroughput: ulAverageThroughput
+            dlAveragePacketThroughput: dlAveragePacketThroughput
+            ulAveragePacketThroughput: ulAveragePacketThroughput
+            ulPeakPacketThroughput: ulPeakPacketThroughput
+            dlPeakPacketThroughput: dlPeakPacketThroughput
+          applicationRelatedInformation:
+            urls:
+            - null
+            - null
+            domainInfoList:
+            - domainName: domainName
+              domainNameProtocol: DNS_QNAME
+            - domainName: domainName
+              domainNameProtocol: DNS_QNAME
+          flowInfo:
+            flowLabel: flowLabel
+            packFiltId: packFiltId
+            flowDirection: DOWNLINK
+            packetFilterUsage: true
+            tosTrafficClass: tosTrafficClass
+            mpxMediaDlInfos:
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            spi: spi
+            flowDescription: flowDescription
+            ethFlowDescription:
+              destMacAddr: destMacAddr
+              destMacAddrEnd: destMacAddrEnd
+              sourceMacAddr: sourceMacAddr
+              fDir: DOWNLINK
+              ethType: ethType
+              fDesc: fDesc
+              vlanTags:
+              - vlanTags
+              - vlanTags
+              srcMacAddrEnd: srcMacAddrEnd
+            mpxMediaUlInfos:
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+        ueIpv6Prefix: 2001:db8:abcd:12::0/64
+        ratType: null
+        eventType: null
+        supi: supi
+        gpsi: gpsi
+        timeStamp: 2000-01-23T04:56:07.000+00:00
+        ueIpv4Addr: 198.51.100.1
+        terminationCause: N4_SESSION_RELEASE
+        startTime: 2000-01-23T04:56:07.000+00:00
+        qosMonitoringMeasurement:
+          _dlMinPacketDelay: 2147483647
+          dlCongestion: 4965
+          _rtrMaxPacketDelay: 2147483647
+          _jitter: 6.965118
+          dlPacketDelay: 2147483647
+          ulCongestion: 5025
+          defaultQosFlowInd: false
+          dlAvailableBitrate: dlAvailableBitrate
+          _rtrMinPacketDelay: 2147483647
+          ulPacketDelay: 2147483647
+          measureFailure: true
+          ulAvailableBitrate: ulAvailableBitrate
+          _packetLossRate: 355
+          _dlMaxPacketDelay: 2147483647
+          _ulMaxPacketDelay: 2147483647
+          dlAveThroughput: dlAveThroughput
+          _ulMinPacketDelay: 2147483647
+          ulAveThroughput: ulAveThroughput
+          rtrPacketDelay: 503831554
+        ueNatMappingInfo:
+          natMappingList:
+          - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+            remotePortNumber: 44421
+            transportProtocol: UDP
+            ipv4Addr: 198.51.100.1
+            portNumber: 18901
+          - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+            remotePortNumber: 44421
+            transportProtocol: UDP
+            ipv4Addr: 198.51.100.1
+            portNumber: 18901
+      nullable: true
+      properties:
+        eventType:
+          $ref: "#/components/schemas/EventType"
+        ueIpv4Addr:
+          description: |
+            String identifying a IPv4 address formatted in the 'dotted decimal' notation as defined in RFC 1166.
+          example: 198.51.100.1
+          pattern: "^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$"
+          title: Ipv4Addr
+          type: string
+        ueIpv6Prefix:
+          $ref: "#/components/schemas/Ipv6Prefix"
+        ueMacAddr:
+          description: |
+            String identifying a MAC address formatted in the hexadecimal notation according to clause 1.1 and clause 2.1 of RFC 7042.
+          pattern: "^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$"
+          title: MacAddr48
+          type: string
+        dnn:
+          description: |
+            String representing a Data Network as defined in clause 9A of 3GPP TS 23.003;  it shall contain either a DNN Network Identifier, or a full DNN with both the Network  Identifier and Operator Identifier, as specified in 3GPP TS 23.003 clause 9.1.1 and 9.1.2. It shall be coded as string in which the labels are separated by dots  (e.g. "Label1.Label2.Label3").
+          title: Dnn
+          type: string
+        snssai:
+          $ref: "#/components/schemas/Snssai"
+        gpsi:
+          description: "String identifying a Gpsi shall contain either an External\
+            \ Id or an MSISDN.  It shall be formatted as follows -External Identifier=\
+            \ \"extid-'extid', where 'extid'  shall be formatted according to clause\
+            \ 19.7.2 of 3GPP TS 23.003 that describes an  External Identifier. \n"
+          pattern: "^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$"
+          title: Gpsi
+          type: string
+        supi:
+          description: "String identifying a Supi that shall contain either an IMSI,\
+            \ a network specific identifier,\na Global Cable Identifier (GCI) or a\
+            \ Global Line Identifier (GLI) as specified in clause \n2.2A of 3GPP TS\
+            \ 23.003. It shall be formatted as follows\n - for an IMSI \"imsi-<imsi>\"\
+            , where <imsi> shall be formatted according to clause 2.2\n   of 3GPP\
+            \ TS 23.003 that describes an IMSI.\n - for a network specific identifier\
+            \ \"nai-<nai>, where <nai> shall be formatted\n   according to clause\
+            \ 28.7.2 of 3GPP TS 23.003 that describes an NAI.\n - for a GCI \"gci-<gci>\"\
+            , where <gci> shall be formatted according to clause 28.15.2\n   of 3GPP\
+            \ TS 23.003.\n - for a GLI \"gli-<gli>\", where <gli> shall be formatted\
+            \ according to clause 28.16.2 of\n   3GPP TS 23.003.To enable that the\
+            \ value is used as part of an URI, the string shall\n   only contain characters\
+            \ allowed according to the \"lower-with-hyphen\" naming convention\n \
+            \  defined in 3GPP TS 29.501.\n"
+          pattern: "^(imsi-[0-9]{5,15}|nai-.+|gci-.+|gli-.+|.+)$"
+          title: Supi
+          type: string
+        timeStamp:
+          description: string with format 'date-time' as defined in OpenAPI.
+          format: date-time
+          title: DateTime
+          type: string
+        startTime:
+          description: string with format 'date-time' as defined in OpenAPI.
+          format: date-time
+          title: DateTime
+          type: string
+        ratType:
+          $ref: "#/components/schemas/RatType"
+        qosMonitoringMeasurement:
+          $ref: "#/components/schemas/QosMonitoringMeasurement"
+        tscMngtInfo:
+          $ref: "#/components/schemas/TscManagementInfo"
+        userDataUsageMeasurements:
+          items:
+            $ref: "#/components/schemas/UserDataUsageMeasurements"
+          minItems: 1
+          title: userDataUsageMeasurements
+          type: array
+        ueNatMappingInfo:
+          $ref: "#/components/schemas/UeNatMappingInfo"
+        handlingOfPayloadHeadersInfo:
+          items:
+            $ref: "#/components/schemas/HandlingOfPayloadHeader"
+          minItems: 1
+          title: handlingOfPayloadHeadersInfo
+          type: array
+        terminationCause:
+          $ref: "#/components/schemas/TerminationCause"
+        skippedReportInfo:
+          items:
+            $ref: "#/components/schemas/SkipReportingCondition"
+          minItems: 1
+          title: skippedReportInfo
+          type: array
+      required:
+      - eventType
+      - timeStamp
+      title: NotificationItem
+      type: object
+    UpfEventSubscription:
+      description: UPF Event Subscription
+      example:
+        eventReportingMode:
+          notifFlag: ACTIVATE
+          partitioningCriteria:
+          - TAC
+          - TAC
+          trigger: ONE_TIME
+          expiry: 2000-01-23T04:56:07.000+00:00
+          mutingExcInstructions: ""
+          subTerminationReportInd: true
+          maxReports: 4
+          repPeriod: 7
+          sampRatio: 13
+          mutingNotSettings: ""
+        nfId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        snssai:
+          sd: sd
+          sst: 26
+        eventList:
+        - skipReportingInstruction:
+            validityTimes:
+            - recurTimeWindow:
+                startTime: 2000-01-23T04:56:07.000+00:00
+                endTime: 2000-01-23T04:56:07.000+00:00
+              recurMonth:
+              - null
+              - null
+              recurType: DAILY
+              recurDate:
+              - null
+              - null
+              recurWeek:
+              - 45
+              - 45
+              recurEndTime: 2000-01-23T04:56:07.000+00:00
+              recurDay:
+              - null
+              - null
+            - recurTimeWindow:
+                startTime: 2000-01-23T04:56:07.000+00:00
+                endTime: 2000-01-23T04:56:07.000+00:00
+              recurMonth:
+              - null
+              - null
+              recurType: DAILY
+              recurDate:
+              - null
+              - null
+              recurWeek:
+              - 45
+              - 45
+              recurEndTime: 2000-01-23T04:56:07.000+00:00
+              recurDay:
+              - null
+              - null
+            skipReportCond:
+            - SKIP_NULL_REPORT
+            - SKIP_NULL_REPORT
+            thresholdCond:
+              thresholdThroughput:
+                dlThroughput: dlThroughput
+                ulPacketThroughput: ulPacketThroughput
+                dlPacketThroughput: dlPacketThroughput
+                ulThroughput: ulThroughput
+              thresholdTrafficVolume:
+                totalVolume: totalVolume
+                dlVolume: dlVolume
+                dlNbOfPackets: 2147483647
+                ulNbOfPackets: 2147483647
+                ulVolume: ulVolume
+                totalNbOfPackets: 2147483647
+          remotePortNumber: 15087
+          remainingDataReports: DISCARD
+          ipDomain: ipDomain
+          trafficFilters:
+          - flowLabel: flowLabel
+            packFiltId: packFiltId
+            flowDirection: DOWNLINK
+            packetFilterUsage: true
+            tosTrafficClass: tosTrafficClass
+            mpxMediaDlInfos:
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            spi: spi
+            flowDescription: flowDescription
+            ethFlowDescription:
+              destMacAddr: destMacAddr
+              destMacAddrEnd: destMacAddrEnd
+              sourceMacAddr: sourceMacAddr
+              fDir: DOWNLINK
+              ethType: ethType
+              fDesc: fDesc
+              vlanTags:
+              - vlanTags
+              - vlanTags
+              srcMacAddrEnd: srcMacAddrEnd
+            mpxMediaUlInfos:
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+          - flowLabel: flowLabel
+            packFiltId: packFiltId
+            flowDirection: DOWNLINK
+            packetFilterUsage: true
+            tosTrafficClass: tosTrafficClass
+            mpxMediaDlInfos:
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            spi: spi
+            flowDescription: flowDescription
+            ethFlowDescription:
+              destMacAddr: destMacAddr
+              destMacAddrEnd: destMacAddrEnd
+              sourceMacAddr: sourceMacAddr
+              fDir: DOWNLINK
+              ethType: ethType
+              fDesc: fDesc
+              vlanTags:
+              - vlanTags
+              - vlanTags
+              srcMacAddrEnd: srcMacAddrEnd
+            mpxMediaUlInfos:
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+          ratTypeList:
+          - NR
+          - NR
+          type: QOS_MONITORING
+          remoteIpv4Addr: 198.51.100.1
+          immediateFlag: false
+          granularityOfMeasurement: PER_APPLICATION
+          inclRatType: true
+          remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+          appIds:
+          - null
+          - null
+          measurementTypes:
+          - VOLUME_MEASUREMENT
+          - VOLUME_MEASUREMENT
+          reportingSuggestionInfo:
+            reportingTimeInfo: 5
+            reportingUrgency: DELAY_TOLERANT
+        - skipReportingInstruction:
+            validityTimes:
+            - recurTimeWindow:
+                startTime: 2000-01-23T04:56:07.000+00:00
+                endTime: 2000-01-23T04:56:07.000+00:00
+              recurMonth:
+              - null
+              - null
+              recurType: DAILY
+              recurDate:
+              - null
+              - null
+              recurWeek:
+              - 45
+              - 45
+              recurEndTime: 2000-01-23T04:56:07.000+00:00
+              recurDay:
+              - null
+              - null
+            - recurTimeWindow:
+                startTime: 2000-01-23T04:56:07.000+00:00
+                endTime: 2000-01-23T04:56:07.000+00:00
+              recurMonth:
+              - null
+              - null
+              recurType: DAILY
+              recurDate:
+              - null
+              - null
+              recurWeek:
+              - 45
+              - 45
+              recurEndTime: 2000-01-23T04:56:07.000+00:00
+              recurDay:
+              - null
+              - null
+            skipReportCond:
+            - SKIP_NULL_REPORT
+            - SKIP_NULL_REPORT
+            thresholdCond:
+              thresholdThroughput:
+                dlThroughput: dlThroughput
+                ulPacketThroughput: ulPacketThroughput
+                dlPacketThroughput: dlPacketThroughput
+                ulThroughput: ulThroughput
+              thresholdTrafficVolume:
+                totalVolume: totalVolume
+                dlVolume: dlVolume
+                dlNbOfPackets: 2147483647
+                ulNbOfPackets: 2147483647
+                ulVolume: ulVolume
+                totalNbOfPackets: 2147483647
+          remotePortNumber: 15087
+          remainingDataReports: DISCARD
+          ipDomain: ipDomain
+          trafficFilters:
+          - flowLabel: flowLabel
+            packFiltId: packFiltId
+            flowDirection: DOWNLINK
+            packetFilterUsage: true
+            tosTrafficClass: tosTrafficClass
+            mpxMediaDlInfos:
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            spi: spi
+            flowDescription: flowDescription
+            ethFlowDescription:
+              destMacAddr: destMacAddr
+              destMacAddrEnd: destMacAddrEnd
+              sourceMacAddr: sourceMacAddr
+              fDir: DOWNLINK
+              ethType: ethType
+              fDesc: fDesc
+              vlanTags:
+              - vlanTags
+              - vlanTags
+              srcMacAddrEnd: srcMacAddrEnd
+            mpxMediaUlInfos:
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+          - flowLabel: flowLabel
+            packFiltId: packFiltId
+            flowDirection: DOWNLINK
+            packetFilterUsage: true
+            tosTrafficClass: tosTrafficClass
+            mpxMediaDlInfos:
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            spi: spi
+            flowDescription: flowDescription
+            ethFlowDescription:
+              destMacAddr: destMacAddr
+              destMacAddrEnd: destMacAddrEnd
+              sourceMacAddr: sourceMacAddr
+              fDir: DOWNLINK
+              ethType: ethType
+              fDesc: fDesc
+              vlanTags:
+              - vlanTags
+              - vlanTags
+              srcMacAddrEnd: srcMacAddrEnd
+            mpxMediaUlInfos:
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+            - payloadType: 76
+              rtcpPacketType: 152
+              identificationTag: identificationTag
+              ssrcId: 343953088
+              rtpSdesHdrExtId: 0
+          ratTypeList:
+          - NR
+          - NR
+          type: QOS_MONITORING
+          remoteIpv4Addr: 198.51.100.1
+          immediateFlag: false
+          granularityOfMeasurement: PER_APPLICATION
+          inclRatType: true
+          remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+          appIds:
+          - null
+          - null
+          measurementTypes:
+          - VOLUME_MEASUREMENT
+          - VOLUME_MEASUREMENT
+          reportingSuggestionInfo:
+            reportingTimeInfo: 5
+            reportingUrgency: DELAY_TOLERANT
+        dnn: dnn
+        bundlingAllowed: true
+        bundleId: 639699262
+        bundledEventNotifyUri: bundledEventNotifyUri
+        ueIpAddress:
+          ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+          ipv4Addr: 198.51.100.1
+          ipv6Prefix: 2001:db8:abcd:12::0/64
+        supi: supi
+        eventNotifyUri: eventNotifyUri
+        anyUe: false
+        notifyCorrelationId: notifyCorrelationId
+      properties:
+        eventList:
+          items:
+            $ref: "#/components/schemas/UpfEvent"
+          minItems: 1
+          title: eventList
+          type: array
+        eventNotifyUri:
+          description: String providing an URI formatted according to RFC 3986.
+          title: Uri
+          type: string
+        notifyCorrelationId:
+          title: notifyCorrelationId
+          type: string
+        eventReportingMode:
+          $ref: "#/components/schemas/UpfEventMode"
+        nfId:
+          description: "String uniquely identifying a NF instance. The format of the\
+            \ NF Instance ID shall be a  Universally Unique Identifier (UUID) version\
+            \ 4. \n"
+          format: uuid
+          title: nfId
+          type: string
+        ueIpAddress:
+          $ref: "#/components/schemas/IpAddr"
+        anyUe:
+          default: false
+          title: anyUe
+          type: boolean
+        supi:
+          description: "String identifying a Supi that shall contain either an IMSI,\
+            \ a network specific identifier,\na Global Cable Identifier (GCI) or a\
+            \ Global Line Identifier (GLI) as specified in clause \n2.2A of 3GPP TS\
+            \ 23.003. It shall be formatted as follows\n - for an IMSI \"imsi-<imsi>\"\
+            , where <imsi> shall be formatted according to clause 2.2\n   of 3GPP\
+            \ TS 23.003 that describes an IMSI.\n - for a network specific identifier\
+            \ \"nai-<nai>, where <nai> shall be formatted\n   according to clause\
+            \ 28.7.2 of 3GPP TS 23.003 that describes an NAI.\n - for a GCI \"gci-<gci>\"\
+            , where <gci> shall be formatted according to clause 28.15.2\n   of 3GPP\
+            \ TS 23.003.\n - for a GLI \"gli-<gli>\", where <gli> shall be formatted\
+            \ according to clause 28.16.2 of\n   3GPP TS 23.003.To enable that the\
+            \ value is used as part of an URI, the string shall\n   only contain characters\
+            \ allowed according to the \"lower-with-hyphen\" naming convention\n \
+            \  defined in 3GPP TS 29.501.\n"
+          pattern: "^(imsi-[0-9]{5,15}|nai-.+|gci-.+|gli-.+|.+)$"
+          title: Supi
+          type: string
+        dnn:
+          description: |
+            String representing a Data Network as defined in clause 9A of 3GPP TS 23.003;  it shall contain either a DNN Network Identifier, or a full DNN with both the Network  Identifier and Operator Identifier, as specified in 3GPP TS 23.003 clause 9.1.1 and 9.1.2. It shall be coded as string in which the labels are separated by dots  (e.g. "Label1.Label2.Label3").
+          title: Dnn
+          type: string
+        snssai:
+          $ref: "#/components/schemas/Snssai"
+        bundlingAllowed:
+          title: bundlingAllowed
+          type: boolean
+        bundleId:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 32-bit integer.
+          maximum: 4294967295
+          minimum: 0
+          title: Uint32
+          type: integer
+        bundledEventNotifyUri:
+          description: String providing an URI formatted according to RFC 3986.
+          title: Uri
+          type: string
+      required:
+      - eventList
+      - eventNotifyUri
+      - eventReportingMode
+      - nfId
+      - notifyCorrelationId
+      title: UpfEventSubscription
+      type: object
+    UpfEventMode:
+      description: UPF Event Mode
+      example:
+        notifFlag: ACTIVATE
+        partitioningCriteria:
+        - TAC
+        - TAC
+        trigger: ONE_TIME
+        expiry: 2000-01-23T04:56:07.000+00:00
+        mutingExcInstructions: ""
+        subTerminationReportInd: true
+        maxReports: 4
+        repPeriod: 7
+        sampRatio: 13
+        mutingNotSettings: ""
+      properties:
+        trigger:
+          $ref: "#/components/schemas/UpfEventTrigger"
+        maxReports:
+          title: maxReports
+          type: integer
+        expiry:
+          description: string with format 'date-time' as defined in OpenAPI.
+          format: date-time
+          title: DateTime
+          type: string
+        repPeriod:
+          description: indicating a time in seconds.
+          title: DurationSec
+          type: integer
+        sampRatio:
+          description: "Unsigned integer indicating Sampling Ratio (see clauses 4.15.1\
+            \ of 3GPP TS 23.502), expressed in percent. \n"
+          maximum: 100
+          minimum: 1
+          title: SamplingRatio
+          type: integer
+        partitioningCriteria:
+          items:
+            $ref: "#/components/schemas/PartitioningCriteria"
+          minItems: 1
+          title: partitioningCriteria
+          type: array
+        notifFlag:
+          $ref: "#/components/schemas/NotificationFlag"
+        mutingExcInstructions:
+          allOf:
+          - $ref: "#/components/schemas/MutingExceptionInstructions"
+          title: mutingExcInstructions
+          writeOnly: true
+        mutingNotSettings:
+          allOf:
+          - $ref: "#/components/schemas/MutingNotificationsSettings"
+          readOnly: true
+          title: mutingNotSettings
+        subTerminationReportInd:
+          title: subTerminationReportInd
+          type: boolean
+      required:
+      - trigger
+      title: UpfEventMode
+      type: object
+    UpfEvent:
+      description: UPF Event
+      example:
+        skipReportingInstruction:
+          validityTimes:
+          - recurTimeWindow:
+              startTime: 2000-01-23T04:56:07.000+00:00
+              endTime: 2000-01-23T04:56:07.000+00:00
+            recurMonth:
+            - null
+            - null
+            recurType: DAILY
+            recurDate:
+            - null
+            - null
+            recurWeek:
+            - 45
+            - 45
+            recurEndTime: 2000-01-23T04:56:07.000+00:00
+            recurDay:
+            - null
+            - null
+          - recurTimeWindow:
+              startTime: 2000-01-23T04:56:07.000+00:00
+              endTime: 2000-01-23T04:56:07.000+00:00
+            recurMonth:
+            - null
+            - null
+            recurType: DAILY
+            recurDate:
+            - null
+            - null
+            recurWeek:
+            - 45
+            - 45
+            recurEndTime: 2000-01-23T04:56:07.000+00:00
+            recurDay:
+            - null
+            - null
+          skipReportCond:
+          - SKIP_NULL_REPORT
+          - SKIP_NULL_REPORT
+          thresholdCond:
+            thresholdThroughput:
+              dlThroughput: dlThroughput
+              ulPacketThroughput: ulPacketThroughput
+              dlPacketThroughput: dlPacketThroughput
+              ulThroughput: ulThroughput
+            thresholdTrafficVolume:
+              totalVolume: totalVolume
+              dlVolume: dlVolume
+              dlNbOfPackets: 2147483647
+              ulNbOfPackets: 2147483647
+              ulVolume: ulVolume
+              totalNbOfPackets: 2147483647
+        remotePortNumber: 15087
+        remainingDataReports: DISCARD
+        ipDomain: ipDomain
+        trafficFilters:
+        - flowLabel: flowLabel
+          packFiltId: packFiltId
+          flowDirection: DOWNLINK
+          packetFilterUsage: true
+          tosTrafficClass: tosTrafficClass
+          mpxMediaDlInfos:
+          - payloadType: 76
+            rtcpPacketType: 152
+            identificationTag: identificationTag
+            ssrcId: 343953088
+            rtpSdesHdrExtId: 0
+          - payloadType: 76
+            rtcpPacketType: 152
+            identificationTag: identificationTag
+            ssrcId: 343953088
+            rtpSdesHdrExtId: 0
+          spi: spi
+          flowDescription: flowDescription
+          ethFlowDescription:
+            destMacAddr: destMacAddr
+            destMacAddrEnd: destMacAddrEnd
+            sourceMacAddr: sourceMacAddr
+            fDir: DOWNLINK
+            ethType: ethType
+            fDesc: fDesc
+            vlanTags:
+            - vlanTags
+            - vlanTags
+            srcMacAddrEnd: srcMacAddrEnd
+          mpxMediaUlInfos:
+          - payloadType: 76
+            rtcpPacketType: 152
+            identificationTag: identificationTag
+            ssrcId: 343953088
+            rtpSdesHdrExtId: 0
+          - payloadType: 76
+            rtcpPacketType: 152
+            identificationTag: identificationTag
+            ssrcId: 343953088
+            rtpSdesHdrExtId: 0
+        - flowLabel: flowLabel
+          packFiltId: packFiltId
+          flowDirection: DOWNLINK
+          packetFilterUsage: true
+          tosTrafficClass: tosTrafficClass
+          mpxMediaDlInfos:
+          - payloadType: 76
+            rtcpPacketType: 152
+            identificationTag: identificationTag
+            ssrcId: 343953088
+            rtpSdesHdrExtId: 0
+          - payloadType: 76
+            rtcpPacketType: 152
+            identificationTag: identificationTag
+            ssrcId: 343953088
+            rtpSdesHdrExtId: 0
+          spi: spi
+          flowDescription: flowDescription
+          ethFlowDescription:
+            destMacAddr: destMacAddr
+            destMacAddrEnd: destMacAddrEnd
+            sourceMacAddr: sourceMacAddr
+            fDir: DOWNLINK
+            ethType: ethType
+            fDesc: fDesc
+            vlanTags:
+            - vlanTags
+            - vlanTags
+            srcMacAddrEnd: srcMacAddrEnd
+          mpxMediaUlInfos:
+          - payloadType: 76
+            rtcpPacketType: 152
+            identificationTag: identificationTag
+            ssrcId: 343953088
+            rtpSdesHdrExtId: 0
+          - payloadType: 76
+            rtcpPacketType: 152
+            identificationTag: identificationTag
+            ssrcId: 343953088
+            rtpSdesHdrExtId: 0
+        ratTypeList:
+        - NR
+        - NR
+        type: QOS_MONITORING
+        remoteIpv4Addr: 198.51.100.1
+        immediateFlag: false
+        granularityOfMeasurement: PER_APPLICATION
+        inclRatType: true
+        remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+        appIds:
+        - null
+        - null
+        measurementTypes:
+        - VOLUME_MEASUREMENT
+        - VOLUME_MEASUREMENT
+        reportingSuggestionInfo:
+          reportingTimeInfo: 5
+          reportingUrgency: DELAY_TOLERANT
+      properties:
+        type:
+          $ref: "#/components/schemas/EventType"
+        immediateFlag:
+          default: false
+          title: immediateFlag
+          type: boolean
+        measurementTypes:
+          items:
+            $ref: "#/components/schemas/MeasurementType"
+          minItems: 1
+          title: measurementTypes
+          type: array
+        appIds:
+          items:
+            $ref: "#/components/schemas/ApplicationId"
+          minItems: 1
+          title: appIds
+          type: array
+        trafficFilters:
+          items:
+            $ref: "#/components/schemas/FlowInformation"
+          minItems: 1
+          title: trafficFilters
+          type: array
+        granularityOfMeasurement:
+          $ref: "#/components/schemas/GranularityOfMeasurement"
+        reportingSuggestionInfo:
+          $ref: "#/components/schemas/ReportingSuggestionInformation"
+        remoteIpv4Addr:
+          description: |
+            String identifying a IPv4 address formatted in the 'dotted decimal' notation as defined in RFC 1166.
+          example: 198.51.100.1
+          pattern: "^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$"
+          title: Ipv4Addr
+          type: string
+        remoteIpv6Addr:
+          $ref: "#/components/schemas/Ipv6Addr"
+        remotePortNumber:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 16-bit integer.
+          maximum: 65535
+          minimum: 0
+          title: Uint16
+          type: integer
+        ipDomain:
+          title: ipDomain
+          type: string
+        remainingDataReports:
+          $ref: "#/components/schemas/RemainingDataReports"
+        skipReportingInstruction:
+          $ref: "#/components/schemas/SkipReportingInstruction"
+        inclRatType:
+          title: inclRatType
+          type: boolean
+        ratTypeList:
+          items:
+            $ref: "#/components/schemas/RatType"
+          minItems: 1
+          title: ratTypeList
+          type: array
+      required:
+      - type
+      title: UpfEvent
+      type: object
+    CreateEventSubscription:
+      description: Data within UPF Create Event Subscription Request
+      example:
+        supportedFeatures: supportedFeatures
+        subscription:
+          eventReportingMode:
+            notifFlag: ACTIVATE
+            partitioningCriteria:
+            - TAC
+            - TAC
+            trigger: ONE_TIME
+            expiry: 2000-01-23T04:56:07.000+00:00
+            mutingExcInstructions: ""
+            subTerminationReportInd: true
+            maxReports: 4
+            repPeriod: 7
+            sampRatio: 13
+            mutingNotSettings: ""
+          nfId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          snssai:
+            sd: sd
+            sst: 26
+          eventList:
+          - skipReportingInstruction:
+              validityTimes:
+              - recurTimeWindow:
+                  startTime: 2000-01-23T04:56:07.000+00:00
+                  endTime: 2000-01-23T04:56:07.000+00:00
+                recurMonth:
+                - null
+                - null
+                recurType: DAILY
+                recurDate:
+                - null
+                - null
+                recurWeek:
+                - 45
+                - 45
+                recurEndTime: 2000-01-23T04:56:07.000+00:00
+                recurDay:
+                - null
+                - null
+              - recurTimeWindow:
+                  startTime: 2000-01-23T04:56:07.000+00:00
+                  endTime: 2000-01-23T04:56:07.000+00:00
+                recurMonth:
+                - null
+                - null
+                recurType: DAILY
+                recurDate:
+                - null
+                - null
+                recurWeek:
+                - 45
+                - 45
+                recurEndTime: 2000-01-23T04:56:07.000+00:00
+                recurDay:
+                - null
+                - null
+              skipReportCond:
+              - SKIP_NULL_REPORT
+              - SKIP_NULL_REPORT
+              thresholdCond:
+                thresholdThroughput:
+                  dlThroughput: dlThroughput
+                  ulPacketThroughput: ulPacketThroughput
+                  dlPacketThroughput: dlPacketThroughput
+                  ulThroughput: ulThroughput
+                thresholdTrafficVolume:
+                  totalVolume: totalVolume
+                  dlVolume: dlVolume
+                  dlNbOfPackets: 2147483647
+                  ulNbOfPackets: 2147483647
+                  ulVolume: ulVolume
+                  totalNbOfPackets: 2147483647
+            remotePortNumber: 15087
+            remainingDataReports: DISCARD
+            ipDomain: ipDomain
+            trafficFilters:
+            - flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+            - flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+            ratTypeList:
+            - NR
+            - NR
+            type: QOS_MONITORING
+            remoteIpv4Addr: 198.51.100.1
+            immediateFlag: false
+            granularityOfMeasurement: PER_APPLICATION
+            inclRatType: true
+            remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+            appIds:
+            - null
+            - null
+            measurementTypes:
+            - VOLUME_MEASUREMENT
+            - VOLUME_MEASUREMENT
+            reportingSuggestionInfo:
+              reportingTimeInfo: 5
+              reportingUrgency: DELAY_TOLERANT
+          - skipReportingInstruction:
+              validityTimes:
+              - recurTimeWindow:
+                  startTime: 2000-01-23T04:56:07.000+00:00
+                  endTime: 2000-01-23T04:56:07.000+00:00
+                recurMonth:
+                - null
+                - null
+                recurType: DAILY
+                recurDate:
+                - null
+                - null
+                recurWeek:
+                - 45
+                - 45
+                recurEndTime: 2000-01-23T04:56:07.000+00:00
+                recurDay:
+                - null
+                - null
+              - recurTimeWindow:
+                  startTime: 2000-01-23T04:56:07.000+00:00
+                  endTime: 2000-01-23T04:56:07.000+00:00
+                recurMonth:
+                - null
+                - null
+                recurType: DAILY
+                recurDate:
+                - null
+                - null
+                recurWeek:
+                - 45
+                - 45
+                recurEndTime: 2000-01-23T04:56:07.000+00:00
+                recurDay:
+                - null
+                - null
+              skipReportCond:
+              - SKIP_NULL_REPORT
+              - SKIP_NULL_REPORT
+              thresholdCond:
+                thresholdThroughput:
+                  dlThroughput: dlThroughput
+                  ulPacketThroughput: ulPacketThroughput
+                  dlPacketThroughput: dlPacketThroughput
+                  ulThroughput: ulThroughput
+                thresholdTrafficVolume:
+                  totalVolume: totalVolume
+                  dlVolume: dlVolume
+                  dlNbOfPackets: 2147483647
+                  ulNbOfPackets: 2147483647
+                  ulVolume: ulVolume
+                  totalNbOfPackets: 2147483647
+            remotePortNumber: 15087
+            remainingDataReports: DISCARD
+            ipDomain: ipDomain
+            trafficFilters:
+            - flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+            - flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+            ratTypeList:
+            - NR
+            - NR
+            type: QOS_MONITORING
+            remoteIpv4Addr: 198.51.100.1
+            immediateFlag: false
+            granularityOfMeasurement: PER_APPLICATION
+            inclRatType: true
+            remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+            appIds:
+            - null
+            - null
+            measurementTypes:
+            - VOLUME_MEASUREMENT
+            - VOLUME_MEASUREMENT
+            reportingSuggestionInfo:
+              reportingTimeInfo: 5
+              reportingUrgency: DELAY_TOLERANT
+          dnn: dnn
+          bundlingAllowed: true
+          bundleId: 639699262
+          bundledEventNotifyUri: bundledEventNotifyUri
+          ueIpAddress:
+            ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+            ipv4Addr: 198.51.100.1
+            ipv6Prefix: 2001:db8:abcd:12::0/64
+          supi: supi
+          eventNotifyUri: eventNotifyUri
+          anyUe: false
+          notifyCorrelationId: notifyCorrelationId
+      properties:
+        subscription:
+          $ref: "#/components/schemas/UpfEventSubscription"
+        supportedFeatures:
+          description: |
+            A string used to indicate the features supported by an API that is used as defined in clause  6.6 in 3GPP TS 29.500. The string shall contain a bitmask indicating supported features in  hexadecimal representation Each character in the string shall take a value of "0" to "9",  "a" to "f" or "A" to "F" and shall represent the support of 4 features as described in  table 5.2.2-3. The most significant character representing the highest-numbered features shall  appear first in the string, and the character representing features 1 to 4 shall appear last  in the string. The list of features and their numbering (starting with 1) are defined  separately for each API. If the string contains a lower number of characters than there are  defined features for an API, all features that would be represented by characters that are not  present in the string are not supported.
+          pattern: "^[A-Fa-f0-9]*$"
+          title: supportedFeatures
+          type: string
+      required:
+      - subscription
+      title: CreateEventSubscription
+      type: object
+    CreatedEventSubscription:
+      description: Data within UPF Create Event Subscription Response
+      example:
+        supportedFeatures: supportedFeatures
+        reportList:
+        - snssai:
+            sd: sd
+            sst: 26
+          ueMacAddr: ueMacAddr
+          dnn: dnn
+          handlingOfPayloadHeadersInfo:
+          - headerValueAfter: headerValueAfter
+            headerInfo: headerInfo
+            headerValueBefore: headerValueBefore
+            headerAction: DETECT
+          - headerValueAfter: headerValueAfter
+            headerInfo: headerInfo
+            headerValueBefore: headerValueBefore
+            headerAction: DETECT
+          skippedReportInfo:
+          - null
+          - null
+          tscMngtInfo:
+            pmics:
+            - portNum: 0
+              portManCont: portManCont
+            - portNum: 0
+              portManCont: portManCont
+            umic:
+              bridgeManCont: bridgeManCont
+          userDataUsageMeasurements:
+          - volumeMeasurement:
+              totalVolume: totalVolume
+              dlVolume: dlVolume
+              dlNbOfPackets: 2147483647
+              ulNbOfPackets: 2147483647
+              ulVolume: ulVolume
+              totalNbOfPackets: 2147483647
+            appId: appId
+            throughputMeasurement:
+              dlThroughput: dlThroughput
+              ulPacketThroughput: ulPacketThroughput
+              dlPacketThroughput: dlPacketThroughput
+              ulThroughput: ulThroughput
+            throughputStatisticsMeasurement:
+              dlPeakThroughPut: dlPeakThroughPut
+              ulPeakThroughput: ulPeakThroughput
+              dlAverageThroughput: dlAverageThroughput
+              ulAverageThroughput: ulAverageThroughput
+              dlAveragePacketThroughput: dlAveragePacketThroughput
+              ulAveragePacketThroughput: ulAveragePacketThroughput
+              ulPeakPacketThroughput: ulPeakPacketThroughput
+              dlPeakPacketThroughput: dlPeakPacketThroughput
+            applicationRelatedInformation:
+              urls:
+              - null
+              - null
+              domainInfoList:
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+            flowInfo:
+              flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+          - volumeMeasurement:
+              totalVolume: totalVolume
+              dlVolume: dlVolume
+              dlNbOfPackets: 2147483647
+              ulNbOfPackets: 2147483647
+              ulVolume: ulVolume
+              totalNbOfPackets: 2147483647
+            appId: appId
+            throughputMeasurement:
+              dlThroughput: dlThroughput
+              ulPacketThroughput: ulPacketThroughput
+              dlPacketThroughput: dlPacketThroughput
+              ulThroughput: ulThroughput
+            throughputStatisticsMeasurement:
+              dlPeakThroughPut: dlPeakThroughPut
+              ulPeakThroughput: ulPeakThroughput
+              dlAverageThroughput: dlAverageThroughput
+              ulAverageThroughput: ulAverageThroughput
+              dlAveragePacketThroughput: dlAveragePacketThroughput
+              ulAveragePacketThroughput: ulAveragePacketThroughput
+              ulPeakPacketThroughput: ulPeakPacketThroughput
+              dlPeakPacketThroughput: dlPeakPacketThroughput
+            applicationRelatedInformation:
+              urls:
+              - null
+              - null
+              domainInfoList:
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+            flowInfo:
+              flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+          ueIpv6Prefix: 2001:db8:abcd:12::0/64
+          ratType: null
+          eventType: null
+          supi: supi
+          gpsi: gpsi
+          timeStamp: 2000-01-23T04:56:07.000+00:00
+          ueIpv4Addr: 198.51.100.1
+          terminationCause: N4_SESSION_RELEASE
+          startTime: 2000-01-23T04:56:07.000+00:00
+          qosMonitoringMeasurement:
+            _dlMinPacketDelay: 2147483647
+            dlCongestion: 4965
+            _rtrMaxPacketDelay: 2147483647
+            _jitter: 6.965118
+            dlPacketDelay: 2147483647
+            ulCongestion: 5025
+            defaultQosFlowInd: false
+            dlAvailableBitrate: dlAvailableBitrate
+            _rtrMinPacketDelay: 2147483647
+            ulPacketDelay: 2147483647
+            measureFailure: true
+            ulAvailableBitrate: ulAvailableBitrate
+            _packetLossRate: 355
+            _dlMaxPacketDelay: 2147483647
+            _ulMaxPacketDelay: 2147483647
+            dlAveThroughput: dlAveThroughput
+            _ulMinPacketDelay: 2147483647
+            ulAveThroughput: ulAveThroughput
+            rtrPacketDelay: 503831554
+          ueNatMappingInfo:
+            natMappingList:
+            - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+              remotePortNumber: 44421
+              transportProtocol: UDP
+              ipv4Addr: 198.51.100.1
+              portNumber: 18901
+            - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+              remotePortNumber: 44421
+              transportProtocol: UDP
+              ipv4Addr: 198.51.100.1
+              portNumber: 18901
+        - snssai:
+            sd: sd
+            sst: 26
+          ueMacAddr: ueMacAddr
+          dnn: dnn
+          handlingOfPayloadHeadersInfo:
+          - headerValueAfter: headerValueAfter
+            headerInfo: headerInfo
+            headerValueBefore: headerValueBefore
+            headerAction: DETECT
+          - headerValueAfter: headerValueAfter
+            headerInfo: headerInfo
+            headerValueBefore: headerValueBefore
+            headerAction: DETECT
+          skippedReportInfo:
+          - null
+          - null
+          tscMngtInfo:
+            pmics:
+            - portNum: 0
+              portManCont: portManCont
+            - portNum: 0
+              portManCont: portManCont
+            umic:
+              bridgeManCont: bridgeManCont
+          userDataUsageMeasurements:
+          - volumeMeasurement:
+              totalVolume: totalVolume
+              dlVolume: dlVolume
+              dlNbOfPackets: 2147483647
+              ulNbOfPackets: 2147483647
+              ulVolume: ulVolume
+              totalNbOfPackets: 2147483647
+            appId: appId
+            throughputMeasurement:
+              dlThroughput: dlThroughput
+              ulPacketThroughput: ulPacketThroughput
+              dlPacketThroughput: dlPacketThroughput
+              ulThroughput: ulThroughput
+            throughputStatisticsMeasurement:
+              dlPeakThroughPut: dlPeakThroughPut
+              ulPeakThroughput: ulPeakThroughput
+              dlAverageThroughput: dlAverageThroughput
+              ulAverageThroughput: ulAverageThroughput
+              dlAveragePacketThroughput: dlAveragePacketThroughput
+              ulAveragePacketThroughput: ulAveragePacketThroughput
+              ulPeakPacketThroughput: ulPeakPacketThroughput
+              dlPeakPacketThroughput: dlPeakPacketThroughput
+            applicationRelatedInformation:
+              urls:
+              - null
+              - null
+              domainInfoList:
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+            flowInfo:
+              flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+          - volumeMeasurement:
+              totalVolume: totalVolume
+              dlVolume: dlVolume
+              dlNbOfPackets: 2147483647
+              ulNbOfPackets: 2147483647
+              ulVolume: ulVolume
+              totalNbOfPackets: 2147483647
+            appId: appId
+            throughputMeasurement:
+              dlThroughput: dlThroughput
+              ulPacketThroughput: ulPacketThroughput
+              dlPacketThroughput: dlPacketThroughput
+              ulThroughput: ulThroughput
+            throughputStatisticsMeasurement:
+              dlPeakThroughPut: dlPeakThroughPut
+              ulPeakThroughput: ulPeakThroughput
+              dlAverageThroughput: dlAverageThroughput
+              ulAverageThroughput: ulAverageThroughput
+              dlAveragePacketThroughput: dlAveragePacketThroughput
+              ulAveragePacketThroughput: ulAveragePacketThroughput
+              ulPeakPacketThroughput: ulPeakPacketThroughput
+              dlPeakPacketThroughput: dlPeakPacketThroughput
+            applicationRelatedInformation:
+              urls:
+              - null
+              - null
+              domainInfoList:
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+              - domainName: domainName
+                domainNameProtocol: DNS_QNAME
+            flowInfo:
+              flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+          ueIpv6Prefix: 2001:db8:abcd:12::0/64
+          ratType: null
+          eventType: null
+          supi: supi
+          gpsi: gpsi
+          timeStamp: 2000-01-23T04:56:07.000+00:00
+          ueIpv4Addr: 198.51.100.1
+          terminationCause: N4_SESSION_RELEASE
+          startTime: 2000-01-23T04:56:07.000+00:00
+          qosMonitoringMeasurement:
+            _dlMinPacketDelay: 2147483647
+            dlCongestion: 4965
+            _rtrMaxPacketDelay: 2147483647
+            _jitter: 6.965118
+            dlPacketDelay: 2147483647
+            ulCongestion: 5025
+            defaultQosFlowInd: false
+            dlAvailableBitrate: dlAvailableBitrate
+            _rtrMinPacketDelay: 2147483647
+            ulPacketDelay: 2147483647
+            measureFailure: true
+            ulAvailableBitrate: ulAvailableBitrate
+            _packetLossRate: 355
+            _dlMaxPacketDelay: 2147483647
+            _ulMaxPacketDelay: 2147483647
+            dlAveThroughput: dlAveThroughput
+            _ulMinPacketDelay: 2147483647
+            ulAveThroughput: ulAveThroughput
+            rtrPacketDelay: 503831554
+          ueNatMappingInfo:
+            natMappingList:
+            - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+              remotePortNumber: 44421
+              transportProtocol: UDP
+              ipv4Addr: 198.51.100.1
+              portNumber: 18901
+            - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+              remotePortNumber: 44421
+              transportProtocol: UDP
+              ipv4Addr: 198.51.100.1
+              portNumber: 18901
+        subscription:
+          eventReportingMode:
+            notifFlag: ACTIVATE
+            partitioningCriteria:
+            - TAC
+            - TAC
+            trigger: ONE_TIME
+            expiry: 2000-01-23T04:56:07.000+00:00
+            mutingExcInstructions: ""
+            subTerminationReportInd: true
+            maxReports: 4
+            repPeriod: 7
+            sampRatio: 13
+            mutingNotSettings: ""
+          nfId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          snssai:
+            sd: sd
+            sst: 26
+          eventList:
+          - skipReportingInstruction:
+              validityTimes:
+              - recurTimeWindow:
+                  startTime: 2000-01-23T04:56:07.000+00:00
+                  endTime: 2000-01-23T04:56:07.000+00:00
+                recurMonth:
+                - null
+                - null
+                recurType: DAILY
+                recurDate:
+                - null
+                - null
+                recurWeek:
+                - 45
+                - 45
+                recurEndTime: 2000-01-23T04:56:07.000+00:00
+                recurDay:
+                - null
+                - null
+              - recurTimeWindow:
+                  startTime: 2000-01-23T04:56:07.000+00:00
+                  endTime: 2000-01-23T04:56:07.000+00:00
+                recurMonth:
+                - null
+                - null
+                recurType: DAILY
+                recurDate:
+                - null
+                - null
+                recurWeek:
+                - 45
+                - 45
+                recurEndTime: 2000-01-23T04:56:07.000+00:00
+                recurDay:
+                - null
+                - null
+              skipReportCond:
+              - SKIP_NULL_REPORT
+              - SKIP_NULL_REPORT
+              thresholdCond:
+                thresholdThroughput:
+                  dlThroughput: dlThroughput
+                  ulPacketThroughput: ulPacketThroughput
+                  dlPacketThroughput: dlPacketThroughput
+                  ulThroughput: ulThroughput
+                thresholdTrafficVolume:
+                  totalVolume: totalVolume
+                  dlVolume: dlVolume
+                  dlNbOfPackets: 2147483647
+                  ulNbOfPackets: 2147483647
+                  ulVolume: ulVolume
+                  totalNbOfPackets: 2147483647
+            remotePortNumber: 15087
+            remainingDataReports: DISCARD
+            ipDomain: ipDomain
+            trafficFilters:
+            - flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+            - flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+            ratTypeList:
+            - NR
+            - NR
+            type: QOS_MONITORING
+            remoteIpv4Addr: 198.51.100.1
+            immediateFlag: false
+            granularityOfMeasurement: PER_APPLICATION
+            inclRatType: true
+            remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+            appIds:
+            - null
+            - null
+            measurementTypes:
+            - VOLUME_MEASUREMENT
+            - VOLUME_MEASUREMENT
+            reportingSuggestionInfo:
+              reportingTimeInfo: 5
+              reportingUrgency: DELAY_TOLERANT
+          - skipReportingInstruction:
+              validityTimes:
+              - recurTimeWindow:
+                  startTime: 2000-01-23T04:56:07.000+00:00
+                  endTime: 2000-01-23T04:56:07.000+00:00
+                recurMonth:
+                - null
+                - null
+                recurType: DAILY
+                recurDate:
+                - null
+                - null
+                recurWeek:
+                - 45
+                - 45
+                recurEndTime: 2000-01-23T04:56:07.000+00:00
+                recurDay:
+                - null
+                - null
+              - recurTimeWindow:
+                  startTime: 2000-01-23T04:56:07.000+00:00
+                  endTime: 2000-01-23T04:56:07.000+00:00
+                recurMonth:
+                - null
+                - null
+                recurType: DAILY
+                recurDate:
+                - null
+                - null
+                recurWeek:
+                - 45
+                - 45
+                recurEndTime: 2000-01-23T04:56:07.000+00:00
+                recurDay:
+                - null
+                - null
+              skipReportCond:
+              - SKIP_NULL_REPORT
+              - SKIP_NULL_REPORT
+              thresholdCond:
+                thresholdThroughput:
+                  dlThroughput: dlThroughput
+                  ulPacketThroughput: ulPacketThroughput
+                  dlPacketThroughput: dlPacketThroughput
+                  ulThroughput: ulThroughput
+                thresholdTrafficVolume:
+                  totalVolume: totalVolume
+                  dlVolume: dlVolume
+                  dlNbOfPackets: 2147483647
+                  ulNbOfPackets: 2147483647
+                  ulVolume: ulVolume
+                  totalNbOfPackets: 2147483647
+            remotePortNumber: 15087
+            remainingDataReports: DISCARD
+            ipDomain: ipDomain
+            trafficFilters:
+            - flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+            - flowLabel: flowLabel
+              packFiltId: packFiltId
+              flowDirection: DOWNLINK
+              packetFilterUsage: true
+              tosTrafficClass: tosTrafficClass
+              mpxMediaDlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              spi: spi
+              flowDescription: flowDescription
+              ethFlowDescription:
+                destMacAddr: destMacAddr
+                destMacAddrEnd: destMacAddrEnd
+                sourceMacAddr: sourceMacAddr
+                fDir: DOWNLINK
+                ethType: ethType
+                fDesc: fDesc
+                vlanTags:
+                - vlanTags
+                - vlanTags
+                srcMacAddrEnd: srcMacAddrEnd
+              mpxMediaUlInfos:
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+              - payloadType: 76
+                rtcpPacketType: 152
+                identificationTag: identificationTag
+                ssrcId: 343953088
+                rtpSdesHdrExtId: 0
+            ratTypeList:
+            - NR
+            - NR
+            type: QOS_MONITORING
+            remoteIpv4Addr: 198.51.100.1
+            immediateFlag: false
+            granularityOfMeasurement: PER_APPLICATION
+            inclRatType: true
+            remoteIpv6Addr: 2001:db8:85a3::8a2e:370:7334
+            appIds:
+            - null
+            - null
+            measurementTypes:
+            - VOLUME_MEASUREMENT
+            - VOLUME_MEASUREMENT
+            reportingSuggestionInfo:
+              reportingTimeInfo: 5
+              reportingUrgency: DELAY_TOLERANT
+          dnn: dnn
+          bundlingAllowed: true
+          bundleId: 639699262
+          bundledEventNotifyUri: bundledEventNotifyUri
+          ueIpAddress:
+            ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+            ipv4Addr: 198.51.100.1
+            ipv6Prefix: 2001:db8:abcd:12::0/64
+          supi: supi
+          eventNotifyUri: eventNotifyUri
+          anyUe: false
+          notifyCorrelationId: notifyCorrelationId
+        subscriptionId: subscriptionId
+      properties:
+        subscription:
+          $ref: "#/components/schemas/UpfEventSubscription"
+        subscriptionId:
+          description: String providing an URI formatted according to RFC 3986.
+          title: Uri
+          type: string
+        reportList:
+          items:
+            $ref: "#/components/schemas/NotificationItem"
+          minItems: 1
+          title: reportList
+          type: array
+        supportedFeatures:
+          description: |
+            A string used to indicate the features supported by an API that is used as defined in clause  6.6 in 3GPP TS 29.500. The string shall contain a bitmask indicating supported features in  hexadecimal representation Each character in the string shall take a value of "0" to "9",  "a" to "f" or "A" to "F" and shall represent the support of 4 features as described in  table 5.2.2-3. The most significant character representing the highest-numbered features shall  appear first in the string, and the character representing features 1 to 4 shall appear last  in the string. The list of features and their numbering (starting with 1) are defined  separately for each API. If the string contains a lower number of characters than there are  defined features for an API, all features that would be represented by characters that are not  present in the string are not supported.
+          pattern: "^[A-Fa-f0-9]*$"
+          title: supportedFeatures
+          type: string
+      required:
+      - subscription
+      - subscriptionId
+      title: CreatedEventSubscription
+      type: object
+    ReportingSuggestionInformation:
+      description: Reporting Suggestion Information
+      example:
+        reportingTimeInfo: 5
+        reportingUrgency: DELAY_TOLERANT
+      properties:
+        reportingUrgency:
+          $ref: "#/components/schemas/ReportingUrgency"
+        reportingTimeInfo:
+          description: indicating a time in seconds.
+          title: DurationSec
+          type: integer
+      required:
+      - reportingUrgency
+      title: ReportingSuggestionInformation
+      type: object
+    QosMonitoringMeasurement:
+      description: QoS Monitoring Measurement information
+      example:
+        _dlMinPacketDelay: 2147483647
+        dlCongestion: 4965
+        _rtrMaxPacketDelay: 2147483647
+        _jitter: 6.965118
+        dlPacketDelay: 2147483647
+        ulCongestion: 5025
+        defaultQosFlowInd: false
+        dlAvailableBitrate: dlAvailableBitrate
+        _rtrMinPacketDelay: 2147483647
+        ulPacketDelay: 2147483647
+        measureFailure: true
+        ulAvailableBitrate: ulAvailableBitrate
+        _packetLossRate: 355
+        _dlMaxPacketDelay: 2147483647
+        _ulMaxPacketDelay: 2147483647
+        dlAveThroughput: dlAveThroughput
+        _ulMinPacketDelay: 2147483647
+        ulAveThroughput: ulAveThroughput
+        rtrPacketDelay: 503831554
+      properties:
+        dlPacketDelay:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 32-bit integer.
+          maximum: 4294967295
+          minimum: 0
+          title: Uint32
+          type: integer
+        ulPacketDelay:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 32-bit integer.
+          maximum: 4294967295
+          minimum: 0
+          title: Uint32
+          type: integer
+        rtrPacketDelay:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 32-bit integer.
+          maximum: 4294967295
+          minimum: 0
+          title: Uint32
+          type: integer
+        measureFailure:
+          title: measureFailure
+          type: boolean
+        dlAveThroughput:
+          description: |
+            String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix "K" is used to represent the standard symbol "k".
+          pattern: ^\d+(\.\d+)? (bps|Kbps|Mbps|Gbps|Tbps)$
+          title: BitRate
+          type: string
+        ulAveThroughput:
+          description: |
+            String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix "K" is used to represent the standard symbol "k".
+          pattern: ^\d+(\.\d+)? (bps|Kbps|Mbps|Gbps|Tbps)$
+          title: BitRate
+          type: string
+        dlCongestion:
+          maximum: 10000
+          minimum: 0
+          title: dlCongestion
+          type: integer
+        ulCongestion:
+          maximum: 10000
+          minimum: 0
+          title: ulCongestion
+          type: integer
+        defaultQosFlowInd:
+          default: false
+          title: defaultQosFlowInd
+          type: boolean
+        dlAvailableBitrate:
+          description: |
+            String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix "K" is used to represent the standard symbol "k".
+          pattern: ^\d+(\.\d+)? (bps|Kbps|Mbps|Gbps|Tbps)$
+          title: BitRate
+          type: string
+        ulAvailableBitrate:
+          description: |
+            String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix "K" is used to represent the standard symbol "k".
+          pattern: ^\d+(\.\d+)? (bps|Kbps|Mbps|Gbps|Tbps)$
+          title: BitRate
+          type: string
+        _dlMinPacketDelay:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 32-bit integer.
+          maximum: 4294967295
+          minimum: 0
+          title: Uint32
+          type: integer
+        _ulMinPacketDelay:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 32-bit integer.
+          maximum: 4294967295
+          minimum: 0
+          title: Uint32
+          type: integer
+        _rtrMinPacketDelay:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 32-bit integer.
+          maximum: 4294967295
+          minimum: 0
+          title: Uint32
+          type: integer
+        _dlMaxPacketDelay:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 32-bit integer.
+          maximum: 4294967295
+          minimum: 0
+          title: Uint32
+          type: integer
+        _ulMaxPacketDelay:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 32-bit integer.
+          maximum: 4294967295
+          minimum: 0
+          title: Uint32
+          type: integer
+        _rtrMaxPacketDelay:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 32-bit integer.
+          maximum: 4294967295
+          minimum: 0
+          title: Uint32
+          type: integer
+        _packetLossRate:
+          description: |
+            Unsigned integer indicating Packet Loss Rate (see clauses 5.7.2.8 and 5.7.4 of 3GPP TS 23.501), expressed in tenth of percent.
+          maximum: 1000
+          minimum: 0
+          title: PacketLossRate
+          type: integer
+        _jitter:
+          description: string with format 'float' as defined in OpenAPI.
+          format: float
+          title: Float
+          type: number
+      title: QosMonitoringMeasurement
+      type: object
+    TscManagementInfo:
+      description: TSC Management Information
+      example:
+        pmics:
+        - portNum: 0
+          portManCont: portManCont
+        - portNum: 0
+          portManCont: portManCont
+        umic:
+          bridgeManCont: bridgeManCont
+      properties:
+        pmics:
+          items:
+            $ref: "#/components/schemas/PortManagementContainer"
+          minItems: 1
+          title: pmics
+          type: array
+        umic:
+          $ref: "#/components/schemas/BridgeManagementContainer"
+      title: TscManagementInfo
+      type: object
+    UserDataUsageMeasurements:
+      description: |
+        User Data Usage Measurements either for the PDU session, or the app-id, or the data flow
+      example:
+        volumeMeasurement:
+          totalVolume: totalVolume
+          dlVolume: dlVolume
+          dlNbOfPackets: 2147483647
+          ulNbOfPackets: 2147483647
+          ulVolume: ulVolume
+          totalNbOfPackets: 2147483647
+        appId: appId
+        throughputMeasurement:
+          dlThroughput: dlThroughput
+          ulPacketThroughput: ulPacketThroughput
+          dlPacketThroughput: dlPacketThroughput
+          ulThroughput: ulThroughput
+        throughputStatisticsMeasurement:
+          dlPeakThroughPut: dlPeakThroughPut
+          ulPeakThroughput: ulPeakThroughput
+          dlAverageThroughput: dlAverageThroughput
+          ulAverageThroughput: ulAverageThroughput
+          dlAveragePacketThroughput: dlAveragePacketThroughput
+          ulAveragePacketThroughput: ulAveragePacketThroughput
+          ulPeakPacketThroughput: ulPeakPacketThroughput
+          dlPeakPacketThroughput: dlPeakPacketThroughput
+        applicationRelatedInformation:
+          urls:
+          - null
+          - null
+          domainInfoList:
+          - domainName: domainName
+            domainNameProtocol: DNS_QNAME
+          - domainName: domainName
+            domainNameProtocol: DNS_QNAME
+        flowInfo:
+          flowLabel: flowLabel
+          packFiltId: packFiltId
+          flowDirection: DOWNLINK
+          packetFilterUsage: true
+          tosTrafficClass: tosTrafficClass
+          mpxMediaDlInfos:
+          - payloadType: 76
+            rtcpPacketType: 152
+            identificationTag: identificationTag
+            ssrcId: 343953088
+            rtpSdesHdrExtId: 0
+          - payloadType: 76
+            rtcpPacketType: 152
+            identificationTag: identificationTag
+            ssrcId: 343953088
+            rtpSdesHdrExtId: 0
+          spi: spi
+          flowDescription: flowDescription
+          ethFlowDescription:
+            destMacAddr: destMacAddr
+            destMacAddrEnd: destMacAddrEnd
+            sourceMacAddr: sourceMacAddr
+            fDir: DOWNLINK
+            ethType: ethType
+            fDesc: fDesc
+            vlanTags:
+            - vlanTags
+            - vlanTags
+            srcMacAddrEnd: srcMacAddrEnd
+          mpxMediaUlInfos:
+          - payloadType: 76
+            rtcpPacketType: 152
+            identificationTag: identificationTag
+            ssrcId: 343953088
+            rtpSdesHdrExtId: 0
+          - payloadType: 76
+            rtcpPacketType: 152
+            identificationTag: identificationTag
+            ssrcId: 343953088
+            rtpSdesHdrExtId: 0
+      properties:
+        appId:
+          description: String providing an application identifier.
+          title: ApplicationId
+          type: string
+        flowInfo:
+          $ref: "#/components/schemas/FlowInformation"
+        volumeMeasurement:
+          $ref: "#/components/schemas/VolumeMeasurement"
+        throughputMeasurement:
+          $ref: "#/components/schemas/ThroughputMeasurement"
+        applicationRelatedInformation:
+          $ref: "#/components/schemas/ApplicationRelatedInformation"
+        throughputStatisticsMeasurement:
+          $ref: "#/components/schemas/ThroughputStatisticsMeasurement"
+      title: UserDataUsageMeasurements
+      type: object
+    VolumeMeasurement:
+      description: Volume Measurement information
+      example:
+        totalVolume: totalVolume
+        dlVolume: dlVolume
+        dlNbOfPackets: 2147483647
+        ulNbOfPackets: 2147483647
+        ulVolume: ulVolume
+        totalNbOfPackets: 2147483647
+      properties:
+        totalVolume:
+          description: |
+            String representing a Traffic Volume measured in bytes; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers.
+          pattern: ^\d+(\.\d+)? (B|kB|MB|GB|TB)$
+          title: TrafficVolume
+          type: string
+        ulVolume:
+          description: |
+            String representing a Traffic Volume measured in bytes; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers.
+          pattern: ^\d+(\.\d+)? (B|kB|MB|GB|TB)$
+          title: TrafficVolume
+          type: string
+        dlVolume:
+          description: |
+            String representing a Traffic Volume measured in bytes; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers.
+          pattern: ^\d+(\.\d+)? (B|kB|MB|GB|TB)$
+          title: TrafficVolume
+          type: string
+        totalNbOfPackets:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
+          maximum: 18446744073709551615
+          minimum: 0
+          title: Uint64
+          type: integer
+        ulNbOfPackets:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
+          maximum: 18446744073709551615
+          minimum: 0
+          title: Uint64
+          type: integer
+        dlNbOfPackets:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
+          maximum: 18446744073709551615
+          minimum: 0
+          title: Uint64
+          type: integer
+      title: VolumeMeasurement
+      type: object
+    ThroughputMeasurement:
+      description: Throughput Measurement information
+      example:
+        dlThroughput: dlThroughput
+        ulPacketThroughput: ulPacketThroughput
+        dlPacketThroughput: dlPacketThroughput
+        ulThroughput: ulThroughput
+      properties:
+        ulThroughput:
+          description: |
+            String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix "K" is used to represent the standard symbol "k".
+          pattern: ^\d+(\.\d+)? (bps|Kbps|Mbps|Gbps|Tbps)$
+          title: BitRate
+          type: string
+        dlThroughput:
+          description: |
+            String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix "K" is used to represent the standard symbol "k".
+          pattern: ^\d+(\.\d+)? (bps|Kbps|Mbps|Gbps|Tbps)$
+          title: BitRate
+          type: string
+        ulPacketThroughput:
+          description: |
+            String representing a packet rate, i.e., packet per second; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers.
+          pattern: ^\d+(\.\d+)? (pps|kpps|Mpps|Gpps|Tpps)$
+          title: PacketRate
+          type: string
+        dlPacketThroughput:
+          description: |
+            String representing a packet rate, i.e., packet per second; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers.
+          pattern: ^\d+(\.\d+)? (pps|kpps|Mpps|Gpps|Tpps)$
+          title: PacketRate
+          type: string
+      title: ThroughputMeasurement
+      type: object
+    ApplicationRelatedInformation:
+      description: Application Related Information
+      example:
+        urls:
+        - null
+        - null
+        domainInfoList:
+        - domainName: domainName
+          domainNameProtocol: DNS_QNAME
+        - domainName: domainName
+          domainNameProtocol: DNS_QNAME
+      properties:
+        urls:
+          items:
+            $ref: "#/components/schemas/Uri"
+          minItems: 1
+          title: urls
+          type: array
+        domainInfoList:
+          items:
+            $ref: "#/components/schemas/DomainInformation"
+          minItems: 1
+          title: domainInfoList
+          type: array
+      title: ApplicationRelatedInformation
+      type: object
+    ThroughputStatisticsMeasurement:
+      description: Throughput Statistics Measurement
+      example:
+        dlPeakThroughPut: dlPeakThroughPut
+        ulPeakThroughput: ulPeakThroughput
+        dlAverageThroughput: dlAverageThroughput
+        ulAverageThroughput: ulAverageThroughput
+        dlAveragePacketThroughput: dlAveragePacketThroughput
+        ulAveragePacketThroughput: ulAveragePacketThroughput
+        ulPeakPacketThroughput: ulPeakPacketThroughput
+        dlPeakPacketThroughput: dlPeakPacketThroughput
+      properties:
+        ulAverageThroughput:
+          description: |
+            String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix "K" is used to represent the standard symbol "k".
+          pattern: ^\d+(\.\d+)? (bps|Kbps|Mbps|Gbps|Tbps)$
+          title: BitRate
+          type: string
+        dlAverageThroughput:
+          description: |
+            String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix "K" is used to represent the standard symbol "k".
+          pattern: ^\d+(\.\d+)? (bps|Kbps|Mbps|Gbps|Tbps)$
+          title: BitRate
+          type: string
+        ulPeakThroughput:
+          description: |
+            String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix "K" is used to represent the standard symbol "k".
+          pattern: ^\d+(\.\d+)? (bps|Kbps|Mbps|Gbps|Tbps)$
+          title: BitRate
+          type: string
+        dlPeakThroughPut:
+          description: |
+            String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix "K" is used to represent the standard symbol "k".
+          pattern: ^\d+(\.\d+)? (bps|Kbps|Mbps|Gbps|Tbps)$
+          title: BitRate
+          type: string
+        ulAveragePacketThroughput:
+          description: |
+            String representing a packet rate, i.e., packet per second; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers.
+          pattern: ^\d+(\.\d+)? (pps|kpps|Mpps|Gpps|Tpps)$
+          title: PacketRate
+          type: string
+        dlAveragePacketThroughput:
+          description: |
+            String representing a packet rate, i.e., packet per second; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers.
+          pattern: ^\d+(\.\d+)? (pps|kpps|Mpps|Gpps|Tpps)$
+          title: PacketRate
+          type: string
+        ulPeakPacketThroughput:
+          description: |
+            String representing a packet rate, i.e., packet per second; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers.
+          pattern: ^\d+(\.\d+)? (pps|kpps|Mpps|Gpps|Tpps)$
+          title: PacketRate
+          type: string
+        dlPeakPacketThroughput:
+          description: |
+            String representing a packet rate, i.e., packet per second; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers.
+          pattern: ^\d+(\.\d+)? (pps|kpps|Mpps|Gpps|Tpps)$
+          title: PacketRate
+          type: string
+      title: ThroughputStatisticsMeasurement
+      type: object
+    DomainInformation:
+      description: Domain Information
+      example:
+        domainName: domainName
+        domainNameProtocol: DNS_QNAME
+      properties:
+        domainName:
+          description: Fully Qualified Domain Name
+          maxLength: 253
+          minLength: 4
+          pattern: "^([0-9A-Za-z]([-0-9A-Za-z]{0,61}[0-9A-Za-z])?\\.)+[A-Za-z]{2,63}\\\
+            .?$"
+          title: Fqdn
+          type: string
+        domainNameProtocol:
+          $ref: "#/components/schemas/DnProtocol"
+      required:
+      - domainName
+      title: DomainInformation
+      type: object
+    UeNatMappingInfo:
+      description: UE NAT Mapping Information
+      example:
+        natMappingList:
+        - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+          remotePortNumber: 44421
+          transportProtocol: UDP
+          ipv4Addr: 198.51.100.1
+          portNumber: 18901
+        - ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+          remotePortNumber: 44421
+          transportProtocol: UDP
+          ipv4Addr: 198.51.100.1
+          portNumber: 18901
+      properties:
+        natMappingList:
+          items:
+            $ref: "#/components/schemas/NatMapping"
+          title: natMappingList
+          type: array
+      required:
+      - natMappingList
+      title: UeNatMappingInfo
+      type: object
+    NatMapping:
+      anyOf: []
+      description: NAT Mapping
+      example:
+        ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+        remotePortNumber: 44421
+        transportProtocol: UDP
+        ipv4Addr: 198.51.100.1
+        portNumber: 18901
+      nullable: true
+      properties:
+        ipv4Addr:
+          description: |
+            String identifying a IPv4 address formatted in the 'dotted decimal' notation as defined in RFC 1166.
+          example: 198.51.100.1
+          pattern: "^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$"
+          title: Ipv4Addr
+          type: string
+        ipv6Addr:
+          $ref: "#/components/schemas/Ipv6Addr"
+        portNumber:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 16-bit integer.
+          maximum: 65535
+          minimum: 0
+          title: Uint16
+          type: integer
+        transportProtocol:
+          $ref: "#/components/schemas/TransportProtocol"
+        remotePortNumber:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 16-bit integer.
+          maximum: 65535
+          minimum: 0
+          title: Uint16
+          type: integer
+      required:
+      - portNumber
+      title: NatMapping
+      type: object
+    HandlingOfPayloadHeader:
+      description: Handling of Payload Header status
+      example:
+        headerValueAfter: headerValueAfter
+        headerInfo: headerInfo
+        headerValueBefore: headerValueBefore
+        headerAction: DETECT
+      properties:
+        headerInfo:
+          title: headerInfo
+          type: string
+        headerValueBefore:
+          title: headerValueBefore
+          type: string
+        headerAction:
+          $ref: "#/components/schemas/HeaderHandlingAction"
+        headerValueAfter:
+          title: headerValueAfter
+          type: string
+      required:
+      - headerAction
+      - headerInfo
+      title: HandlingOfPayloadHeader
+      type: object
+    SkipReportingInstruction:
+      description: Skip Reporting Instruction Information
+      example:
+        validityTimes:
+        - recurTimeWindow:
+            startTime: 2000-01-23T04:56:07.000+00:00
+            endTime: 2000-01-23T04:56:07.000+00:00
+          recurMonth:
+          - null
+          - null
+          recurType: DAILY
+          recurDate:
+          - null
+          - null
+          recurWeek:
+          - 45
+          - 45
+          recurEndTime: 2000-01-23T04:56:07.000+00:00
+          recurDay:
+          - null
+          - null
+        - recurTimeWindow:
+            startTime: 2000-01-23T04:56:07.000+00:00
+            endTime: 2000-01-23T04:56:07.000+00:00
+          recurMonth:
+          - null
+          - null
+          recurType: DAILY
+          recurDate:
+          - null
+          - null
+          recurWeek:
+          - 45
+          - 45
+          recurEndTime: 2000-01-23T04:56:07.000+00:00
+          recurDay:
+          - null
+          - null
+        skipReportCond:
+        - SKIP_NULL_REPORT
+        - SKIP_NULL_REPORT
+        thresholdCond:
+          thresholdThroughput:
+            dlThroughput: dlThroughput
+            ulPacketThroughput: ulPacketThroughput
+            dlPacketThroughput: dlPacketThroughput
+            ulThroughput: ulThroughput
+          thresholdTrafficVolume:
+            totalVolume: totalVolume
+            dlVolume: dlVolume
+            dlNbOfPackets: 2147483647
+            ulNbOfPackets: 2147483647
+            ulVolume: ulVolume
+            totalNbOfPackets: 2147483647
+      properties:
+        skipReportCond:
+          items:
+            $ref: "#/components/schemas/SkipReportingCondition"
+          minItems: 1
+          title: skipReportCond
+          type: array
+        validityTimes:
+          items:
+            $ref: "#/components/schemas/RecurTime"
+          minItems: 1
+          title: validityTimes
+          type: array
+        thresholdCond:
+          $ref: "#/components/schemas/ThresholdCond"
+      required:
+      - skipReportCond
+      title: SkipReportingInstruction
+      type: object
+    ThresholdCond:
+      description: Instructions of use of a set of Thresholds
+      example:
+        thresholdThroughput:
+          dlThroughput: dlThroughput
+          ulPacketThroughput: ulPacketThroughput
+          dlPacketThroughput: dlPacketThroughput
+          ulThroughput: ulThroughput
+        thresholdTrafficVolume:
+          totalVolume: totalVolume
+          dlVolume: dlVolume
+          dlNbOfPackets: 2147483647
+          ulNbOfPackets: 2147483647
+          ulVolume: ulVolume
+          totalNbOfPackets: 2147483647
+      properties:
+        thresholdTrafficVolume:
+          $ref: "#/components/schemas/VolumeMeasurement"
+        thresholdThroughput:
+          $ref: "#/components/schemas/ThroughputMeasurement"
+      title: ThresholdCond
+      type: object
+    ExtNotificationData:
+      oneOf:
+      - $ref: "#/components/schemas/NotificationData"
+      - items:
+          $ref: "#/components/schemas/NotificationData"
+        minItems: 2
+        type: array
+      title: ExtNotificationData
+    EventType:
+      description: Event Type
+      enum:
+      - QOS_MONITORING
+      - USER_DATA_USAGE_MEASURES
+      - USER_DATA_USAGE_TRENDS
+      - TSC_MNGT_INFO
+      - UE_NAT_MAPPING_INFO
+      - HANDLING_OF_PAYLOAD_HEADERS_INFO
+      - SUBSCRIPTION_TERMINATION
+      title: EventType
+      type: string
+    UpfEventTrigger:
+      description: Upf Event Trigger
+      enum:
+      - ONE_TIME
+      - PERIODIC
+      - CONTINUOUS
+      title: UpfEventTrigger
+      type: string
+    MeasurementType:
+      description: Measurement Type
+      enum:
+      - VOLUME_MEASUREMENT
+      - THROUGHPUT_MEASUREMENT
+      - APPLICATION_RELATED_INFO
+      title: MeasurementType
+      type: string
+    GranularityOfMeasurement:
+      description: Granularity Of Measurement
+      enum:
+      - PER_APPLICATION
+      - PER_SESSION
+      - PER_FLOW
+      title: GranularityOfMeasurement
+      type: string
+    DnProtocol:
+      description: Domain Name Protocol
+      enum:
+      - DNS_QNAME
+      - TLS_SNI
+      - TLS_SAN
+      - TLS_SCN
+      title: DnProtocol
+      type: string
+    ReportingUrgency:
+      description: Reporting Urgency
+      enum:
+      - DELAY_TOLERANT
+      - NON_DELAY_TOLERANT
+      title: ReportingUrgency
+      type: string
+    TerminationCause:
+      description: the reason to terminate the subscription
+      enum:
+      - N4_SESSION_RELEASE
+      title: TerminationCause
+      type: string
+    RemainingDataReports:
+      description: indication on how to handle the data collected by the source UPF
+      enum:
+      - DISCARD
+      - SEND
+      title: RemainingDataReports
+      type: string
+    SkipReportingCondition:
+      description: Conditions for which the UPF can skip sending the event report
+      enum:
+      - SKIP_NULL_REPORT
+      - SKIP_OUTSIDE_VALIDITY_TIME
+      - SKIP_BELOW_THRESHOLDS_REPORT
+      title: SkipReportingCondition
+      type: string
+    RedirectResponse:
+      description: |
+        The response shall include a Location header field containing a different URI  (pointing to a different URI of an other service instance), or the same URI if a request  is redirected to the same target resource via a different SCP.
+      example:
+        targetSepp: targetSepp
+        cause: cause
+        targetScp: targetScp
+      properties:
+        cause:
+          title: cause
+          type: string
+        targetScp:
+          description: String providing an URI formatted according to RFC 3986.
+          title: Uri
+          type: string
+        targetSepp:
+          description: String providing an URI formatted according to RFC 3986.
+          title: Uri
+          type: string
+      title: RedirectResponse
+      type: object
+    Uri:
+      description: String providing an URI formatted according to RFC 3986.
+      title: Uri
+      type: string
+    ProblemDetails:
+      description: Provides additional information in an error response.
+      properties:
+        type:
+          description: String providing an URI formatted according to RFC 3986.
+          title: Uri
+          type: string
+        title:
+          title: title
+          type: string
+        status:
+          title: status
+          type: integer
+        detail:
+          description: A human-readable explanation specific to this occurrence of
+            the problem.
+          title: detail
+          type: string
+        instance:
+          description: String providing an URI formatted according to RFC 3986.
+          title: Uri
+          type: string
+        cause:
+          description: |
+            A machine-readable application error cause specific to this occurrence of the problem.  This IE should be present and provide application-related error information, if available.
+          title: cause
+          type: string
+        invalidParams:
+          items:
+            $ref: "#/components/schemas/InvalidParam"
+          minItems: 1
+          title: invalidParams
+          type: array
+        supportedFeatures:
+          description: |
+            A string used to indicate the features supported by an API that is used as defined in clause  6.6 in 3GPP TS 29.500. The string shall contain a bitmask indicating supported features in  hexadecimal representation Each character in the string shall take a value of "0" to "9",  "a" to "f" or "A" to "F" and shall represent the support of 4 features as described in  table 5.2.2-3. The most significant character representing the highest-numbered features shall  appear first in the string, and the character representing features 1 to 4 shall appear last  in the string. The list of features and their numbering (starting with 1) are defined  separately for each API. If the string contains a lower number of characters than there are  defined features for an API, all features that would be represented by characters that are not  present in the string are not supported.
+          pattern: "^[A-Fa-f0-9]*$"
+          title: supportedFeatures
+          type: string
+        nrfId:
+          description: Fully Qualified Domain Name
+          maxLength: 253
+          minLength: 4
+          pattern: "^([0-9A-Za-z]([-0-9A-Za-z]{0,61}[0-9A-Za-z])?\\.)+[A-Za-z]{2,63}\\\
+            .?$"
+          title: Fqdn
+          type: string
+        supportedApiVersions:
+          items:
+            type: string
+          minItems: 1
+          title: supportedApiVersions
+          type: array
+      title: ProblemDetails
+      type: object
+    InvalidParam:
+      description: It contains an invalid parameter and a related description.
+      properties:
+        param:
+          description: |
+            If the invalid parameter is an attribute in a JSON body, this IE shall contain the  attribute's name and shall be encoded as a JSON Pointer. If the invalid parameter is  an HTTP header, this IE shall be formatted as the concatenation of the string "header "  plus the name of such header. If the invalid parameter is a query parameter, this IE  shall be formatted as the concatenation of the string "query " plus the name of such  query parameter. If the invalid parameter is a variable part in the path of a resource  URI, this IE shall contain the name of the variable, including the symbols "{" and "}"  used in OpenAPI specification as the notation to represent variable path segments.
+          title: param
+          type: string
+        reason:
+          description: |
+            A human-readable reason, e.g. "must be a positive integer". In cases involving failed  operations in a PATCH request, the reason string should identify the operation that  failed using the operation's array index to assist in correlation of the invalid  parameter with the failed operation, e.g." Replacement value invalid for attribute  (failed operation index= 4)"
+          title: reason
+          type: string
+      required:
+      - param
+      title: InvalidParam
+      type: object
+    SupportedFeatures:
+      description: |
+        A string used to indicate the features supported by an API that is used as defined in clause  6.6 in 3GPP TS 29.500. The string shall contain a bitmask indicating supported features in  hexadecimal representation Each character in the string shall take a value of "0" to "9",  "a" to "f" or "A" to "F" and shall represent the support of 4 features as described in  table 5.2.2-3. The most significant character representing the highest-numbered features shall  appear first in the string, and the character representing features 1 to 4 shall appear last  in the string. The list of features and their numbering (starting with 1) are defined  separately for each API. If the string contains a lower number of characters than there are  defined features for an API, all features that would be represented by characters that are not  present in the string are not supported.
+      pattern: "^[A-Fa-f0-9]*$"
+      title: supportedFeatures
+      type: string
+    Fqdn:
+      description: Fully Qualified Domain Name
+      maxLength: 253
+      minLength: 4
+      pattern: "^([0-9A-Za-z]([-0-9A-Za-z]{0,61}[0-9A-Za-z])?\\.)+[A-Za-z]{2,63}\\\
+        .?$"
+      title: Fqdn
+      type: string
+    PatchItem:
+      description: it contains information on data to be changed.
+      example:
+        op: add
+        path: path
+        from: from
+        value: ""
+      properties:
+        op:
+          $ref: "#/components/schemas/PatchOperation"
+        path:
+          description: |
+            contains a JSON pointer value (as defined in IETF RFC 6901) that references a location of a resource on which the patch operation shall be performed.
+          title: path
+          type: string
+        from:
+          description: |
+            indicates the path of the source JSON element (according to JSON Pointer syntax) being moved or copied to the location indicated by the "path" attribute.
+          title: from
+          type: string
+        value:
+          title: value
+      required:
+      - op
+      - path
+      title: PatchItem
+      type: object
+    PatchOperation:
+      description: Operations as defined in IETF RFC 6902.
+      enum:
+      - add
+      - copy
+      - move
+      - remove
+      - replace
+      - test
+      title: PatchOperation
+      type: string
+    PatchResult:
+      description: The execution report result on failed modification.
+      example:
+        report:
+        - path: path
+          reason: reason
+        - path: path
+          reason: reason
+      properties:
+        report:
+          description: |
+            The execution report contains an array of report items. Each report item indicates one  failed modification.
+          items:
+            $ref: "#/components/schemas/ReportItem"
+          minItems: 1
+          title: report
+          type: array
+      required:
+      - report
+      title: PatchResult
+      type: object
+    ReportItem:
+      description: indicates performed modivications.
+      example:
+        path: path
+        reason: reason
+      properties:
+        path:
+          description: |
+            Contains a JSON pointer value (as defined in IETF RFC 6901) that references a  location of a resource to which the modification is subject.
+          title: path
+          type: string
+        reason:
+          description: |
+            A human-readable reason providing details on the reported modification failure.  The reason string should identify the operation that failed using the operation's  array index to assist in correlation of the invalid parameter with the failed  operation, e.g. "Replacement value invalid for attribute (failed operation index= 4)".
+          title: reason
+          type: string
+      required:
+      - path
+      title: ReportItem
+      type: object
+    SamplingRatio:
+      description: "Unsigned integer indicating Sampling Ratio (see clauses 4.15.1\
+        \ of 3GPP TS 23.502), expressed in percent. \n"
+      maximum: 100
+      minimum: 1
+      title: SamplingRatio
+      type: integer
+    Ipv4Addr:
+      description: |
+        String identifying a IPv4 address formatted in the 'dotted decimal' notation as defined in RFC 1166.
+      example: 198.51.100.1
+      pattern: "^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$"
+      title: Ipv4Addr
+      type: string
+    Ipv6Prefix:
+      description: |
+        String identifying an IPv6 address prefix formatted according to clause 4 of RFC 5952. IPv6Prefix data type may contain an individual /128 IPv6 address.
+      example: 2001:db8:abcd:12::0/64
+      title: Ipv6Prefix
+      type: string
+    MacAddr48:
+      description: |
+        String identifying a MAC address formatted in the hexadecimal notation according to clause 1.1 and clause 2.1 of RFC 7042.
+      pattern: "^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$"
+      title: MacAddr48
+      type: string
+    Dnn:
+      description: |
+        String representing a Data Network as defined in clause 9A of 3GPP TS 23.003;  it shall contain either a DNN Network Identifier, or a full DNN with both the Network  Identifier and Operator Identifier, as specified in 3GPP TS 23.003 clause 9.1.1 and 9.1.2. It shall be coded as string in which the labels are separated by dots  (e.g. "Label1.Label2.Label3").
+      title: Dnn
+      type: string
+    Snssai:
+      description: |
+        When Snssai needs to be converted to string (e.g. when used in maps as key), the string shall be composed of one to three digits "sst" optionally followed by "-" and 6 hexadecimal digits "sd".
+      example:
+        sd: sd
+        sst: 26
+      properties:
+        sst:
+          description: "Unsigned integer, within the range 0 to 255, representing\
+            \ the Slice/Service Type.  It indicates the expected Network Slice behaviour\
+            \ in terms of features and services. Values 0 to 127 correspond to the\
+            \ standardized SST range. Values 128 to 255 correspond  to the Operator-specific\
+            \ range. See clause 28.4.2 of 3GPP TS 23.003. Standardized values are\
+            \ defined in clause 5.15.2.2 of 3GPP TS 23.501. \n"
+          maximum: 255
+          minimum: 0
+          title: sst
+          type: integer
+        sd:
+          description: |
+            3-octet string, representing the Slice Differentiator, in hexadecimal representation. Each character in the string shall take a value of "0" to "9", "a" to "f" or "A" to "F" and shall represent 4 bits. The most significant character representing the 4 most significant bits of the SD shall appear first in the string, and the character representing the 4 least significant bit of the SD shall appear last in the string. This is an optional parameter that complements the Slice/Service type(s) to allow to  differentiate amongst multiple Network Slices of the same Slice/Service type. This IE shall be absent if no SD value is associated with the SST.
+          pattern: "^[A-Fa-f0-9]{6}$"
+          title: sd
+          type: string
+      required:
+      - sst
+      title: Snssai
+      type: object
+    Gpsi:
+      description: "String identifying a Gpsi shall contain either an External Id\
+        \ or an MSISDN.  It shall be formatted as follows -External Identifier= \"\
+        extid-'extid', where 'extid'  shall be formatted according to clause 19.7.2\
+        \ of 3GPP TS 23.003 that describes an  External Identifier. \n"
+      pattern: "^(msisdn-[0-9]{5,15}|extid-[^@]+@[^@]+|.+)$"
+      title: Gpsi
+      type: string
+    Supi:
+      description: "String identifying a Supi that shall contain either an IMSI, a\
+        \ network specific identifier,\na Global Cable Identifier (GCI) or a Global\
+        \ Line Identifier (GLI) as specified in clause \n2.2A of 3GPP TS 23.003. It\
+        \ shall be formatted as follows\n - for an IMSI \"imsi-<imsi>\", where <imsi>\
+        \ shall be formatted according to clause 2.2\n   of 3GPP TS 23.003 that describes\
+        \ an IMSI.\n - for a network specific identifier \"nai-<nai>, where <nai>\
+        \ shall be formatted\n   according to clause 28.7.2 of 3GPP TS 23.003 that\
+        \ describes an NAI.\n - for a GCI \"gci-<gci>\", where <gci> shall be formatted\
+        \ according to clause 28.15.2\n   of 3GPP TS 23.003.\n - for a GLI \"gli-<gli>\"\
+        , where <gli> shall be formatted according to clause 28.16.2 of\n   3GPP TS\
+        \ 23.003.To enable that the value is used as part of an URI, the string shall\n\
+        \   only contain characters allowed according to the \"lower-with-hyphen\"\
+        \ naming convention\n   defined in 3GPP TS 29.501.\n"
+      pattern: "^(imsi-[0-9]{5,15}|nai-.+|gci-.+|gli-.+|.+)$"
+      title: Supi
+      type: string
+    DateTime:
+      description: string with format 'date-time' as defined in OpenAPI.
+      format: date-time
+      title: DateTime
+      type: string
+    RatType:
+      description: Indicates the radio access used.
+      enum:
+      - NR
+      - EUTRA
+      - WLAN
+      - VIRTUAL
+      - NBIOT
+      - WIRELINE
+      - WIRELINE_CABLE
+      - WIRELINE_BBF
+      - LTE-M
+      - NR_U
+      - EUTRA_U
+      - TRUSTED_N3GA
+      - TRUSTED_WLAN
+      - UTRA
+      - GERA
+      - NR_LEO
+      - NR_MEO
+      - NR_GEO
+      - NR_OTHER_SAT
+      - NR_REDCAP
+      - WB_E_UTRAN_LEO
+      - WB_E_UTRAN_MEO
+      - WB_E_UTRAN_GEO
+      - WB_E_UTRAN_OTHERSAT
+      - NB_IOT_LEO
+      - NB_IOT_MEO
+      - NB_IOT_GEO
+      - NB_IOT_OTHERSAT
+      - LTE_M_LEO
+      - LTE_M_MEO
+      - LTE_M_GEO
+      - LTE_M_OTHERSAT
+      - NR_EREDCAP
+      title: RatType
+      type: string
+    NfInstanceId:
+      description: "String uniquely identifying a NF instance. The format of the NF\
+        \ Instance ID shall be a  Universally Unique Identifier (UUID) version 4.\
+        \ \n"
+      format: uuid
+      title: nfId
+      type: string
+    IpAddr:
+      description: Contains an IP adresse.
+      example:
+        ipv6Addr: 2001:db8:85a3::8a2e:370:7334
+        ipv4Addr: 198.51.100.1
+        ipv6Prefix: 2001:db8:abcd:12::0/64
+      nullable: true
+      oneOf: []
+      properties:
+        ipv4Addr:
+          description: |
+            String identifying a IPv4 address formatted in the 'dotted decimal' notation as defined in RFC 1166.
+          example: 198.51.100.1
+          pattern: "^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$"
+          title: Ipv4Addr
+          type: string
+        ipv6Addr:
+          $ref: "#/components/schemas/Ipv6Addr"
+        ipv6Prefix:
+          $ref: "#/components/schemas/Ipv6Prefix"
+      title: IpAddr
+      type: object
+    Ipv6Addr:
+      description: |
+        String identifying an IPv6 address formatted according to clause 4 of RFC5952. The mixed IPv4 IPv6 notation according to clause 5 of RFC5952 shall not be used.
+      example: 2001:db8:85a3::8a2e:370:7334
+      title: Ipv6Addr
+      type: string
+    Uint32:
+      description: |
+        Integer where the allowed values correspond to the value range of an unsigned 32-bit integer.
+      maximum: 4294967295
+      minimum: 0
+      title: Uint32
+      type: integer
+    DurationSec:
+      description: indicating a time in seconds.
+      title: DurationSec
+      type: integer
+    PartitioningCriteria:
+      description: |
+        Possible values are:
+        - "TAC": Type Allocation Code
+        - "SUBPLMN": Subscriber PLMN ID
+        - "GEOAREA": Geographical area, i.e. list(s) of TAI(s)
+        - "SNSSAI": S-NSSAI
+        - "DNN": DNN
+      enum:
+      - TAC
+      - SUBPLMN
+      - GEOAREA
+      - SNSSAI
+      - DNN
+      title: PartitioningCriteria
+      type: string
+    NotificationFlag:
+      description: "Possible values are:\n- ACTIVATE: The event notification is activated.\n\
+        - DEACTIVATE: The event notification is deactivated and shall be muted. The\
+        \ available\n   event(s) shall be stored.\n- RETRIEVAL: The event notification\
+        \ shall be sent to the NF service consumer(s),\n  after that, is muted again.\
+        \ \n"
+      enum:
+      - ACTIVATE
+      - DEACTIVATE
+      - RETRIEVAL
+      title: NotificationFlag
+      type: string
+    MutingExceptionInstructions:
+      description: |
+        Indicates to an Event producer NF instructions for the subscription and stored events when an exception (e.g. full buffer) occurs at the Event producer NF while the event is muted.
+      properties:
+        bufferedNotifs:
+          $ref: "#/components/schemas/BufferedNotificationsAction"
+        subscription:
+          $ref: "#/components/schemas/SubscriptionAction"
+      title: MutingExceptionInstructions
+      type: object
+    BufferedNotificationsAction:
+      description: |
+        Indicates the required action by the event producer NF on the buffered Notifications.
+      enum:
+      - SEND_ALL
+      - DISCARD_ALL
+      - DROP_OLD
+      title: BufferedNotificationsAction
+      type: string
+    SubscriptionAction:
+      description: |
+        Indicates the required action by the event producer NF on the event subscription if an exception occurs while the event is muted.
+      enum:
+      - CLOSE
+      - CONTINUE_WITH_MUTING
+      - CONTINUE_WITHOUT_MUTING
+      title: SubscriptionAction
+      type: string
+    MutingNotificationsSettings:
+      description: |
+        Indicates the Event producer NF settings to the Event consumer NF
+      properties:
+        maxNoOfNotif:
+          title: maxNoOfNotif
+          type: integer
+        durationBufferedNotif:
+          description: indicating a time in seconds.
+          title: DurationSec
+          type: integer
+      title: MutingNotificationsSettings
+      type: object
+    ApplicationId:
+      description: String providing an application identifier.
+      title: ApplicationId
+      type: string
+    FlowInformation:
+      description: Contains the flow information.
+      example:
+        flowLabel: flowLabel
+        packFiltId: packFiltId
+        flowDirection: DOWNLINK
+        packetFilterUsage: true
+        tosTrafficClass: tosTrafficClass
+        mpxMediaDlInfos:
+        - payloadType: 76
+          rtcpPacketType: 152
+          identificationTag: identificationTag
+          ssrcId: 343953088
+          rtpSdesHdrExtId: 0
+        - payloadType: 76
+          rtcpPacketType: 152
+          identificationTag: identificationTag
+          ssrcId: 343953088
+          rtpSdesHdrExtId: 0
+        spi: spi
+        flowDescription: flowDescription
+        ethFlowDescription:
+          destMacAddr: destMacAddr
+          destMacAddrEnd: destMacAddrEnd
+          sourceMacAddr: sourceMacAddr
+          fDir: DOWNLINK
+          ethType: ethType
+          fDesc: fDesc
+          vlanTags:
+          - vlanTags
+          - vlanTags
+          srcMacAddrEnd: srcMacAddrEnd
+        mpxMediaUlInfos:
+        - payloadType: 76
+          rtcpPacketType: 152
+          identificationTag: identificationTag
+          ssrcId: 343953088
+          rtpSdesHdrExtId: 0
+        - payloadType: 76
+          rtcpPacketType: 152
+          identificationTag: identificationTag
+          ssrcId: 343953088
+          rtpSdesHdrExtId: 0
+      properties:
+        flowDescription:
+          description: Defines a packet filter of an IP flow.
+          title: FlowDescription
+          type: string
+        ethFlowDescription:
+          $ref: "#/components/schemas/EthFlowDescription"
+        packFiltId:
+          description: An identifier of packet filter.
+          title: packFiltId
+          type: string
+        packetFilterUsage:
+          description: |
+            Indicates whether the packet filter shall be sent to the UE. true indicates that Tthe packet filter shall be sent to the UE. false indicates that the packet filter shall not be sent to the UE.  The default value is "false" shall apply, if the attribute is not present and has not been supplied previously.
+          title: packetFilterUsage
+          type: boolean
+        tosTrafficClass:
+          description: |
+            Contains the Ipv4 Type-of-Service and mask field or the Ipv6 Traffic-Class field and  mask field.
+          nullable: true
+          title: tosTrafficClass
+          type: string
+        spi:
+          description: the security parameter index of the IPSec packet.
+          nullable: true
+          title: spi
+          type: string
+        flowLabel:
+          description: the Ipv6 flow label header field.
+          nullable: true
+          title: flowLabel
+          type: string
+        flowDirection:
+          $ref: "#/components/schemas/FlowDirectionRm"
+        mpxMediaUlInfos:
+          description: Multiplexed media information for the Uplink IP flow.
+          items:
+            $ref: "#/components/schemas/MpxMediaInfo"
+          minItems: 1
+          title: mpxMediaUlInfos
+          type: array
+        mpxMediaDlInfos:
+          description: Multiplexed media information for the Downlink IP flow.
+          items:
+            $ref: "#/components/schemas/MpxMediaInfo"
+          minItems: 1
+          title: mpxMediaDlInfos
+          type: array
+      title: FlowInformation
+      type: object
+    FlowDescription:
+      description: Defines a packet filter of an IP flow.
+      title: FlowDescription
+      type: string
+    EthFlowDescription:
+      description: Identifies an Ethernet flow.
+      example:
+        destMacAddr: destMacAddr
+        destMacAddrEnd: destMacAddrEnd
+        sourceMacAddr: sourceMacAddr
+        fDir: DOWNLINK
+        ethType: ethType
+        fDesc: fDesc
+        vlanTags:
+        - vlanTags
+        - vlanTags
+        srcMacAddrEnd: srcMacAddrEnd
+      properties:
+        destMacAddr:
+          description: |
+            String identifying a MAC address formatted in the hexadecimal notation according to clause 1.1 and clause 2.1 of RFC 7042.
+          pattern: "^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$"
+          title: MacAddr48
+          type: string
+        ethType:
+          title: ethType
+          type: string
+        fDesc:
+          description: Defines a packet filter of an IP flow.
+          title: FlowDescription
+          type: string
+        fDir:
+          $ref: "#/components/schemas/FlowDirection"
+        sourceMacAddr:
+          description: |
+            String identifying a MAC address formatted in the hexadecimal notation according to clause 1.1 and clause 2.1 of RFC 7042.
+          pattern: "^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$"
+          title: MacAddr48
+          type: string
+        vlanTags:
+          items:
+            type: string
+          maxItems: 2
+          minItems: 1
+          title: vlanTags
+          type: array
+        srcMacAddrEnd:
+          description: |
+            String identifying a MAC address formatted in the hexadecimal notation according to clause 1.1 and clause 2.1 of RFC 7042.
+          pattern: "^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$"
+          title: MacAddr48
+          type: string
+        destMacAddrEnd:
+          description: |
+            String identifying a MAC address formatted in the hexadecimal notation according to clause 1.1 and clause 2.1 of RFC 7042.
+          pattern: "^([0-9a-fA-F]{2})((-[0-9a-fA-F]{2}){5})$"
+          title: MacAddr48
+          type: string
+      required:
+      - ethType
+      title: EthFlowDescription
+      type: object
+    FlowDirection:
+      description: "Indicates the direction of the service data flow.  \nPossible\
+        \ values are:\n- DOWNLINK: The corresponding filter applies for traffic to\
+        \ the UE.\n- UPLINK: The corresponding filter applies for traffic from the\
+        \ UE.\n- BIDIRECTIONAL: The corresponding filter applies for traffic both\
+        \ to and from the UE.\n- UNSPECIFIED: The corresponding filter applies for\
+        \ traffic to the UE (downlink), but has no\nspecific direction declared. The\
+        \ service data flow detection shall apply the filter for\nuplink traffic as\
+        \ if the filter was bidirectional. The PCF shall not use the value\nUNSPECIFIED\
+        \ in filters created by the network in NW-initiated procedures. The PCF shall\
+        \ only\ninclude the value UNSPECIFIED in filters in UE-initiated procedures\
+        \ if the same value is\nreceived from the SMF.\n"
+      enum:
+      - DOWNLINK
+      - UPLINK
+      - BIDIRECTIONAL
+      - UNSPECIFIED
+      title: FlowDirection
+      type: string
+    FlowDirectionRm:
+      description: |
+        This data type is defined in the same way as the "FlowDirection" data type, with the only  difference that it allows null value.
+      enum:
+      - DOWNLINK
+      - UPLINK
+      - BIDIRECTIONAL
+      - UNSPECIFIED
+      - null
+      title: FlowDirectionRm
+      type: string
+      x-enum-descriptions:
+      - ""
+      - ""
+      - ""
+      - ""
+      - JSON's null value.
+    MpxMediaInfo:
+      anyOf: []
+      description: Contains the Multiplexed Media Identification Information.
+      example:
+        payloadType: 76
+        rtcpPacketType: 152
+        identificationTag: identificationTag
+        ssrcId: 343953088
+        rtpSdesHdrExtId: 0
+      nullable: true
+      properties:
+        ssrcId:
+          description: |
+            Integer where the allowed values correspond to the value range of an unsigned 32-bit integer.
+          maximum: 4294967295
+          minimum: 0
+          title: Uint32
+          type: integer
+        payloadType:
+          maximum: 127
+          minimum: 0
+          title: payloadType
+          type: integer
+        identificationTag:
+          title: identificationTag
+          type: string
+        rtpSdesHdrExtId:
+          description: "Unsigned Integer, i.e. only value 0 and integers above 0 are\
+            \ permissible."
+          minimum: 0
+          title: Uinteger
+          type: integer
+        rtcpPacketType:
+          maximum: 255
+          minimum: 0
+          title: rtcpPacketType
+          type: integer
+      title: MpxMediaInfo
+      type: object
+    Uint16:
+      description: |
+        Integer where the allowed values correspond to the value range of an unsigned 16-bit integer.
+      maximum: 65535
+      minimum: 0
+      title: Uint16
+      type: integer
+    BitRate:
+      description: |
+        String representing a bit rate; the prefixes follow the standard symbols from The International System of Units, and represent x1000 multipliers, with the exception that prefix "K" is used to represent the standard symbol "k".
+      pattern: ^\d+(\.\d+)? (bps|Kbps|Mbps|Gbps|Tbps)$
+      title: BitRate
+      type: string
+    PacketLossRate:
+      description: |
+        Unsigned integer indicating Packet Loss Rate (see clauses 5.7.2.8 and 5.7.4 of 3GPP TS 23.501), expressed in tenth of percent.
+      maximum: 1000
+      minimum: 0
+      title: PacketLossRate
+      type: integer
+    Float:
+      description: string with format 'float' as defined in OpenAPI.
+      format: float
+      title: Float
+      type: number
+    PortManagementContainer:
+      description: Contains the port management information container for a port.
+      example:
+        portNum: 0
+        portManCont: portManCont
+      properties:
+        portManCont:
+          description: string with format 'bytes' as defined in OpenAPI
+          format: byte
+          title: Bytes
+          type: string
+        portNum:
+          description: "Unsigned Integer, i.e. only value 0 and integers above 0 are\
+            \ permissible."
+          minimum: 0
+          title: Uinteger
+          type: integer
+      required:
+      - portManCont
+      - portNum
+      title: PortManagementContainer
+      type: object
+    TsnPortNumber:
+      $ref: "#/components/schemas/Uinteger"
+    Uinteger:
+      description: "Unsigned Integer, i.e. only value 0 and integers above 0 are permissible."
+      minimum: 0
+      title: Uinteger
+      type: integer
+    BridgeManagementContainer:
+      description: Contains the UMIC.
+      example:
+        bridgeManCont: bridgeManCont
+      properties:
+        bridgeManCont:
+          description: string with format 'bytes' as defined in OpenAPI
+          format: byte
+          title: Bytes
+          type: string
+      required:
+      - bridgeManCont
+      title: BridgeManagementContainer
+      type: object
+    TrafficVolume:
+      description: |
+        String representing a Traffic Volume measured in bytes; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers.
+      pattern: ^\d+(\.\d+)? (B|kB|MB|GB|TB)$
+      title: TrafficVolume
+      type: string
+    Uint64:
+      description: |
+        Integer where the allowed values correspond to the value range of an unsigned 64-bit integer.
+      maximum: 18446744073709551615
+      minimum: 0
+      title: Uint64
+      type: integer
+    PacketRate:
+      description: |
+        String representing a packet rate, i.e., packet per second; the prefixes follow the symbols from The International System of Units, and represent x1000 multipliers.
+      pattern: ^\d+(\.\d+)? (pps|kpps|Mpps|Gpps|Tpps)$
+      title: PacketRate
+      type: string
+    TransportProtocol:
+      description: "Possible values are:\n- UDP: User Datagram Protocol.\n- TCP: Transmission\
+        \ Control Protocol. \n"
+      enum:
+      - UDP
+      - TCP
+      title: TransportProtocol
+      type: string
+    HeaderHandlingAction:
+      description: |
+        Represents the type of header handling actions.
+        Possible values are:
+        - DETECT: Indicates that the request is for the detection of a header field.
+        - REMOVE: Indicates that the request is for the removal of a header field.
+        - REPLACE: Indicates that the request is for the replacement of information in a header
+          field.
+        - INSERT: Indicates that the request is for the addition of a header field.
+      enum:
+      - DETECT
+      - REMOVE
+      - REPLACE
+      - INSERT
+      title: HeaderHandlingAction
+      type: string
+    RecurTime:
+      description: Contains the recurring time period
+      example:
+        recurTimeWindow:
+          startTime: 2000-01-23T04:56:07.000+00:00
+          endTime: 2000-01-23T04:56:07.000+00:00
+        recurMonth:
+        - null
+        - null
+        recurType: DAILY
+        recurDate:
+        - null
+        - null
+        recurWeek:
+        - 45
+        - 45
+        recurEndTime: 2000-01-23T04:56:07.000+00:00
+        recurDay:
+        - null
+        - null
+      properties:
+        recurTimeWindow:
+          $ref: "#/components/schemas/ValidTimePeriod"
+        recurType:
+          $ref: "#/components/schemas/RecurType"
+        recurMonth:
+          items:
+            $ref: "#/components/schemas/MonthOfYear"
+          minItems: 1
+          title: recurMonth
+          type: array
+        recurWeek:
+          items:
+            maximum: 64
+            minimum: 1
+            type: integer
+          minItems: 1
+          title: recurWeek
+          type: array
+        recurDay:
+          items:
+            $ref: "#/components/schemas/DayOfWeek"
+          minItems: 1
+          title: recurDay
+          type: array
+        recurDate:
+          items:
+            $ref: "#/components/schemas/DateTime"
+          minItems: 1
+          title: recurDate
+          type: array
+        recurEndTime:
+          description: string with format 'date-time' as defined in OpenAPI.
+          format: date-time
+          title: DateTime
+          type: string
+      title: RecurTime
+      type: object
+    ValidTimePeriod:
+      description: Contains the validity time period
+      example:
+        startTime: 2000-01-23T04:56:07.000+00:00
+        endTime: 2000-01-23T04:56:07.000+00:00
+      properties:
+        startTime:
+          description: string with format 'date-time' as defined in OpenAPI.
+          format: date-time
+          title: DateTime
+          type: string
+        endTime:
+          description: string with format 'date-time' as defined in OpenAPI.
+          format: date-time
+          title: DateTime
+          type: string
+      title: ValidTimePeriod
+      type: object
+    RecurType:
+      description: Indicates the recurrence applicable to a time window.
+      enum:
+      - DAILY
+      - WEEKLY
+      - MONTHLY_BY_DATE
+      - MONTHLY_BY_DAY
+      - YEARLY
+      - WEEKDAYS_ONLY
+      - WEEKENDS_ONLY
+      title: RecurType
+      type: string
+    NullValue:
+      description: JSON's null value.
+      enum:
+      - null
+      type: string
+    Bytes:
+      description: string with format 'bytes' as defined in OpenAPI
+      format: byte
+      title: Bytes
+      type: string
+    MonthOfYear:
+      description: |
+        integer between and including 1 and 12 denoting a month. 1 shall indicate January, and the subsequent months shall be indicated with the next higher numbers. 12 shall indicate December.
+      maximum: 12
+      minimum: 1
+      title: MonthOfYear
+      type: integer
+    DayOfWeek:
+      description: |
+        integer between and including 1 and 7 denoting a weekday. 1 shall indicate Monday, and the subsequent weekdays shall be indicated with the next higher numbers. 7 shall indicate Sunday.
+      maximum: 7
+      minimum: 1
+      title: DayOfWeek
+      type: integer
+  securitySchemes:
+    oAuth2ClientCredentials:
+      flows:
+        clientCredentials:
+          scopes:
+            nupf-ee: Access to the Nupf_EventExposure API
+          tokenUrl: "{nrfApiRoot}/oauth2/token"
+      type: oauth2

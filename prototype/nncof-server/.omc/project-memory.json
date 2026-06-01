@@ -1,0 +1,183 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1778114565532,
+  "projectRoot": "d:\\projects\\2026\\ncof_impl\\nncof-server",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Python",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "pyproject.toml",
+          "requirements.txt"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "fastapi",
+        "version": null,
+        "category": "backend"
+      }
+    ],
+    "packageManager": "pip",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "pytest",
+    "lintCommand": "ruff check",
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "src",
+      "tests"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1778114565508,
+      "keyFiles": []
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 5,
+      "lastAccessed": 1778114565508,
+      "keyFiles": [
+        "conftest.py",
+        "test_individual_ncof_events_subscription_document_api.py",
+        "test_individual_ncof_event_subscription_transfer_document_api.py",
+        "test_ncof_events_subscriptions_collection_api.py",
+        "test_ncof_event_subscription_transfers_collection_api.py"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "src\\nncof\\impl\\ncof_events_subscriptions_collection_api_impl.py",
+      "accessCount": 3,
+      "lastAccessed": 1777264591752,
+      "type": "file"
+    },
+    {
+      "path": "src\\nncof\\impl\\__init__.py",
+      "accessCount": 3,
+      "lastAccessed": 1777264764230,
+      "type": "file"
+    },
+    {
+      "path": "src\\nncof\\apis\\individual_ncof_events_subscription_document_api_base.py",
+      "accessCount": 2,
+      "lastAccessed": 1777264121117,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 1,
+      "lastAccessed": 1777263671725,
+      "type": "file"
+    },
+    {
+      "path": "requirements.txt",
+      "accessCount": 1,
+      "lastAccessed": 1777263710721,
+      "type": "file"
+    },
+    {
+      "path": "pyproject.toml",
+      "accessCount": 1,
+      "lastAccessed": 1777263750986,
+      "type": "file"
+    },
+    {
+      "path": "src\\nncof\\main.py",
+      "accessCount": 1,
+      "lastAccessed": 1777263814425,
+      "type": "file"
+    },
+    {
+      "path": "src\\nncof\\security_api.py",
+      "accessCount": 1,
+      "lastAccessed": 1777263882316,
+      "type": "file"
+    },
+    {
+      "path": "src\\nncof\\models\\nncof_events_subscription.py",
+      "accessCount": 1,
+      "lastAccessed": 1777263905645,
+      "type": "file"
+    },
+    {
+      "path": "CLAUDE.md",
+      "accessCount": 1,
+      "lastAccessed": 1777263943006,
+      "type": "file"
+    },
+    {
+      "path": "src\\nncof\\apis\\ncof_events_subscriptions_collection_api_base.py",
+      "accessCount": 1,
+      "lastAccessed": 1777264148215,
+      "type": "file"
+    },
+    {
+      "path": "src\\nncof\\apis\\individual_ncof_event_subscription_transfer_document_api_base.py",
+      "accessCount": 1,
+      "lastAccessed": 1777264175937,
+      "type": "file"
+    },
+    {
+      "path": "src\\nncof\\apis\\ncof_event_subscription_transfers_collection_api_base.py",
+      "accessCount": 1,
+      "lastAccessed": 1777264203862,
+      "type": "file"
+    },
+    {
+      "path": "src\\nncof\\impl\\individual_ncof_events_subscription_document_api_impl.py",
+      "accessCount": 1,
+      "lastAccessed": 1777264283919,
+      "type": "file"
+    },
+    {
+      "path": "src\\nncof\\impl\\individual_ncof_event_subscription_transfer_document_api_impl.py",
+      "accessCount": 1,
+      "lastAccessed": 1777264346937,
+      "type": "file"
+    },
+    {
+      "path": "src\\nncof\\impl\\ncof_event_subscription_transfers_collection_api_impl.py",
+      "accessCount": 1,
+      "lastAccessed": 1777264404888,
+      "type": "file"
+    },
+    {
+      "path": "src\\nncof\\apis\\individual_ncof_events_subscription_document_api.py",
+      "accessCount": 1,
+      "lastAccessed": 1777264624162,
+      "type": "file"
+    },
+    {
+      "path": "src\\nncof\\apis\\ncof_events_subscriptions_collection_api.py",
+      "accessCount": 1,
+      "lastAccessed": 1777264658004,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

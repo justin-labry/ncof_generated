@@ -1,0 +1,81 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1778026551466,
+  "projectRoot": "d:\\projects\\2026\\ncof_impl\\nupf-server",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Python",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "pyproject.toml",
+          "requirements.txt"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "fastapi",
+        "version": null,
+        "category": "backend"
+      }
+    ],
+    "packageManager": "pip",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "pytest",
+    "lintCommand": "ruff check",
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "src",
+      "tests"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "doc": {
+      "path": "doc",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1778026551447,
+      "keyFiles": [
+        "request.json"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1778026551448,
+      "keyFiles": []
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 3,
+      "lastAccessed": 1778026551449,
+      "keyFiles": [
+        "conftest.py",
+        "test_default_api.py",
+        "test_subscriptions_collection_api.py"
+      ]
+    }
+  },
+  "hotPaths": [],
+  "userDirectives": []
+}

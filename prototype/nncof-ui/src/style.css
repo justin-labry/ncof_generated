@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3b82f6;
+  --color-secondary: #10b981;
+  --color-accent: #f59e0b;
+}
+
+body {
+  @apply bg-slate-950 text-slate-100;
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  margin: 0;
+  /* overflow: hidden; */
+}
+
+.glass-panel {
+  @apply bg-slate-900/40 backdrop-blur-xl border border-white/10;
+}
+
+/* Firefox를 위한 표준 속성 */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+/* Chrome, Edge, Safari를 위한 Webkit 속성 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px; /* 클릭하기 편하도록 전체 너비를 약간 넓힘 */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* 트랙은 투명하게 유지하여 미니멀함 강조 */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  /* 배경색과 투명도 조절 */
+  background-color: rgba(255, 255, 255, 0.15);
+
+  /* 테두리를 활용해 '플로팅' 느낌의 여백 생성 (핵심!) */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  /* 호버 시 더 밝게 하이라이트 */
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+  /* 클릭 시 확실한 피드백 */
+  background-color: rgba(255, 255, 255, 0.4);
+}
