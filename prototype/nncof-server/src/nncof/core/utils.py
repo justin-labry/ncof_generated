@@ -64,48 +64,6 @@ def print_logo(title, description, version):
     console.print(panel)
 
 
-# def setup_logging(config_path="logging_config.yaml"):
-#     # 현재 파일의 디렉토리를 기준으로 config 파일 경로 설정
-#     script_dir = os.path.dirname(os.path.abspath(__file__))
-#     config_path = os.path.join(script_dir, config_path)
-
-#     if not os.path.exists(config_path):
-#         print(f"WARNING: Logging config file not found at {config_path}")
-#         # 기본 로깅 설정
-#         logging.basicConfig(
-#             level=logging.INFO,
-#             format="[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s [%(filename)s:%(lineno)d]",
-#         )
-#         return
-
-#     try:
-#         with open(config_path, "r", encoding="utf-8") as f:
-#             config = yaml.safe_load(f)
-
-#         # 커스텀 필터 클래스 (logging_config.yaml의 'path.to.your.ShortNameFilter'에 해당)
-#         class ShortNameFilter(logging.Filter):
-#             def filter(self, record):
-#                 # 파일 이름에서 마지막 부분만 추출
-#                 record.short_name = record.name.split(".")[-1]
-#                 return True
-
-#         # 필터 등록
-#         config["filters"]["short_name"]["()"] = ShortNameFilter
-
-#         # logging.config.dictConfig 사용
-#         logging.config.dictConfig(config)
-
-#         print(f"Logging configured successfully from {config_path}")
-
-#     except Exception as e:
-#         print(f"ERROR: Failed to load logging config: {e}")
-#         # 오류 시 기본 설정
-#         logging.basicConfig(
-#             level=logging.INFO,
-#             format="[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s [%(filename)s:%(lineno)d]",
-#         )
-
-
 def get_current_timestamp():
     """현재 시간을 밀리초(ms) 단위의 타임스탬프로 반환"""
     import time

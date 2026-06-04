@@ -1,36 +1,83 @@
+import json
 import logging
+import os
+from typing import Any
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("NF_Discovery")
 
+def _find_project_root(marker: str = "pyproject.toml") -> str:
+    """pyproject.toml이 있는 디렉토리를 프로젝트 루트로 간주하고 상위로 탐색한다."""
+    current = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        if os.path.isfile(os.path.join(current, marker)):
+            return current
+        parent = os.path.dirname(current)
+        if parent == current:
+            raise RuntimeError(f"Cannot find project root ({marker})")
+        current = parent
+
+
+# 프로젝트 루트 기준 JSON 설정 파일 경로
+_config_file_path = os.path.join(_find_project_root(), "nrf_dummy_nfs.json")
+
+
+def _load_dummy_nfs() -> dict[str, Any]:
+    """nrf_dummy_nfs.json 파일에서 Dummy NF 설정을 읽어온다. 파일이 없으면 하드코딩된 기본값을 반환한다."""
+    _default_nfs = {
+        "SMF": {
+            "base_uri": "http://127.0.0.1:8001",
+            "services": {"nsmf-eventexposure": "/nsmf-eventexposure/v1"},
+        },
+        "AF": {
+            "base_uri": "http://127.0.0.1:8002",
+            "services": {"naf-eventexposure": "/naf-eventexposure/v1"},
+        },
+        "RICF": {
+            "base_uri": "http://127.0.0.1:8003",
+            "services": {
+                "nsmf-eventexposure": "/nsmf-eventexposure/v1",
+            },
+        },
+        "PCF": {
+            "base_uri": "http://127.0.0.1:8004",
+            "services": {
+                "npcf-eventexposure": "/npcf-eventexposure/v1",
+            },
+        },
+    }
+    try:
+        with open(_config_file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            logger.info(
+                f"[NRF] Dummy NF config loaded from {_config_file_path}"
+            )
+            return data
+    except FileNotFoundError:
+        logger.warning(
+            f"[NRF] Config file not found at {_config_file_path}. Using hardcoded defaults."
+        )
+        return _default_nfs
+    except json.JSONDecodeError as e:
+        logger.error(
+            f"[NRF] Invalid JSON in config file: {e}. Using hardcoded defaults."
+        )
+        return _default_nfs
+
+
+# 모듈 로드 시 Dummy NF 설정을 JSON 파일에서 읽어온다
+_dummy_nfs: dict[str, Any] = _load_dummy_nfs()
+
 
 class NFDiscovery:
+    """
+    NF 조회를 위한 클래스
+    """
+
     def __init__(self, use_nrf=False):
         self.use_nrf = use_nrf
-        # Dummy 데이터베이스: NRF 연동 전까지 사용할 로컬 맵핑
-        self._dummy_nfs = {
-            "SMF": {
-                "base_uri": "http://127.0.0.1:8001",
-                "services": {"nsmf-eventexposure": "/nsmf-eventexposure/v1"},
-            },
-            "AF": {
-                "base_uri": "http://127.0.0.1:8002",
-                "services": {"naf-eventexposure": "/naf-eventexposure/v1"},
-            },
-            "RICF": {
-                "base_uri": "http://127.0.0.1:8003",
-                "services": {
-                    "nsmf-eventexposure": "/nsmf-eventexposure/v1",
-                },
-            },
-            "PCF": {
-                "base_uri": "http://127.0.0.1:8004",
-                "services": {
-                    "npcf-eventexposure": "/npcf-eventexposure/v1",
-                },
-            },
-        }
+        self._dummy_nfs = _dummy_nfs
 
     def get_nf_uri(self, nf_type: str, service_name: str = "") -> str:
         """

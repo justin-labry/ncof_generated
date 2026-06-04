@@ -13,6 +13,7 @@ Do not edit the class manually.
 
 import logging
 import os
+from dotenv import load_dotenv
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -46,6 +47,8 @@ from nncof.apis.web_api import (
 
 
 from nncof.core import utils
+
+load_dotenv()
 
 
 logger = logging.getLogger(__name__)
@@ -92,7 +95,5 @@ async def read_index():
         return FileResponse(index_path)
     return {"message": "NCOF Event Exposure Service is running. (index.html not found)"}
 
-
-from nncof.core import supi_mapping
 
 utils.print_logo(title, description, version)

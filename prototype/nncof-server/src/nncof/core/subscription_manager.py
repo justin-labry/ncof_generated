@@ -1,8 +1,7 @@
 import uuid
 import logging
-import asyncio
 import json
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from fastapi.encoders import jsonable_encoder
 
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def _normalize_subscription(
     subscription: Any,
-    subscription_id: str = "",
+    subscription_id: str | None,
 ) -> Dict[str, Any]:
     """
     NncofEventsSubscription / NsmfEventExposure / NefEventExposureSubsc 세 타입의
@@ -40,7 +39,7 @@ def _normalize_subscription(
             "eventSubscriptions": [{ "event": str }, ...]
         }
     """
-    sub_id = subscription_id
+    sub_id = subscription_id if subscription_id else ""
     if isinstance(subscription, NsmfEventExposure):
         sub_id = subscription.sub_id or subscription_id
 
@@ -114,19 +113,9 @@ def getSubscriptionManager():
 
 class SubscriptionManager:
     """
-    SubscriptionManager 는 NF의 구독 상태를 관리하는 싱글톤 객체이다.
-    기본 절차는 다음과 같다.
+    SubscriptionManager 는 구독 핸들러를 관리하는 기능을 제공한다.
+    새로운 구독요청이 발생하면 SubscriptionHandler 객체를 생성하고 관리한다.
 
-    - PCF 또는 RICF 는 NCOF에게 구독요청을 보낸다.
-    - NCOF 는 구독요청을 분석 후 데이터 수집을 위해서 다른 NF(SMF, AF, RICF)들로 구독요청을 보낸다.
-    - 각 NF는 NCOF에게 구독요청을 수신하면 필요한 데이터를 생성하여 NCOF로 주기적으로 Notification을 보낸다.
-    - NCOF는 수신한 데이터를 구독 아이디별로 맵핑하여 저장한다.
-    - 최초 구독 요청을 한 NF(PCF 또는 RICF)에게 Notification 을 보낸다.
-
-    이를 위해서 NCOF는 구독요청별로 별도의 SubscriptionHandler를 생성하여 처리한다.
-    SubscriptionHandler 는 데이터 저장을 위한 스토어와 다른 NF들로 부터 수신한 Notification 을 관리해야 한다.
-    주기적으로 스토어에 있는 데이터를 분석해서 최초 구독 요청을 한 NF(PCF 또는 RICF)에게 Notification 을 보낸다.
-    SubscriptionHandler 는 구독해지를 위해서 NF들로 구독 해지 요청을 보낼 수 있다.
     """
 
     _instance = None
@@ -146,72 +135,6 @@ class SubscriptionManager:
         self._initialized = True
         logger.info("[SubscriptionManager] 싱글톤 인스턴스가 초기화.")
 
-    async def create_subscription(
-        self, subscription_request: NncofEventsSubscription
-    ) -> str:
-        """
-        새로운 구독 요청을 처리하고 핸들러를 생성한다.
-
-        Args:
-            subscription_request (NncofEventsSubscription): 구독 요청 모델 객체
-
-        Returns:
-            str: 생성된 구독 ID
-        """
-
-        nf_id = (
-            subscription_request.cons_nf_info.nf_id
-            if subscription_request.cons_nf_info
-            and subscription_request.cons_nf_info.nf_id
-            else ""
-        )
-
-        # nf_id = subscription_request.cons_nf_info.nf_id
-        if nf_id.startswith("pcf"):
-            from_node = "pcf"
-        elif nf_id.startswith("ricf"):
-            from_node = "ricf"
-        else:
-            from_node = "unknown"
-
-        # 1. 구독 ID 생성
-        subscription_id = str(uuid.uuid4())
-
-        # 관계 기록 (외부 NF -> NCOF) 및 웹 소켓 브로드캐스트 통합
-        # await self.add_relation(
-        #     from_node=from_node,
-        #     to_node="ncof",
-        #     msg_type="SUBSCRIBE",
-        #     data=jsonable_encoder(subscription_request),
-        #     sub_id=subscription_id,
-        # )
-
-        # 2. 핸들러 인스턴스 생성 (관계 관리를 위해 self 전달)
-        handler = SubscriptionHandler(
-            subscription_id, subscription_request, relation_manager=self
-        )
-
-        # 상태 변경 통보 (SUBSCRIBED)
-        await self.add_relation(
-            from_node=from_node,
-            to_node="ncof",
-            msg_type="SUBSCRIBED",
-            data=jsonable_encoder(subscription_request),
-            sub_id=subscription_id,
-        )
-
-        await asyncio.sleep(1)
-
-        # 3. 핸들러 시작 (비동기 작업 수행: 외부 NF 구독 등)
-        await handler.start()
-
-        # 4. 관리 목록에 추가
-        self.subscriptions[subscription_id] = handler
-
-        logger.info(f"[SubscriptionManager] 구독 생성 완료: {subscription_id}")
-
-        return subscription_id
-
     def _get_from_node(self, nf_id: str) -> str | None:
 
         PCF = "pcf"
@@ -223,8 +146,57 @@ class SubscriptionManager:
         elif nf_id.startswith(RICF):
             from_node = RICF
         else:
-            from_node = None
+            from_node = "Unknown"
         return from_node
+
+    def get_nf_id(self, sub_req: NncofEventsSubscription):
+        nf_info = sub_req.cons_nf_info
+        nf_id = getattr(nf_info, "nf_id")
+        return nf_id
+
+    async def create_subscription(
+        self, subscription_request: NncofEventsSubscription
+    ) -> str:
+        """
+        새로운 구독 요청을 휘한 핸들러를 생성하고 관리한다.
+
+        Args:
+            subscription_request (NncofEventsSubscription): 구독 요청 모델 객체
+
+        Returns:
+            str: 생성된 구독 ID
+        """
+
+        nf_id = self.get_nf_id(subscription_request)
+
+        from_node = self._get_from_node(nf_id)
+
+        # 1. 구독 ID 생성
+        subscription_id = str(uuid.uuid4())
+
+        # 2. 핸들러 인스턴스 생성 (관계 관리를 위해 self 전달)
+        handler = SubscriptionHandler(
+            subscription_id, subscription_request, relation_manager=self
+        )
+
+        # 상태 변경 통보 (SUBSCRIBED)
+        await self.add_relation(
+            from_node=from_node if from_node else "unknown",
+            to_node="ncof",
+            msg_type="SUBSCRIBED",
+            data=jsonable_encoder(subscription_request),
+            sub_id=subscription_id,
+        )
+
+        # 3. 핸들러 시작 (비동기 작업 수행: 외부 NF 구독 등)
+        await handler.start()
+
+        # 4. 관리 목록에 추가
+        self.subscriptions[subscription_id] = handler
+
+        logger.info(f"새로운 구독 생성 완료 - {subscription_id}")
+
+        return subscription_id
 
     async def delete_subscription(self, subscription_id: str) -> bool:
         """
@@ -241,8 +213,7 @@ class SubscriptionManager:
             logger.warning(f"[{subscription_id}] 삭제하려는 구독 ID가 존재하지 않음")
             return False
 
-        nf_info = handler.subscription.cons_nf_info if handler.subscription else None
-        nf_id = getattr(nf_info, "nf_id")
+        nf_id = self.get_nf_id(handler.subscription)
 
         from_node = self._get_from_node(nf_id)
 
@@ -321,7 +292,7 @@ class SubscriptionManager:
 
     def get_handler(self, subscription_id: str) -> Optional[SubscriptionHandler]:
         """
-        구독 ID에 해당하는 핸들러 객체를 반환한다. (Notification 수신 처리용)
+        구독 ID에 해당하는 핸들러 객체를 반환한다.
 
         Args:
             subscription_id (str): 구독 ID
@@ -334,7 +305,7 @@ class SubscriptionManager:
     async def add_relation(
         self, from_node: str, to_node: str, msg_type: str, data: Any, sub_id: str
     ):
-        """구독 관계를 추가하고 웹 대시보드에 브로드캐스트한다."""
+        """구독 관계를 추가하고 웹 소켓에 브로드캐스트한다."""
         relation = {
             "from": from_node,
             "to": to_node,
@@ -403,7 +374,7 @@ class SubscriptionManager:
                 req_body = ext.get("subscription")
                 if req_body is not None:
                     ext_entry["subscription"] = _normalize_subscription(
-                        req_body, ext.get("external_sub_id", "")
+                        req_body, ext.get("external_sub_id")
                     )
                 ext_subs.append(ext_entry)
             entry["externalSubscriptions"] = ext_subs
@@ -425,6 +396,9 @@ class SubscriptionManager:
         return result
 
     def get_control_notifications(self) -> Dict[str, Any]:
+        """
+        모든 핸들러가 수집한 Notification (Control) 데이터를 반환한다.
+        """
         result: Dict[str, Any] = {}
         for sub_id, handler in self.subscriptions.items():
             data = handler.control_data_store.get_all()

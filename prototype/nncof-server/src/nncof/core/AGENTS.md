@@ -15,7 +15,6 @@ core/
 ├── nrf.py                      # NRF (NF Repository Function) 클라이언트
 ├── supi_mapping.py             # SUPI <-> IP 정적 매핑 (JSON)
 ├── utils.py                    # safe_get, safe_set, print_logo, timestamp
-├── logging_config.yaml         # 로깅 설정
 └── __init__.py                 # 빈 파일
 ```
 

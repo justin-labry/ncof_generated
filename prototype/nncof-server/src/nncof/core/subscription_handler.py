@@ -84,11 +84,9 @@ class SubscriptionHandler:
         self, target: str, req_body: NsmfEventExposure | NefEventExposureSubsc
     ) -> Optional[str]:
         """
-        다른 NF로 구독 요청을 전송하고, 해당 NF가 생성한 구독 ID를 반환합니다.
+        데이터 수집을 위한 NF로 구독 요청을 전송하고, 해당 NF가 생성한 구독 ID를 반환한다.
         """
-        logger.info(
-            f"[{self.subscription_id}] send subscription request to [{target.upper()}]"
-        )
+        logger.info(f"[{self.subscription_id}] send subscription request to [{target}]")
 
         nf_uri = nrf.get_nf_uri(target)
 
@@ -137,7 +135,7 @@ class SubscriptionHandler:
 
     async def _send_external_unsubscription(self, target: str, external_sub_id: str):
         """
-        다른 NF로 구독 해지 요청을 전송합니다.
+        다른 NF로 구독 해지 요청을 전송한다.
         """
         logger.info(
             f"[{self.subscription_id}] ---[UNSUBSCRIBE] --->[{target.upper()}] (ID: {external_sub_id})"
@@ -176,6 +174,10 @@ class SubscriptionHandler:
                 logger.error(f"Failed to remove relation: {e}")
 
     async def _notify_analyzing(self, subscription_id: str):
+        """
+        데이터 분석 시작 및 종료 알림
+        : 실제로 제어명령 생성을 위해서 신경망 통과 시작부터 종료시까지의 시점을 UI에게 알리는 용도
+        """
         await broadcast_web_message(
             sub_id=subscription_id,
             from_node="ncof",
@@ -184,7 +186,7 @@ class SubscriptionHandler:
             data="{}",
         )
 
-        await asyncio.sleep(3)
+        await asyncio.sleep(3)  #
 
         await broadcast_web_message(
             sub_id=subscription_id,
@@ -278,7 +280,6 @@ class SubscriptionHandler:
 
         if qos_template is None:
             return None
-        logger.info("*** find wlan_performance ***")
 
         cell_notif, qos_notif = None, None
 
@@ -289,11 +290,9 @@ class SubscriptionHandler:
         if notif is None:
             return None
 
-        print("-------------[received notification from RICF]-----------")
-        rprint(
-            notif.notification_items[0].user_data_usage_measurements,  # type: ignore
-        )
-        print("=============[ Generated Notfication ]====================")
+        print(f"-----[ Received Notification from {nf_type}]-----")
+        rprint(notif)
+        print("======[ Generated Notfication ]=====")
         try:
             result = self.rule_engine.generate_notification(
                 notif.to_dict(),
@@ -306,21 +305,20 @@ class SubscriptionHandler:
             if result is not None:
                 cell_notif = result["cell_power_15f"]
                 qos_notif = result["qos_policy_14e"]
-                print("-----------[cell_notif]--------------------------")
-                rprint(cell_notif)
-                # print("----------[qos_notif]-----------------------------")
-                # rprint(qos_notif)
-
                 if cell_notif is not None and nf_type == "RICF":
+                    rprint(cell_notif)
                     self.control_data_store.add_data(
-                        "ricf", self.subscription.notif_corr_id, cell_notif[0]
+                        nf_type.lower(), self.subscription.notif_corr_id, cell_notif[0]
                     )
                     await self._notify_subscriber("ricf", cell_notif)
                 if qos_notif is not None and nf_type == "PCF":
+                    rprint(qos_notif)
                     self.control_data_store.add_data(
-                        "pcf", f"{self.subscription.notif_corr_id}_qos", qos_notif[0]
+                        nf_type.lower(),
+                        f"{self.subscription.notif_corr_id}_qos",
+                        qos_notif[0],
                     )
-                    await self._notify_subscriber("pcf", qos_notif)
+                    await self._notify_subscriber(nf_type.lower(), qos_notif)
 
         except Exception as e:
             print(e)
@@ -395,13 +393,17 @@ class SubscriptionHandler:
         )
 
     async def start(self):
+        """
+        구독에 대한 핸들러를 시작한다.
+        1. 데이터 수집을 위한 하위 구독 요청 보내기
+        2. 비동기 태스크 시작 (주기적 분석)
+        """
         self.is_running = True
         logger.info(f"[{self.subscription_id}] 시작됨. 외부 NF 구독 절차 실행.")
 
         subscription_requests = build_subscription_requests(
             self.subscription_id, self.subscription
         )
-        print("length of subscription_requests", len(subscription_requests))
         for sub_req in subscription_requests:
 
             target = sub_req.get("target")

@@ -9,10 +9,20 @@ import json
 import os
 from typing import Dict, Any, Optional
 
-# Get the directory where this module is located
-module_dir = os.path.dirname(os.path.abspath(__file__))
-# Path to the mapping configuration file
-config_file_path = os.path.join(module_dir, "supi_to_ip_mapping_info.json")
+def _find_project_root(marker: str = "pyproject.toml") -> str:
+    """pyproject.toml이 있는 디렉토리를 프로젝트 루트로 간주하고 상위로 탐색한다."""
+    current = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        if os.path.isfile(os.path.join(current, marker)):
+            return current
+        parent = os.path.dirname(current)
+        if parent == current:
+            raise RuntimeError(f"Cannot find project root ({marker})")
+        current = parent
+
+
+# 프로젝트 루트 기준 JSON 설정 파일 경로
+config_file_path = os.path.join(_find_project_root(), "supi_to_ip_mapping_info.json")
 
 
 # Load the mapping data

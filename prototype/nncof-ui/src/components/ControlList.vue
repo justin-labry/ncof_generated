@@ -200,33 +200,30 @@ onMounted(fetchAll);
                         <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">QoS Policy Assist Sets (Info {{ qIdx }} / Set {{ q2Idx }})</div>
                         <table class="w-full text-[11px] border-collapse">
                           <thead>
-                            <tr class="text-left text-slate-500 font-bold uppercase tracking-wider">
-                              <th class="px-2 py-1 border-b border-white/10">#</th>
-                              <th class="px-2 py-1 border-b border-white/10">Id</th>
-                              <th class="px-2 py-1 border-b border-white/10">gbrDl</th>
-                              <!-- <th class="px-2 py-1 border-b border-white/10">dnn</th> -->
-                              <th class="px-2 py-1 border-b border-white/10">mbrDl</th>
-                              <th class="px-2 py-1 border-b border-white/10">ratTypes</th>
+                            <tr class="text-left text-slate-500 font-bold tracking-wider">
+                              <th class="px-1 py-1 border-b border-white/10">#</th>
+                              <th class="px-1 py-1 border-b border-white/10">gnbValue</th>
+                              <th class="px-1 py-1 border-b border-white/10">n3LwfId</th>
+                              <th class="px-1 py-1 border-b border-white/10">gbrDl</th>
+                              <th class="px-1 py-1 border-b border-white/10">mbrDl</th>
+                              <th class="px-1 py-1 border-b border-white/10 truncate">ratType</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr v-for="(q3, q3Idx) of q2.qosPolAssistSets" :key="q3Idx"
                               class="even:bg-white/3 hover:bg-white/6 transition-colors">
-                              <td class="px-2 py-1 text-slate-600 border-b border-white/5 truncate">{{ q3Idx }}</td>
-                              <td class="px-2 py-1 font-mono text-sky-300 border-b border-white/5 max-w-12 truncate">{{ q3.qosParamSet?.qosParamSetId }}</td>
-                              <td class="px-2 py-1 font-mono text-emerald-300 border-b border-white/5">{{ q3.qosParamSet?.gbrDl ?? '-' }}</td>
-                              <!-- <td class="px-2 py-1 font-mono text-emerald-300 border-b border-white/5">{{ q3.dnn ?? '-' }}</td> -->
-                              <td class="px-2 py-1 font-mono text-amber-300 border-b border-white/5">{{ q3.qosParamSet?.mbrDl ?? '-' }}</td>
-                              <td class="px-2 py-1 font-mono text-amber-300 border-b border-white/5">{{ q3.ratTypes?.join(',') ?? '-' }}</td>
+                              <td class="px-1 py-1 text-slate-600 border-b border-white/5 truncate">{{ q3Idx }}</td>
+                              <td class="px-1 py-1 font-mono text-sky-300 border-b border-white/5 max-w-12 truncate-">{{ q3.spatialValidity.gRanNodeIds[0]?.gNbId?.gNBValue }}</td>
+                              <td class="px-1 py-1 font-mono text-sky-300 border-b border-white/5 max-w-12 truncate-">{{ q3.spatialValidity.gRanNodeIds[0]?.n3IwfId }}</td>
+                              <td class="px-1 py-1 font-mono text-emerald-300 border-b border-white/5">{{ q3.qosParamSet?.gbrDl ?? '-' }}</td>
+                              <td class="px-1 py-1 font-mono text-amber-300 border-b border-white/5">{{ q3.qosParamSet?.mbrDl ?? '-' }}</td>
+                              <td class="px-1 py-1 font-mono text-amber-300 border-b border-white/5">{{ q3.ratTypes?.join(',') ?? '-' }}</td>
                             </tr>
                           </tbody>
                         </table>
                       </div>
                     </div>
                   </div>
-                      <!-- </div> -->
-                    <!-- </div> -->
-                  <!-- </div> -->
                 </div>
               </div>
             </div>

@@ -1,7 +1,7 @@
+import os
 import logging
 import zlib
 
-from rich import print as rprint
 from typing import List, TypedDict
 from datetime import datetime
 
@@ -28,25 +28,21 @@ from nnef.models.reporting_information import ReportingInformation
 from nnef.models.nef_event_exposure_subsc import NefEventExposureSubsc, NefEventSubs
 from nnef.models.network_area_info import NetworkAreaInfo as NefNetworkAreaInfo
 
-from nncof.core.supi_mapping import get_mapping_by_supi
+from .supi_mapping import get_mapping_by_supi
 from datetime import datetime, timezone, timedelta
 
 # Create timezone (+09:00)
 tz = timezone(timedelta(hours=9))
 
-# Get current time in that timezone
-
 logger = logging.getLogger(__name__)
 
 
-NCOF_NOTIFICATION_BASE_URI = "http://localhost:8000/notifications"
-
-
-def build_notif_uri(nf_type: str, subscription_id: str) -> str:
+def _build_notif_uri(nf_type: str, subscription_id: str) -> str:
+    NCOF_NOTIFICATION_BASE_URI = os.getenv("NCOF_NOTIFICATION_BASE_URI")
     return f"{NCOF_NOTIFICATION_BASE_URI}/{nf_type}/{subscription_id}"
 
 
-def generate_notif_id(type: str):
+def _generate_notif_id(type: str):
     now = datetime.now(tz)
     return f"NOTIFICATION_{type}_{now.isoformat()}"
 
@@ -81,7 +77,7 @@ def _generate_flow_id_from_rule(rule: str) -> int:
     return zlib.crc32(rule.encode("utf-8")) & 0xFFFFFFFF
 
 
-def build_event_filter(
+def _build_event_filter(
     event_subscription: NncofEventSubscription,
 ):
     tgt_ue = TargetUeIdentification()
@@ -101,7 +97,7 @@ def build_event_filter(
     return event_filter
 
 
-def build_traffic_filter(supi: str, use_any_ue: bool = False) -> List[FlowInformation]:
+def _build_traffic_filter(supi: str, use_any_ue: bool = False) -> List[FlowInformation]:
 
     supi_info = get_mapping_by_supi(supi)
 
@@ -172,8 +168,8 @@ def _handle_cell_power_ctrl(
         event_sub_rf_signal.event_rep_info = reporting_info
 
     nef_subscription = NefEventExposureSubsc(
-        notifId=generate_notif_id("ricf"),
-        notifUri=build_notif_uri("ricf", subscription_id),
+        notifId=_generate_notif_id("ricf"),
+        notifUri=_build_notif_uri("ricf", subscription_id),
         eventsSubs=[event_sub_rf_signal, event_sub_power_energy_consumption],
     )
 
@@ -202,8 +198,8 @@ def _fill_nsmf_event_subscription(
         else ReportingInformation(repPeriod=60)
     )
 
-    nsmf_subscription.notif_id = generate_notif_id("upf")
-    nsmf_subscription.notif_uri = build_notif_uri("upf", subscription_id)
+    nsmf_subscription.notif_id = _generate_notif_id("upf")
+    nsmf_subscription.notif_uri = _build_notif_uri("upf", subscription_id)
 
     nsmf_subscription.nf_id = "ncof-uuid-001"
     nsmf_subscription.notif_method = "PERIODIC"
@@ -272,7 +268,7 @@ def _handle_service_experience(
         if index < len(app_ids):
             qos_monitoring.app_ids = [app_ids[index]]
 
-        qos_monitoring.traffic_filters = build_traffic_filter(supi)
+        qos_monitoring.traffic_filters = _build_traffic_filter(supi)
         qos_monitoring.granularity_of_measurement = "PER_FLOW"
         qos_monitoring.reporting_suggestion_info = ReportingSuggestionInformation(
             reportingUrgency="DELAY_TOLERANT", reportingTimeInfo=10
@@ -310,7 +306,7 @@ def _handle_service_experience(
     udum.app_ids = event_subscription.app_ids
     traffic_filters = []
     for index, supi in enumerate(supis):
-        traffic_filters += build_traffic_filter(supi)
+        traffic_filters += _build_traffic_filter(supi)
 
     udum.traffic_filters = traffic_filters
 
@@ -344,8 +340,8 @@ def _handle_service_experience(
     evt_sub_smf.upf_events = upf_events
 
     nsmf_subscription = NsmfEventExposure(
-        notifId=generate_notif_id("upf"),
-        notifUri=build_notif_uri("smf", subscription_id),
+        notifId=_generate_notif_id("upf"),
+        notifUri=_build_notif_uri("smf", subscription_id),
         eventSubs=[evt_sub_smf],
     )
 
@@ -391,7 +387,7 @@ def _handle_service_experience(
     #
     evt_sub_perf_data_af = NefEventSubs(event="PERF_DATA")
 
-    event_filter = build_event_filter(event_subscription)
+    event_filter = _build_event_filter(event_subscription)
     evt_sub_perf_data_af.event_filter = event_filter
 
     reporting_info = (
@@ -405,8 +401,8 @@ def _handle_service_experience(
     # CN AF로 보낼 구독 요청
     af_event_exposure = NefEventExposureSubsc(
         # notifId="", notifUri="",
-        notifId=generate_notif_id("af"),
-        notifUri=build_notif_uri("af", subscription_id),
+        notifId=_generate_notif_id("af"),
+        notifUri=_build_notif_uri("af", subscription_id),
         eventsSubs=[evt_sub_perf_data_af],
     )
 
@@ -415,7 +411,7 @@ def _handle_service_experience(
     #
     evt_sub_perf_data_ricf = NefEventSubs(event="PERF_DATA")
 
-    event_filter = build_event_filter(event_subscription)
+    event_filter = _build_event_filter(event_subscription)
     evt_sub_perf_data_ricf.event_filter = event_filter
     evt_sub_perf_data_ricf.event_rep_info = reporting_info
 
@@ -423,8 +419,8 @@ def _handle_service_experience(
     ricf_event_exposure = NefEventExposureSubsc(
         # notifId="",
         # notifUri="",
-        notifId=generate_notif_id("ricf"),
-        notifUri=build_notif_uri("ricf", subscription_id),
+        notifId=_generate_notif_id("ricf"),
+        notifUri=_build_notif_uri("ricf", subscription_id),
         eventsSubs=[evt_sub_perf_data_ricf],
     )
 
@@ -446,7 +442,7 @@ def _handle_e2e_data_vol(
     #
     evt_sub_perf_data_af = NefEventSubs(event="DISPERSION")
 
-    event_filter = build_event_filter(event_subscription)
+    event_filter = _build_event_filter(event_subscription)
     evt_sub_perf_data_af.event_filter = event_filter
 
     reporting_info = _build_reporting_info(nncof_events_subscription)
@@ -454,8 +450,8 @@ def _handle_e2e_data_vol(
     evt_sub_perf_data_af.event_rep_info = reporting_info
 
     nef_subscription = NefEventExposureSubsc(
-        notifId=generate_notif_id("af"),
-        notifUri=build_notif_uri("af", subscription_id),
+        notifId=_generate_notif_id("af"),
+        notifUri=_build_notif_uri("af", subscription_id),
         eventsSubs=[evt_sub_perf_data_af],
     )
 
@@ -486,7 +482,7 @@ def _handle_ricf_wlan_performance(
 
     # supi 개수만큼 qos 모니터링 객체 생성
     for index, supi in enumerate(supis):
-        udum.traffic_filters = build_traffic_filter(supi, True)
+        udum.traffic_filters = _build_traffic_filter(supi, True)
 
     udum.granularity_of_measurement = "PEF_FLOW"
 
@@ -520,27 +516,6 @@ def _handle_ricf_wlan_performance(
     nsmf_subscription = NsmfEventExposure(
         notifId="", notifUri="", eventSubs=[evt_sub_smf]
     )
-    # nsmf_subscription.sub_id = ""
-    # nsmf_subscription.notif_id = ""
-    # nsmf_subscription.notif_uri = ""
-    # nsmf_subscription.alt_notif_fqdns = ["ncof.6g-i2p.etri.re.kr"]
-    # nsmf_subscription.alt_notif_ipv4_addrs = ["10.0.0.100"]
-    # nsmf_subscription.nf_id = "ncof-uuid-001"
-    # nsmf_subscription.notif_method = "PERIODIC"
-    # nsmf_subscription.rep_period = 60
-    # nsmf_subscription.max_report_nbr = 0
-    # nsmf_subscription.expiry = datetime.fromisoformat("2026-03-08T12:00:00+09:00")
-    # nsmf_subscription.imme_rep = False
-    # nsmf_subscription.samp_ratio = 100
-    # nsmf_subscription.servive_name = "nsmf-event_exposure"
-    # nsmf_subscription.supported_features = "FF"
-    # nsmf_subscription.def_qos_supp = False
-    # nsmf_subscription.qos_mon_pending = False
-    # nsmf_subscription.udr_restart_ind = False
-    # nsmf_subscription.any_ue_ind = False
-    # nsmf_subscription.group_id = "00000001-001-01-0001"
-    # nsmf_subscription.dnn = "6g-i2p.etri.re.kr"
-    # nsmf_subscription.upf_id = "upf-001"
 
     _fill_nsmf_event_subscription(
         subscription_id,
