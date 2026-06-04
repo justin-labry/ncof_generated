@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 
-import { Play, RotateCcw, Trash2, CheckCircle, Clock, Activity, Terminal, XCircle, Zap } from 'lucide-vue-next';
+import { Play, RotateCcw, Trash2, Activity, Terminal, XCircle, Zap } from 'lucide-vue-next';
 
 import { useNetworkStore } from '../store/network';
 import { nodeColorClass } from '../utils/nodeColors';
