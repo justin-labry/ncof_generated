@@ -38,8 +38,15 @@ logger = logging.getLogger(__name__)
 
 
 def _build_notif_uri(nf_type: str, subscription_id: str) -> str:
-    NCOF_NOTIFICATION_BASE_URI = os.getenv("NCOF_NOTIFICATION_BASE_URI")
-    return f"{NCOF_NOTIFICATION_BASE_URI}/{nf_type}/{subscription_id}"
+    base_uri = os.getenv("NCOF_NOTIFICATION_BASE_URI")
+    if not base_uri:
+        # .env 미설정 시 자기 자신(NCOF)의 콜백 엔드포인트로 폴백
+        port = os.getenv("PORT", "8000")
+        base_uri = f"http://localhost:{port}/notifications"
+        logger.warning(
+            "NCOF_NOTIFICATION_BASE_URI 미설정 — 기본값 사용: %s", base_uri
+        )
+    return f"{base_uri}/{nf_type}/{subscription_id}"
 
 
 def _generate_notif_id(type: str):
