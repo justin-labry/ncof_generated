@@ -5,7 +5,7 @@
     "notificationMethod": "PERIODIC",
     "repPeriod": 6,
     "maxReportNbr": 0,
-    "monDur": "2026-07-08T12:00:00+09:00",
+    "monDur": "2026-12-30T12:00:00+09:00",
     "immRep": false,
     "sampRatio": 100
   },
