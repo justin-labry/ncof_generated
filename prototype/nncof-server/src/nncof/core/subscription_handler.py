@@ -28,7 +28,7 @@ from .subscription_request_builder import ExternalSubscriptionRequest
 from .websocket_manager import broadcast_web_message
 
 from .data_store import NotificationDataStore
-from .gnb2_rule_engine import Gnb2RuleEngine
+from .gnb2_rl_engine import create_decision_engine
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,8 @@ class SubscriptionHandler:
         self.external_subscriptions: List[ExternalSubscriptionRequest] = []
         # HTTP 연결 풀 재사용을 위한 공유 클라이언트
         self._client = httpx.AsyncClient(timeout=httpx.Timeout(5.0))
-        self.rule_engine = Gnb2RuleEngine()
+        # NCOF_DECISION_ENGINE=rl 이면 RL 정책, 아니면(기본) 룰 베이스
+        self.rule_engine = create_decision_engine()
 
     def _get_source_nf_type(self) -> Literal["PCF", "RICF"] | None:
         """
