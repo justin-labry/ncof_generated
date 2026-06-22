@@ -21,6 +21,13 @@ class Gnb2RuleEngine:
         self.last_emitted_state = None  # emit-on-change 추적용
         self.last_change_at = None  # minimum-dwell guard용
 
+    def _decide(self, metric: float) -> str:
+        """
+        WLAN metric → gNB2 상태 판정. RL 엔진은 이 메서드만 오버라이드한다.
+        (emit-on-change / dwell guard / 15f·14_e 생성은 공통 로직 공유)
+        """
+        return decide_gnb2_state(metric, self.th_mbps)
+
     def generate_notification(
         self,
         notif_12p_c: dict,
@@ -30,7 +37,7 @@ class Gnb2RuleEngine:
         corr_id: str | None,
     ) -> Dict[str, List[dict]] | None:
         metric = extract_wlan_dl_mbps(notif_12p_c)
-        new_state = decide_gnb2_state(metric, self.th_mbps)  # stateless
+        new_state = self._decide(metric)
 
         if new_state == self.last_emitted_state:
             return None  # no change → 통지 안 보냄
