@@ -63,8 +63,9 @@ class SubscriptionHandler:
     async def _send_external_subscription(
         self, target: str, req_body: NsmfEventExposure | NefEventExposureSubsc
     ) -> Optional[str]:
-        """데이터 수집을 위한 NF 로 구독 요청을 전송하고 구독 ID 를 반환한다."""
-        logger.info(f"[{self.subscription_id}] send subscription request to [{target}]")
+        """
+        데이터 수집을 위한 대상 NF 로 구독 요청을 보낸다.
+        """
 
         nf_uri = nrf.get_nf_uri(target)
         if not nf_uri:
@@ -72,7 +73,6 @@ class SubscriptionHandler:
             return None
 
         subscription_url = f"{nf_uri}/subscriptions"
-        logger.info(f"[{self.subscription_id}] 💢 Sending POST to: {subscription_url}")
 
         try:
             response = await self._client.post(
@@ -80,34 +80,27 @@ class SubscriptionHandler:
             )
             if response.status_code in (200, 201):
                 resp_json = response.json()
-                sub_id = resp_json.get("subscriptionId") or resp_json.get("subId")
-
-                if not sub_id and "Subscription-ID" in response.headers:
-                    sub_id = response.headers["Subscription-ID"]
-
-                if sub_id:
-                    logger.info(
-                        f"[{self.subscription_id}] [{target.upper()}] 구독 성공. ID: {sub_id}"
+                external_sub_id = resp_json.get("subscriptionId") or resp_json.get(
+                    "subId"
+                )
+                if not external_sub_id and "Subscription-ID" in response.headers:
+                    external_sub_id = response.headers["Subscription-ID"]
+                if not external_sub_id:
+                    logger.warning(
+                        f"[{self.subscription_id}] {target.upper()} 로부터 ID 를 획득하지 못함 "
+                        f"(Status: {response.status_code})."
                     )
-                    return sub_id
-
-            logger.warning(
-                f"[{self.subscription_id}] {target.upper()} 로부터 ID 를 획득하지 못함 "
-                f"(Status: {response.status_code})."
-            )
+                return external_sub_id
         except Exception as e:
-            logger.error(
+            logger.warning(
                 f"[{self.subscription_id}] {target.upper()} 연결 중 오류 발생: {e}"
             )
-            return None
-
         return None
 
     async def _send_external_unsubscription(self, target: str, external_sub_id: str):
-        """NF 로 구독 해지 요청을 전송한다."""
-        logger.info(
-            f"[{self.subscription_id}] ---[UNSUBSCRIBE] --->[{target.upper()}] (ID: {external_sub_id})"
-        )
+        """
+        대상 NF 로 구독 해지 요청을 보낸다.
+        """
 
         nf_uri = nrf.get_nf_uri(target)
         if not nf_uri:
@@ -121,9 +114,7 @@ class SubscriptionHandler:
         try:
             response = await self._client.delete(unsubscription_url)
             if response.status_code in (204, 200):
-                logger.info(
-                    f"[{self.subscription_id}] {target.upper()} 구독 해지 성공. ID: {external_sub_id}"
-                )
+                return True
             else:
                 logger.warning(
                     f"[{self.subscription_id}] {target.upper()} 구독 해지 실패 "
@@ -134,11 +125,10 @@ class SubscriptionHandler:
                 f"[{self.subscription_id}] {target.upper()} 구독 해지 중 오류 발생: {e}"
             )
 
-        if self._relation_manager is not None:
-            try:
-                await self._relation_manager.remove_relations_by_sub_id(external_sub_id)
-            except Exception as e:
-                logger.error(f"Failed to remove relation: {e}")
+        try:
+            await self._relation_manager.remove_relations_by_sub_id(external_sub_id)
+        except Exception as e:
+            logger.error(f"Failed to remove relation: {e}")
 
     async def _notify_subscriber(self, nf_type: str, ncof_control_event: list[dict]):
         """제어 명령을 NF(PCF 또는 RICF)로 전송한다."""
@@ -244,39 +234,39 @@ class SubscriptionHandler:
                 )
 
         # Phase 2: 성공한 구독에 대해 relation 을 지연 시간을 두고 순차적으로 추가 (시각적 효과)
-        if self._relation_manager is not None:
-            await asyncio.sleep(1)
-            for target, subscription, external_sub_id in successful:
-                try:
+        # if self._relation_manager is not None:
+        await asyncio.sleep(1)
+        for target, subscription, external_sub_id in successful:
+            try:
 
-                    if target.lower() == "af" or target.lower() == "ricf":
-                        await self._relation_manager.add_relation(
-                            from_node="ncof",
-                            to_node="nef",
-                            msg_type="SUBSCRIBED",
-                            data=jsonable_encoder(subscription),
-                            sub_id=external_sub_id + "_nef",
-                        )
-                        await asyncio.sleep(0.5)
-                        await self._relation_manager.add_relation(
-                            from_node="nef",
-                            to_node=target.lower(),
-                            msg_type="SUBSCRIBED",
-                            data=jsonable_encoder(subscription),
-                            sub_id=external_sub_id,
-                        )
-                    else:
-                        await self._relation_manager.add_relation(
-                            from_node="ncof",
-                            to_node=target.lower(),
-                            msg_type="SUBSCRIBED",
-                            data=jsonable_encoder(subscription),
-                            sub_id=external_sub_id,
-                        )
-
+                if target.lower() == "af" or target.lower() == "ricf":
+                    await self._relation_manager.add_relation(
+                        from_node="ncof",
+                        to_node="nef",
+                        msg_type="SUBSCRIBED",
+                        data=jsonable_encoder(subscription),
+                        sub_id=external_sub_id + "_nef",
+                    )
                     await asyncio.sleep(0.5)
-                except Exception as e:
-                    logger.error(f"Failed to add relation: {e}")
+                    await self._relation_manager.add_relation(
+                        from_node="nef",
+                        to_node=target.lower(),
+                        msg_type="SUBSCRIBED",
+                        data=jsonable_encoder(subscription),
+                        sub_id=external_sub_id,
+                    )
+                else:
+                    await self._relation_manager.add_relation(
+                        from_node="ncof",
+                        to_node=target.lower(),
+                        msg_type="SUBSCRIBED",
+                        data=jsonable_encoder(subscription),
+                        sub_id=external_sub_id,
+                    )
+
+                await asyncio.sleep(0.5)
+            except Exception as e:
+                logger.error(f"Failed to add relation: {e}")
 
         if self.subscription.evt_req and self.subscription.evt_req.rep_period:
             await self._analyzer.start()
