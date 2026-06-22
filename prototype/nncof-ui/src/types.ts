@@ -7,8 +7,13 @@ export type NodeType =
   | "AMF"
   | "UPF"
   | "UE"
+  | "NEF"
+  | "N3IWF"
   | "WIFI"
+  | "NETWORK"
   | "GNODEB";
+
+export type NodeSize = "large" | "normal" | "small";
 
 export interface NetworkNode {
   id: string;
@@ -18,6 +23,9 @@ export interface NetworkNode {
   x: number;
   y: number;
   status: "ACTIVE" | "INACTIVE";
+  size?: NodeSize;
+  /** src/assets/ 에 있는 이미지 파일명 (예: "nef.png") */
+  image?: string;
 }
 
 export type MessageType =
@@ -26,8 +34,8 @@ export type MessageType =
   | "NOTIFICATION"
   | "SUBSCRIBED"
   | "UNSUBSCRIBED"
-  | "ANALIZING"
-  | "ANALIZED";
+  | "ANALYZING"
+  | "ANALYZED";
 
 export interface Message {
   id: string;
@@ -47,6 +55,7 @@ export interface Subscription {
   subId?: string;
   timestamp: number;
   count?: number;
+  type?: MessageType;
 }
 
 // 토폴로지 노드 간 연결관계를 나타내는 엣지 (구독과 무관)
