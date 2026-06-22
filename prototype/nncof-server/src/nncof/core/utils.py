@@ -80,7 +80,7 @@ def system_info():
         "APP_DESCRIPTION", "NCOF Event Exposure Service for 6G-I2P PoC Scenario."
     )
     version = os.getenv("APP_VERSION", "0.1.0")
-    title = os.getenv("APP_TITLE", "")
+    title = os.getenv("APP_TITLE", "Nncof_EventsSubscription")
     ip = _get_local_ip()
     return {
         "status": "online",
