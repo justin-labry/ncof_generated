@@ -1,122 +1,40 @@
 import uuid
 import logging
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypedDict
 
 from fastapi.encoders import jsonable_encoder
-
-from nsmf.models.nsmf_event_exposure import NsmfEventExposure
-from nnef.models.nef_event_exposure_subsc import NefEventExposureSubsc
 
 from nncof.models.nncof_events_subscription import NncofEventsSubscription
 
 from .websocket_manager import broadcast_web_message
 from .subscription_handler import SubscriptionHandler
+from .utils import _normalize_subscription
 
 logger = logging.getLogger(__name__)
-
-
-def _normalize_subscription(
-    subscription: Any,
-    subscription_id: str | None,
-) -> Dict[str, Any]:
-    """
-    NncofEventsSubscription / NsmfEventExposure / NefEventExposureSubsc 세 타입의
-    구독 객체를 공통 구조의 dict로 변환한다.
-
-    Args:
-        subscription: 변환할 구독 객체.
-        subscription_id: SubscriptionManager 의 키로 사용되는 구독 ID.
-
-    Returns:
-        {
-            "subscriptionId": str,
-            "notifUri": str,
-            "eventReq": {
-                "notificationMethod": str (기본값 "PERIODIC"),
-                "repPeriod": int (기본값 60),
-            },
-            "eventSubscriptions": [{ "event": str }, ...]
-        }
-    """
-    sub_id = subscription_id if subscription_id else ""
-    if isinstance(subscription, NsmfEventExposure):
-        sub_id = subscription.sub_id or subscription_id
-
-    notif_uri = ""
-    if isinstance(subscription, NncofEventsSubscription):
-        notif_uri = subscription.notification_uri or ""
-    elif isinstance(subscription, NsmfEventExposure):
-        notif_uri = subscription.notif_uri or ""
-    elif isinstance(subscription, NefEventExposureSubsc):
-        notif_uri = subscription.notif_uri or ""
-
-    notif_method = "PERIODIC"
-    rep_period = 60
-    from_node = ""
-    if isinstance(subscription, NncofEventsSubscription):
-        if subscription.evt_req is not None:
-            notif_method = subscription.evt_req.notif_method or notif_method
-            rep_period = subscription.evt_req.rep_period or rep_period
-            nf_id = (
-                subscription.cons_nf_info.nf_id
-                if subscription.cons_nf_info and subscription.cons_nf_info.nf_id
-                else ""
-            )
-
-            # nf_id = subscription_request.cons_nf_info.nf_id
-            if nf_id.startswith("pcf"):
-                from_node = "pcf"
-            elif nf_id.startswith("ricf"):
-                from_node = "ricf"
-            else:
-                from_node = "unknown"
-
-    elif isinstance(subscription, NsmfEventExposure):
-        notif_method = subscription.notif_method or notif_method
-        rep_period = subscription.rep_period or rep_period
-    elif isinstance(subscription, NefEventExposureSubsc):
-        if subscription.events_rep_info is not None:
-            notif_method = subscription.events_rep_info.notif_method or notif_method
-            rep_period = subscription.events_rep_info.rep_period or rep_period
-
-    event_subs: List[Dict[str, str]] = []
-
-    if isinstance(subscription, NncofEventsSubscription):
-        if subscription.event_subscriptions:
-            for es in subscription.event_subscriptions:
-                event_subs.append({"event": es.event})
-    elif isinstance(subscription, NsmfEventExposure):
-        if subscription.event_subs:
-            for es in subscription.event_subs:
-                event_subs.append({"event": es.event})
-    elif isinstance(subscription, NefEventExposureSubsc):
-        if subscription.events_subs:
-            for es in subscription.events_subs:
-                event_subs.append({"event": es.event})
-
-    return {
-        "subscriptionId": sub_id,
-        "notifUri": notif_uri,
-        "fromNode": from_node,
-        "eventReq": {
-            "notificationMethod": notif_method,
-            "repPeriod": rep_period,
-        },
-        # "eventSubscriptions": event_subs,
-        "data": subscription,
-    }
 
 
 def getSubscriptionManager():
     return SubscriptionManager()
 
 
+Relation = TypedDict(
+    "Relation",
+    {
+        "from": str,
+        "to": str,
+        "type": str,
+        "data": Any,
+        "sub_id": str,
+    },
+)
+
+
 class SubscriptionManager:
     """
     SubscriptionManager 는 구독 핸들러를 관리하는 기능을 제공한다.
     새로운 구독요청이 발생하면 SubscriptionHandler 객체를 생성하고 관리한다.
-
+    싱글톤으로 항상 동일한 인스턴스를 반환한다.
     """
 
     _instance = None
@@ -132,28 +50,26 @@ class SubscriptionManager:
             return
         self.nf_service_discovery = nf_service_discovery
         self.subscriptions: Dict[str, SubscriptionHandler] = {}
-        self.active_relations = []  # [{from, to, type, data, sub_id}]
+        self.active_relations: list[Relation] = []
         self._initialized = True
         logger.info("[SubscriptionManager] 싱글톤 인스턴스가 초기화.")
 
-    def _get_from_node(self, nf_id: str) -> str | None:
-
+    def _get_src_nf(self, nf_id: str) -> str | None:
+        """
+        nf_id 의 시작패턴을 사용해서 PCF와 RICF를 구분한다.
+        """
         PCF = "pcf"
         RICF = "ricf"
 
-        from_node = None
         if nf_id.startswith(PCF):
-            from_node = PCF
+            return PCF
         elif nf_id.startswith(RICF):
-            from_node = RICF
+            return RICF
         else:
-            from_node = "Unknown"
-        return from_node
+            return None
 
     def get_nf_id(self, sub_req: NncofEventsSubscription):
-        nf_info = sub_req.cons_nf_info
-        nf_id = getattr(nf_info, "nf_id")
-        return nf_id
+        return getattr(sub_req.cons_nf_info, "nf_id")
 
     async def create_subscription(
         self, subscription_request: NncofEventsSubscription
@@ -170,7 +86,7 @@ class SubscriptionManager:
 
         nf_id = self.get_nf_id(subscription_request)
 
-        from_node = self._get_from_node(nf_id)
+        from_node = self._get_src_nf(nf_id)
 
         # 1. 구독 ID 생성
         subscription_id = str(uuid.uuid4())
@@ -195,7 +111,7 @@ class SubscriptionManager:
         # 4. 관리 목록에 추가
         self.subscriptions[subscription_id] = handler
 
-        logger.info(f"새로운 구독 생성 완료 - {subscription_id}")
+        logger.info(f"[{subscription_id}]새로운 구독 생성 완료")
 
         return subscription_id
 
@@ -216,7 +132,7 @@ class SubscriptionManager:
 
         nf_id = self.get_nf_id(handler.subscription)
 
-        from_node = self._get_from_node(nf_id)
+        from_node = self._get_src_nf(nf_id)
 
         await self.add_relation(
             sub_id=subscription_id,
@@ -307,7 +223,7 @@ class SubscriptionManager:
         self, from_node: str, to_node: str, msg_type: str, data: Any, sub_id: str
     ):
         """구독 관계를 추가하고 웹 소켓에 브로드캐스트한다."""
-        relation = {
+        relation: Relation = {
             "from": from_node,
             "to": to_node,
             "type": msg_type,
@@ -315,8 +231,7 @@ class SubscriptionManager:
             "sub_id": sub_id,
         }
 
-        # 1. 관리 목록에 추가 (SUBSCRIBED 또는 NOTIFY 등의 상태 업데이트가 아닌 순수 SUBSCRIBE 관계만 유지하고 싶을 수 있으나, 일단 모든 이벤트를 기록)
-        # 특정 타입만 리스트에 유지하려면 아래에 조건문 추가 가능
+        # 1. 관리 목록에 추가
         self.active_relations.append(relation)
 
         # 2. 웹 소켓 브로드캐스트 일원화
@@ -328,7 +243,9 @@ class SubscriptionManager:
             data=data,
         )
 
-        logger.info(f"{from_node} ---> {to_node} ({msg_type})")
+        logger.info(
+            f"[] [{from_node.upper()}] --- [{msg_type}] ---> [{to_node.upper()}]"
+        )
 
     async def remove_relations_by_sub_id(self, sub_id: str):
         """특정 구독 ID와 관련된 모든 관계를 제거한다."""
@@ -373,7 +290,7 @@ class SubscriptionManager:
             f"[SubscriptionManager] Relation 제거: {sub_id} (개수: {before_count} -> {after_count})"
         )
 
-    def get_active_relations(self):
+    def get_active_relations(self) -> list[Any]:
         """현재 모든 활성 구독 관계를 반환한다."""
         return self.active_relations
 

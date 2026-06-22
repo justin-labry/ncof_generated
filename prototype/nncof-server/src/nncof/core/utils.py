@@ -10,6 +10,14 @@ from rich.console import Console
 from rich.table import Table
 from rich import box
 
+
+from typing import Any, Dict, List
+
+from nsmf.models.nsmf_event_exposure import NsmfEventExposure
+from nnef.models.nef_event_exposure_subsc import NefEventExposureSubsc
+
+from nncof.models.nncof_events_subscription import NncofEventsSubscription
+
 logger = logging.getLogger(__name__)
 
 console = Console()
@@ -90,4 +98,96 @@ def system_info():
         "port": port,
         "ip": ip,
         "notification_base_uri": f"http://{ip}:{port}/notifications",
+    }
+
+
+def _normalize_subscription(
+    subscription: Any,
+    subscription_id: str | None,
+) -> Dict[str, Any]:
+    """
+    NncofEventsSubscription / NsmfEventExposure / NefEventExposureSubsc 세 타입의
+    구독 객체를 공통 구조의 dict로 변환한다.
+
+    Args:
+        subscription: 변환할 구독 객체.
+        subscription_id: SubscriptionManager 의 키로 사용되는 구독 ID.
+
+    Returns:
+        {
+            "subscriptionId": str,
+            "notifUri": str,
+            "eventReq": {
+                "notificationMethod": str (기본값 "PERIODIC"),
+                "repPeriod": int (기본값 60),
+            },
+            "eventSubscriptions": [{ "event": str }, ...]
+        }
+    """
+    sub_id = subscription_id if subscription_id else ""
+    if isinstance(subscription, NsmfEventExposure):
+        sub_id = subscription.sub_id or subscription_id
+
+    notif_uri = ""
+    if isinstance(subscription, NncofEventsSubscription):
+        notif_uri = subscription.notification_uri or ""
+    elif isinstance(subscription, NsmfEventExposure):
+        notif_uri = subscription.notif_uri or ""
+    elif isinstance(subscription, NefEventExposureSubsc):
+        notif_uri = subscription.notif_uri or ""
+
+    notif_method = "PERIODIC"
+    rep_period = 60
+    from_node = ""
+    if isinstance(subscription, NncofEventsSubscription):
+        if subscription.evt_req is not None:
+            notif_method = subscription.evt_req.notif_method or notif_method
+            rep_period = subscription.evt_req.rep_period or rep_period
+            nf_id = (
+                subscription.cons_nf_info.nf_id
+                if subscription.cons_nf_info and subscription.cons_nf_info.nf_id
+                else ""
+            )
+
+            # nf_id = subscription_request.cons_nf_info.nf_id
+            if nf_id.startswith("pcf"):
+                from_node = "pcf"
+            elif nf_id.startswith("ricf"):
+                from_node = "ricf"
+            else:
+                from_node = "unknown"
+
+    elif isinstance(subscription, NsmfEventExposure):
+        notif_method = subscription.notif_method or notif_method
+        rep_period = subscription.rep_period or rep_period
+    elif isinstance(subscription, NefEventExposureSubsc):
+        if subscription.events_rep_info is not None:
+            notif_method = subscription.events_rep_info.notif_method or notif_method
+            rep_period = subscription.events_rep_info.rep_period or rep_period
+
+    event_subs: List[Dict[str, str]] = []
+
+    if isinstance(subscription, NncofEventsSubscription):
+        if subscription.event_subscriptions:
+            for es in subscription.event_subscriptions:
+                event_subs.append({"event": es.event})
+    elif isinstance(subscription, NsmfEventExposure):
+        if subscription.event_subs:
+            for es in subscription.event_subs:
+                event_subs.append({"event": es.event})
+    elif isinstance(subscription, NefEventExposureSubsc):
+        if subscription.events_subs:
+            for es in subscription.events_subs:
+                event_subs.append({"event": es.event})
+
+    return {
+        "subscriptionId": sub_id,
+        "notifUri": notif_uri,
+        "fromNode": from_node,
+        "eventReq": {
+            "notificationMethod": notif_method,
+            "repPeriod": rep_period,
+        },
+        # "eventSubscriptions": event_subs,
+        "data": subscription,
     }
