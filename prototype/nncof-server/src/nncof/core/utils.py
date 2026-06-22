@@ -1,20 +1,18 @@
-from functools import reduce
-import json
 import os
-from typing import Any
-import httpx
+import logging
+import time
+import socket
+
+from functools import reduce
+
 from rich.panel import Panel
 from rich.console import Console
-from rich.logging import RichHandler
-import logging
-import yaml
-import logging.config
-
-logger = logging.getLogger(__name__)
-console = Console()
-
 from rich.table import Table
 from rich import box
+
+logger = logging.getLogger(__name__)
+
+console = Console()
 
 
 def safe_get(obj, *attrs, default=None):
@@ -37,7 +35,7 @@ def safe_set(target_obj, target_attrs: list, value):
 
 def print_logo(title, description, version):
 
-    port = int(os.getenv("PORT", 8000))  #
+    port = os.getenv("PORT", 8000)
 
     table = Table(box=None, show_header=False, padding=(0, 2))
 
@@ -46,19 +44,17 @@ def print_logo(title, description, version):
     table.add_row("NAME", f"{title}")
     table.add_row("DESCRIPTION", f"{description}")
     table.add_row("VERSION", f"{version}")
-
-    table.add_row("PORT", f"[bold yellow]{str(port)}[/]")
+    table.add_row("PORT", f"[bold yellow]{port}[/]")
     table.add_row("STATUS", "[bold green]● RUNNING[/]")
 
     panel = Panel(
         table,
-        title="[bold cyan]NNCOF[/]",
+        title="[bold blue]NNCOF[/]",
         title_align="left",
-        subtitle="[dim]ctrl+c to stop[/]",
         subtitle_align="right",
-        border_style="cyan",
+        border_style="blue",
         box=box.DOUBLE_EDGE,
-        padding=(0, 1),
+        padding=(1, 1, 1, 1),
         expand=False,
     )
     console.print(panel)
@@ -66,6 +62,32 @@ def print_logo(title, description, version):
 
 def get_current_timestamp():
     """현재 시간을 밀리초(ms) 단위의 타임스탬프로 반환"""
-    import time
-
     return int(time.time() * 1000)
+
+
+def _get_local_ip() -> str:
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("8.8.8.8", 80))
+            return s.getsockname()[0]
+    except Exception:
+        return "127.0.0.1"
+
+
+def system_info():
+    port = int(os.getenv("PORT", 8000))
+    description = os.getenv(
+        "APP_DESCRIPTION", "NCOF Event Exposure Service for 6G-I2P PoC Scenario."
+    )
+    version = os.getenv("APP_VERSION", "0.1.0")
+    title = os.getenv("APP_TITLE", "")
+    ip = _get_local_ip()
+    return {
+        "status": "online",
+        "title": title,
+        "description": description,
+        "version": version,
+        "port": port,
+        "ip": ip,
+        "notification_base_uri": f"http://{ip}:{port}/notifications",
+    }

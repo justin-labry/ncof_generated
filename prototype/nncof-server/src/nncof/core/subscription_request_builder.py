@@ -31,6 +31,8 @@ from nnef.models.network_area_info import NetworkAreaInfo as NefNetworkAreaInfo
 from .supi_mapping import get_mapping_by_supi
 from datetime import datetime, timezone, timedelta
 
+from nncof.core.utils import system_info
+
 # Create timezone (+09:00)
 tz = timezone(timedelta(hours=9))
 
@@ -38,8 +40,19 @@ logger = logging.getLogger(__name__)
 
 
 def _build_notif_uri(nf_type: str, subscription_id: str) -> str:
-    NCOF_NOTIFICATION_BASE_URI = os.getenv("NCOF_NOTIFICATION_BASE_URI")
-    return f"{NCOF_NOTIFICATION_BASE_URI}/{nf_type}/{subscription_id}"
+    s_info = system_info()
+    NCOF_NOTIFICATION_BASE_URI = (
+        os.getenv("NCOF_NOTIFICATION_BASE_URI")
+        if os.getenv("NCOF_NOTIFICATION_BASE_URI")
+        else ""
+    )
+
+    r = (
+        s_info["notification_base_uri"]
+        if s_info["notification_base_uri"]
+        else NCOF_NOTIFICATION_BASE_URI
+    )
+    return f"{r}/{nf_type}/{subscription_id}"
 
 
 def _generate_notif_id(type: str):
@@ -195,7 +208,7 @@ def _fill_nsmf_event_subscription(
     evt_req = (
         nncof_events_subscription.evt_req
         if nncof_events_subscription is not None
-        else ReportingInformation(repPeriod=60)
+        else ReportingInformation(repPeriod=50)
     )
 
     nsmf_subscription.notif_id = _generate_notif_id("upf")
@@ -424,6 +437,10 @@ def _handle_service_experience(
         eventsSubs=[evt_sub_perf_data_ricf],
     )
 
+    af_event_exposure.events_rep_info = reporting_info
+    ricf_event_exposure.events_rep_info = reporting_info
+    af_event_exposure.supp_feat = "FF"
+
     return [
         {"target": "smf", "subscription": nsmf_subscription},
         {"target": "af", "subscription": af_event_exposure},
@@ -436,7 +453,6 @@ def _handle_e2e_data_vol(
     nncof_events_subscription: NncofEventsSubscription,
     event_subscription: NncofEventSubscription,
 ):
-
     #
     # DISPERSION: ---> AF
     #
@@ -535,7 +551,7 @@ def _handle_qos_policy_assist(
     return []
 
 
-# 핸들러 매핑 테이블
+# 메시지 빌더 매핑 테이블
 SUBSCRIPTIOS_BUILIN_BUILDERS = {
     "_CELL_POWER_CTRL": _handle_cell_power_ctrl,
     "SERVICE_EXPERIENCE": _handle_service_experience,
@@ -557,22 +573,24 @@ def build_subscription_requests(
     subscription_id: str, nncof_events_subscription: NncofEventsSubscription
 ) -> List[ExternalSubscriptionRequest]:
     """
-    SubscriptionRequest 를 취합하여 최종적으로 반환하는 함수이다.
-    각 event type 별 전담 핸들러 함수를 호출하여 외부 NF로 보낼 요청을 생성한다.
+    구독요청으로 부터 하위 구독요청을 생성하는 함수이다.
+    각 event type 별 전용 빌더를 사용하여 데이터 수집 대상 NF로 보낼 구독요청을 생성한다.
     """
-    reqs = []
+    requests: List[ExternalSubscriptionRequest] = []
     for event_subscription in nncof_events_subscription.event_subscriptions:
-        builder = SUBSCRIPTIOS_BUILIN_BUILDERS.get(event_subscription.event)
-        if builder is None:
+        builde_subscription_request = SUBSCRIPTIOS_BUILIN_BUILDERS.get(
+            event_subscription.event
+        )
+        if builde_subscription_request is None:
             logging.warning(f"Unhandled event: {event_subscription.event}")
             continue
 
-        reqs.extend(
-            builder(
+        requests.extend(
+            builde_subscription_request(
                 subscription_id,
                 nncof_events_subscription,
                 event_subscription,
             )
         )
 
-    return reqs
+    return requests

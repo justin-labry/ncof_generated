@@ -103,7 +103,8 @@ def _normalize_subscription(
             "notificationMethod": notif_method,
             "repPeriod": rep_period,
         },
-        "eventSubscriptions": event_subs,
+        # "eventSubscriptions": event_subs,
+        "data": subscription,
     }
 
 
@@ -333,10 +334,13 @@ class SubscriptionManager:
         """특정 구독 ID와 관련된 모든 관계를 제거한다."""
         # 1. 제거될 관계들을 먼저 찾아서 브로드캐스트
         removed_relations = [
-            r for r in self.active_relations if r.get("sub_id") == sub_id
+            r
+            for r in self.active_relations
+            if r.get("sub_id") == sub_id or r.get("sub_id") == sub_id + "_nef"
         ]
 
         for rel in removed_relations:
+
             await broadcast_web_message(
                 from_node=rel["from"],
                 to_node=rel["to"],
@@ -345,10 +349,23 @@ class SubscriptionManager:
                 data=json.dumps({"subscriptionId": sub_id}),
             )
 
+            # just for NEF visualization
+            if rel["to"] == "nef":
+                await broadcast_web_message(
+                    from_node=rel["from"],
+                    to_node=rel["to"],
+                    msg_type="UNSUBSCRIBED",
+                    sub_id=sub_id + "_nef",
+                    data=json.dumps({"subscriptionId": sub_id}),
+                )
+
         # 2. 리스트에서 제거
         before_count = len(self.active_relations)
         self.active_relations = [
             r for r in self.active_relations if r.get("sub_id") != sub_id
+        ]
+        self.active_relations = [
+            r for r in self.active_relations if r.get("sub_id") != sub_id + "_nef"
         ]
 
         after_count = len(self.active_relations)
@@ -359,6 +376,46 @@ class SubscriptionManager:
     def get_active_relations(self):
         """현재 모든 활성 구독 관계를 반환한다."""
         return self.active_relations
+
+    def get_handlers(self) -> List[Dict[str, Any]]:
+        """
+        모든 핸들러의 상태와 기본 구독 정보를 반환한다.
+        (웹 대시보드용)
+
+        Returns:
+            [{
+                "subscription_id": str,
+                "is_running": bool,
+                "source_nf_type": str | None,
+                "event_subscriptions": [{"event": str}, ...],
+                "notification_uri": str | None,
+                "notif_corr_id": str | None,
+                "external_subscriptions": [{"target": str, "external_sub_id": str}, ...]
+            }, ...]
+        """
+        result = []
+        for sub_id, handler in self.subscriptions.items():
+            source_nf = handler.get_source_nf_type()
+            event_subs = []
+            if handler.subscription.event_subscriptions:
+                for es in handler.subscription.event_subscriptions:
+                    event_subs.append({"event": es.event})
+            ext_subs = [
+                {"target": ext["target"], "external_sub_id": ext["external_sub_id"]}
+                for ext in handler.external_subscriptions
+            ]
+            result.append(
+                {
+                    "subscription_id": handler.subscription_id,
+                    "is_running": handler.is_running,
+                    "source_nf_type": source_nf,
+                    "event_subscriptions": event_subs,
+                    "notification_uri": handler.subscription.notification_uri,
+                    "notif_corr_id": handler.subscription.notif_corr_id,
+                    "external_subscriptions": ext_subs,
+                }
+            )
+        return result
 
     def get_subscriptions(self):
         """현재 모든 활성 구독을 반환한다. (내부 구독 + 외부 NF로 보낸 구독 요청 포함)"""
