@@ -44,18 +44,22 @@ from nncof.apis.nef_events_notifications_api import (
 from nncof.apis.web_api import (
     router as WebApiRouter,
 )
-
+from nncof.core.utils import system_info
 
 from nncof.core import utils
 
 load_dotenv()
 
+info = system_info()
+
+title = info["title"]
+description = info["description"]
+version = info["version"]
+
+
+utils.print_logo(title, description, version)
 
 logger = logging.getLogger(__name__)
-
-title = "Nncof_EventsSubscription"
-description = "NCOF Event Exposure Service for 6G-I2P PoC Scenario."
-version = "0.1.0"
 
 
 app = FastAPI(
@@ -80,12 +84,12 @@ app.include_router(NEFEventsNotificationApiRouter)
 app.include_router(WebApiRouter)
 
 # 정적 파일 서비스 설정
-# src/nncof/static 디렉토리를 /static 경로로 마운트합니다.
+# src/nncof/static 디렉토리를 루트(/)로 마운트한다. Vite 빌드 결과물(/assets/*)이 정상 서빙되도록 함.
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if not os.path.exists(static_dir):
     os.makedirs(static_dir)
 
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 
 
 @app.get("/", include_in_schema=False)
@@ -94,6 +98,3 @@ async def read_index():
     if os.path.exists(index_path):
         return FileResponse(index_path)
     return {"message": "NCOF Event Exposure Service is running. (index.html not found)"}
-
-
-utils.print_logo(title, description, version)

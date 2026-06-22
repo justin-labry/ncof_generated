@@ -1,16 +1,20 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from typing import List, Dict, Any
+import importlib
 import logging
-import json
-import time
+import pkgutil
 
-from nncof.core import utils
-from nncof.core.websocket_manager import manager, broadcast_web_message
-from nncof.core.subscription_manager import SubscriptionManager
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+
+from nncof.apis.web_api_base import BaseWebApi
+from nncof.core.websocket_manager import manager
+import nncof.impl
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["web-api"])
+
+ns_pkg = nncof.impl
+for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
+    importlib.import_module(name)
 
 
 @router.websocket("/ws")
@@ -29,65 +33,48 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @router.get("/status")
 async def get_status():
-    """
-    웹 대시보드를 위한 서버 상태 확인 엔드포인트
-    """
-    return {
-        "status": "online",
-        "service": "NCOF Event Exposure Service",
-        "version": "0.1.0",
-    }
-
-
-@router.get("/events/summary")
-async def get_events_summary():
-    """
-    이벤트 요약 정보 반환 (샘플 데이터)
-    """
-    return {"total_subscriptions": 5, "active_events": 12, "recent_notifications": 45}
+    if not BaseWebApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return await BaseWebApi.subclasses[0]().get_status()
 
 
 @router.get("/subscriptions/relations")
 async def get_subscription_relations():
-    """
-    현재 활성화된 모든 구독 관계(토폴로지 표시용)를 조회한다.
-    반환 형식: [{from, to, type, data, sub_id}]
-    """
-    manager = SubscriptionManager()
-    return manager.get_active_relations()
+    if not BaseWebApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return await BaseWebApi.subclasses[0]().get_subscription_relations()
 
 
 @router.get("/subscriptions/all")
 async def get_subscriptions():
-    """
-    현재 활성화된 모든 구독을 조회한다.
-    반환 형식: [{sub_id, sub_info}]
-    """
-    manager = SubscriptionManager()
-    return manager.get_subscriptions()
+    if not BaseWebApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return await BaseWebApi.subclasses[0]().get_subscriptions()
 
 
 @router.get("/notifications/all")
 async def get_notifications():
-    """
-    모든 핸들러가 수집한 Notification 데이터를 조회한다.
-    반환 형식: { subscription_id: { source_nf: { data_type: [entries] } } }
-    """
-    manager = SubscriptionManager()
-    return manager.get_notifications()
+    if not BaseWebApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return await BaseWebApi.subclasses[0]().get_notifications()
 
 
 @router.get("/notifications/{sub_id}")
 async def get_notification_by_id(sub_id: str):
-    """
-    특정 구독 ID의 Notification 데이터를 조회한다.
-    반환 형식: { source_nf: { data_type: [entries] } }
-    """
-    manager = SubscriptionManager()
-    return manager.get_notification_by_id(sub_id)
+    if not BaseWebApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return await BaseWebApi.subclasses[0]().get_notification_by_id(sub_id)
 
 
 @router.get("/controls/all")
 async def get_control_notifications():
-    manager = SubscriptionManager()
-    return manager.get_control_notifications()
+    if not BaseWebApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return await BaseWebApi.subclasses[0]().get_control_notifications()
+
+
+@router.get("/handlers")
+async def get_handlers():
+    if not BaseWebApi.subclasses:
+        raise HTTPException(status_code=500, detail="Not implemented")
+    return await BaseWebApi.subclasses[0]().get_handlers()
