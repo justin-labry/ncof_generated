@@ -25,7 +25,7 @@ class NCOFEventNotificationImpl(
         # Add color code below print statement
         print("\n[bold blue]===== BEGIN =====[/bold blue]")
         print(f"**** NF: {type.upper()} ****")
-
+        pprint(notifications)
         if len(notifications) == 0:
             return None
 
