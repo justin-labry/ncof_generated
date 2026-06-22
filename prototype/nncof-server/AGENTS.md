@@ -9,7 +9,7 @@ NCOF Event Exposure Service — 6G-I2P PoC용 FastAPI 서버. NncofEventsSubscri
 
 ## STRUCTURE
 
-```
+```sh
 nncof-server/
 ├── src/nncof/
 │   ├── core/           # 비즈니스 로직: 구독 관리, 핸들러, WebSocket, NRF 연동
@@ -23,7 +23,7 @@ nncof-server/
 ## WHERE TO LOOK
 
 | Task | Path | Note |
-|------|------|------|
+| ------ | ------ | ------ |
 | 구독 비즈니스 로직 | `src/nncof/core/subscription_manager.py` | Singleton. 모든 CRUD + 정규화 |
 | 이벤트 처리/전파 | `src/nncof/core/subscription_handler.py` | NF별 구독 요청 생성, 데이터 수집 |
 | WebSocket 실시간 통신 | `src/nncof/core/websocket_manager.py` | 브라우저 대시보드용 |

@@ -6,13 +6,13 @@
         }
     },
     "AF": {
-        "base_uri": "http://127.0.0.1:8002",
+        "base_uri": "http://127.0.0.1:8002/nnef-eventexposure/af/v1",
         "services": {
             "naf-eventexposure": "/naf-eventexposure/v1"
         }
     },
     "RICF": {
-        "base_uri": "http://127.0.0.1:8003",
+        "base_uri": "http://127.0.0.1:8002/nnef-eventexposure/ricf/v1",
         "services": {
             "nsmf-eventexposure": "/nsmf-eventexposure/v1"
         }
