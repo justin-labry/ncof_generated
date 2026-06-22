@@ -36,7 +36,7 @@ for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
 
 
 @router.post(
-    "/subscriptions",
+    "/nnef-eventexposure/{type}/v1/subscriptions",
     responses={
         201: {"model": NefEventExposureSubsc, "description": "Success"},
         400: {"model": ProblemDetails, "description": "Bad request"},
@@ -58,6 +58,7 @@ for _, name, _ in pkgutil.iter_modules(ns_pkg.__path__, ns_pkg.__name__ + "."):
 )
 async def create_individual_subcription(
     nef_event_exposure_subsc: NefEventExposureSubsc = Body(None, description=""),
+    type: str = Path(..., description="NF service type"),
     token_oAuth2ClientCredentials: TokenModel = Security(
         get_token_oAuth2ClientCredentials, scopes=["nnef-eventexposure"]
     ),
@@ -67,8 +68,10 @@ async def create_individual_subcription(
     # return await BaseSubscriptionsCollectionApi.subclasses[0]().create_individual_subcription(nef_event_exposure_subsc)
 
     # 1. 실행 시 주입된 환경 변수 확인 (기본값 TYPE_A)
-    app_mode = os.getenv("APP_MODE", "AF").upper()
+    # app_mode = os.getenv("APP_MODE", "AF").upper()
+    app_mode = type.upper()
 
+    print(f"***** app mode: {app_mode}")
     # 2. 모드에 맞는 구현체 찾기
     # 클래스 이름이나 별도 속성을 통해 매핑할 수 있습니다.
     target_cls = None
