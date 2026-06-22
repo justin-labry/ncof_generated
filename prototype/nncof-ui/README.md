@@ -1,14 +1,11 @@
-# SignalViz - Network Signaling Visualizer
+# NcofViz - NCOF Visualizer
 
-A high-performance, interactive network signaling visualization tool built with Vue 3, D3.js, and Tailwind CSS v4.
+Vue 3, D3.js 및 Tailwind CSS v4를 기반으로 구축된 고성능 NCOF 시각화 도구
 
 ## 🚀 Features
 
-- **Protocol Simulation**: Build message queues and simulate network flows (SUBSCRIBE, NOTIFY, etc.)
-- **Persistent Links**: 'SUBSCRIBED' state maintains a visual connection between nodes.
-- **Interactive Topology**: Drag and drop nodes to reorganize your network.
-- **Deep Monitoring**: Inspect node details, system statuses, and active communication channels.
-- **Aesthetic UI**: Modern glassmorphism design with a focus on usability and visual clarity.
+- 구독/알림 메시지 실시간 시각화
+- 메시지별 상세 구조 출력
 
 ## 🛠️ Tech Stack
 
@@ -39,9 +36,8 @@ npm run dev
 npm run build
 ```
 
-## 📝 Usage
+빌드 명령을 수행하면 빌드 결과물이 다음과 같이 NCOF 서버의 특정 경로에 복사된다.
 
-1. **Select a Node**: Click on any node (NCOF, User, or Resource) to view its details in the right panel.
-2. **Add Messages**: Choose a message type and target, then click "Enqueue" to add to the simulation queue.
-3. **Run Simulation**: Use the left panel to execute the entire queue or run messages individually.
-4. **Organize**: Drag nodes anywhere on the canvas. The layout will persist during your session.
+```bash
+cp -r dist/. ../nncof-server/src/nncof/static/
+```
