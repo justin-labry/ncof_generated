@@ -26,16 +26,26 @@ logger = logging.getLogger(__name__)
 subscriptions: Dict[str, dict] = {}
 
 
-def _power_energy_cons_data_deepsleep():
-    power_energy_cons_data = PowerEnergyConsData()
-    power_energy_cons_data.start_time = datetime.now(timezone.utc)
-    power_energy_cons_data.duration = 60
-    power_energy_cons_data.power = "0mW"
-    power_energy_cons_data.min_power = "0mW"
-    power_energy_cons_data.peak_power = "0mW"
-    power_energy_cons_data.energy = "0.0J"
-    power_energy_cons_data.power_state = "DEEP_SLEEP"
-    return power_energy_cons_data
+# 3GPP TR 38.864 V18.1.0 — BS Category 1, Set 1 상대전력 (deep sleep=1 기준, Table 5.1-3)
+_REL_POWER = {"ACTIVE": 280, "DEEP_SLEEP": 1}
+
+
+def _power_energy_for_state(state: str) -> PowerEnergyConsData:
+    """NCOF가 명령한 셀 전력 상태(ACTIVE/DEEP_SLEEP)를 38.864 상대전력으로
+    표현한 13p_d 전력 피드백 데이터를 만든다. (deep sleep=1 기준, 무단위 상대값)
+    이 PoC는 2-state만 사용하므로 그 외 값은 ACTIVE로 처리한다."""
+    if state not in _REL_POWER:
+        state = "ACTIVE"
+    p = _REL_POWER[state]
+    data = PowerEnergyConsData()
+    data.start_time = datetime.now(timezone.utc)
+    data.duration = 60
+    data.power = f"{p}"
+    data.min_power = f"{p}"
+    data.peak_power = f"{p}"
+    data.energy = f"{p * 60}"  # 상대전력 × duration(60s)
+    data.power_state = state
+    return data
 
 
 async def periodic_notification_sender(sub_id: str, interval_seconds: int):
@@ -69,14 +79,16 @@ async def periodic_notification_sender(sub_id: str, interval_seconds: int):
         )
         simulation_notification_data(event_notification)
 
-        # simulate DEEP_SLEEP state
-        if NCOFEventNotificationImpl.cell_power_state == "DEEP_SLEEP":
-            for event_notif in event_notification.event_notifs:
-                if event_notif.event == "_POWER_ENERGY_CONSUMPTION":
-                    if event_notif.power_energy_consumption_infos is not None:
-                        event_notif.power_energy_consumption_infos[
-                            1
-                        ].power_energy_cons_data = _power_energy_cons_data_deepsleep()
+        # 13p_d 전력 피드백을 NCOF가 명령한 2-state(ACTIVE/DEEP_SLEEP)로 반영.
+        # (명령 이력이 없으면 셀은 ACTIVE로 간주, 38.864 상대전력 적용)
+        cmd_state = NCOFEventNotificationImpl.cell_power_state or "ACTIVE"
+        for event_notif in event_notification.event_notifs:
+            if (
+                event_notif.event == "_POWER_ENERGY_CONSUMPTION"
+                and event_notif.power_energy_consumption_infos is not None
+            ):
+                for pec_info in event_notif.power_energy_consumption_infos:
+                    pec_info.power_energy_cons_data = _power_energy_for_state(cmd_state)
         logger.info(f"[{sub_id}] 💡[Notification]---> [NCOF]")
         await utils.notify(
             sub_id, notif_uri, event_notification.model_dump(mode="json")
