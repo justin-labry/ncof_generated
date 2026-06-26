@@ -15,8 +15,11 @@ import math
 
 class TrafficGenerator:
     def __init__(self, mode: str, rng, *, episode_len: int = 288):
-        self.mode = mode
         self.rng = rng  # numpy Generator (env의 np_random 공유)
+        # "mixed": 에피소드마다 세 패턴 중 하나를 무작위 선택 (일반화 학습용)
+        if mode == "mixed":
+            mode = ["markov", "toggle", "sine"][int(rng.integers(0, 3))]
+        self.mode = mode
         self.episode_len = episode_len
         self._t = 0
         # markov regime: 0=low, 1=high

@@ -29,7 +29,7 @@ from gym_for_ncof.env import (  # noqa: E402
 )
 from gym_for_ncof.policy_export import export_rl_module_to_json  # noqa: E402
 
-ENV_CONFIG = {"traffic_mode": "markov", "norm_mbps": DEFAULT_NORM_MBPS}
+ENV_CONFIG = {"traffic_mode": "mixed", "norm_mbps": DEFAULT_NORM_MBPS}
 
 
 def build_algo():
