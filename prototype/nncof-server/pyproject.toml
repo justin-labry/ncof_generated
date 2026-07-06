@@ -1,0 +1,37 @@
+[project]
+name = "nncof-server"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.136.1",
+    "httpx>=0.28.1",
+    "uvicorn>=0.46.0",
+    "nupf-server",
+    "nnef-server",
+    "nsmf-server",
+    "rprint>=0.0.8",
+    "rich>=15.0.0",
+    "colorlog>=6.10.1",
+    "pyyaml>=6.0.3",
+    "websockets>=16.0",
+    "python-dotenv>=1.2.2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nncof"]
+
+[tool.uv.sources]
+nupf-server = { workspace = true }
+nnef-server =  { workspace = true }
+nsmf-server =  { workspace = true }
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]

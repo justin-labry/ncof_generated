@@ -1,0 +1,32 @@
+version: 1
+disable_existing_loggers: False
+
+# 커스텀 필터 정의 (마지막 이름만 추출)
+filters:
+  short_name:
+    (): path.to.your.ShortNameFilter # 아래 파이썬 코드의 필터 클래스 경로
+
+formatters:
+  colored:
+    (): colorlog.ColoredFormatter
+    format: "%(log_color)s[%(asctime)s] [%(levelname)s] [%(short_name)s] - %(message)s [%(filename)s:%(lineno)d]"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+    log_colors:
+      DEBUG: cyan
+      INFO: green
+      WARNING: yellow
+      ERROR: red
+      CRITICAL: bold_red
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: colored
+    filters: [short_name] # 필터 적용
+    stream: ext://sys.stderr
+
+loggers:
+  root:
+    level: INFO
+    handlers: [console]

@@ -1,0 +1,29 @@
+[project]
+name = "gym-for-ncof"
+version = "0.1.0"
+description = "Gymnasium environment + RLlib training for the NCOF gNB2 power-saving decision"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "gymnasium>=1.0",
+    "numpy>=1.26",
+    "ray[rllib]>=2.40,<3",
+    "torch>=2.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gym_for_ncof"]
+
+# 학습용으로는 CPU torch면 충분 (모델이 64x64 MLP).
+# GPU 학습이 필요해지면 아래 source/index 블록을 제거하면 기본(CUDA) wheel을 받는다.
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

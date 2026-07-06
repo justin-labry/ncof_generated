@@ -1,0 +1,293 @@
+{
+  "correlationId": "NOTIFICATION_2026-03-01T12:00:00+09:00_1",
+  "eventNotifyUri": "https://6g-i2p.etri.re.kr/poc2/upf/",
+  "achievedSampRatio": 100,
+  "notificationItems": [
+    {
+      "eventType": "QOS_MONITORING",
+      "timeStamp": "2026-03-01T12:01:00+09:00",
+      "startTime": "2026-03-01T12:01:00+09:00",
+      "ueIpv4Addr": "192.168.1.11",
+      "dnn": "6g-i2p.etri.re.kr",
+      "snssai": {
+        "sst": 1,
+        "sd": "000001"
+      },
+      "supi": "imsi-001010000000001",
+      "ratType": "NR",
+      "skippedReportInfo": [
+        "SKIP_OUTSIDE_VALIDITY_TIME"
+      ],
+      "qosMonitoringMeasurement": {
+        "dlPacketDelay": 5,
+        "ulPacketDelay": 5,
+        "rtrPacketDelay": 10,
+        "dlAveThroughput": "150 Mbps",
+        "ulAveThroughput": "50 Mbps",
+        "dlAvailableBitrate": "200 Mbps",
+        "ulAvailableBitrate": "100 Mbps",
+        "defaultQoSFlowInd": false,
+        "_dlMinPacketDelay": 2,
+        "_ulMinPacketDelay": 2,
+        "_rtrMinPacketDelay": 5,
+        "_dlMaxPacketDelay": 10,
+        "_ulMaxPacketDelay": 10,
+        "_rtrMaxPacketDelay": 20,
+        "_packetLossRate": 2,
+        "_jitter": 0.0
+      }
+    },
+    {
+      "eventType": "QOS_MONITORING",
+      "timeStamp": "2026-03-01T12:01:00+09:00",
+      "startTime": "2026-03-01T12:01:00+09:00",
+      "ueIpv4Addr": "192.168.1.12",
+      "dnn": "6g-i2p.etri.re.kr",
+      "snssai": {
+        "sst": 1,
+        "sd": "000002"
+      },
+      "gpsi": "msisdn-001010000000002",
+      "supi": "imsi-001010000000002",
+      "ratType": "WLAN",
+      "skippedReportInfo": [
+        "SKIP_OUTSIDE_VALIDITY_TIME"
+      ],
+      "qosMonitoringMeasurement": {
+        "dlPacketDelay": 5,
+        "ulPacketDelay": 5,
+        "rtrPacketDelay": 10,
+        "dlAveThroughput": "150 Mbps",
+        "ulAveThroughput": "50 Mbps",
+        "dlAvailableBitrate": "300 Mbps",
+        "ulAvailableBitrate": "100 Mbps",
+        "defaultQoSFlowInd": false,
+        "_dlMinPacketDelay": 2,
+        "_ulMinPacketDelay": 2,
+        "_rtrMinPacketDelay": 5,
+        "_dlMaxPacketDelay": 10,
+        "_ulMaxPacketDelay": 10,
+        "_rtrMaxPacketDelay": 20,
+        "_packetLossRate": 2,
+        "_jitter": 0.0
+      }
+    },
+    {
+      "eventType": "QOS_MONITORING",
+      "timeStamp": "2026-03-01T12:01:00+09:00",
+      "startTime": "2026-03-01T12:01:00+09:00",
+      "ueIpv4Addr": "192.168.1.13",
+      "dnn": "6g-i2p.etri.re.kr",
+      "snssai": {
+        "sst": 1,
+        "sd": "000003"
+      },
+      "gpsi": "msisdn-001010000000003",
+      "supi": "imsi-001010000000003",
+      "ratType": "NR",
+      "skippedReportInfo": [
+        "SKIP_OUTSIDE_VALIDITY_TIME"
+      ],
+      "qosMonitoringMeasurement": {
+        "dlPacketDelay": 5,
+        "ulPacketDelay": 5,
+        "rtrPacketDelay": 10,
+        "dlAveThroughput": "150 Mbps",
+        "ulAveThroughput": "50 Mbps",
+        "dlAvailableBitrate": "300 Mbps",
+        "ulAvailableBitrate": "100 Mbps",
+        "defaultQoSFlowInd": false,
+        "_dlMinPacketDelay": 2,
+        "_ulMinPacketDelay": 2,
+        "_rtrMinPacketDelay": 5,
+        "_dlMaxPacketDelay": 10,
+        "_ulMaxPacketDelay": 10,
+        "_rtrMaxPacketDelay": 20,
+        "_packetLossRate": 2,
+        "_jitter": 0.0
+      }
+    },
+    {
+      "eventType": "QOS_MONITORING",
+      "timeStamp": "2026-03-01T12:01:00+09:00",
+      "startTime": "2026-03-01T12:01:00+09:00",
+      "ueIpv4Addr": "192.168.1.14",
+      "dnn": "6g-i2p.etri.re.kr",
+      "snssai": {
+        "sst": 1,
+        "sd": "000004"
+      },
+      "gpsi": "msisdn-001010000000004",
+      "supi": "imsi-001010000000004",
+      "ratType": "WLAN",
+      "skippedReportInfo": [
+        "SKIP_OUTSIDE_VALIDITY_TIME"
+      ],
+      "qosMonitoringMeasurement": {
+        "dlPacketDelay": 5,
+        "ulPacketDelay": 5,
+        "rtrPacketDelay": 10,
+        "dlAveThroughput": "150 Mbps",
+        "ulAveThroughput": "50 Mbps",
+        "dlAvailableBitrate": "300 Mbps",
+        "ulAvailableBitrate": "100 Mbps",
+        "defaultQoSFlowInd": false,
+        "_dlMinPacketDelay": 2,
+        "_ulMinPacketDelay": 2,
+        "_rtrMinPacketDelay": 5,
+        "_dlMaxPacketDelay": 10,
+        "_ulMaxPacketDelay": 10,
+        "_rtrMaxPacketDelay": 20,
+        "_packetLossRate": 2,
+        "_jitter": 0.0
+      }
+    },
+    {
+      "eventType": "USER_DATA_USAGE_MEASURES",
+      "timeStamp": "2026-03-01T12:01:00+09:00",
+      "startTime": "2026-03-01T12:01:00+09:00",
+      "dnn": "6g-i2p.etri.re.kr",
+      "skippedReportInfo": [
+        "SKIP_OUTSIDE_VALIDITY_TIME"
+      ],
+      "userDataUsageMeasurements": [
+        {
+          "flowInfo": {
+            "flowDescription": "permit in 6 from 192.168.1.21/32 8080 to 192.168.1.11/32 80",
+            "packFiltId": "filter-001-ul"
+          },
+          "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-1",
+          "volumeMeasurement": {
+            "ulVolume": "3 GB",
+            "ulNbOfPackets": 6000
+          },
+          "throughputStatisticsMeasurement": {
+            "ulAverageThroughput": "50 Mbps",
+            "ulPeakThroughput": "100 Mbps",
+            "ulAveragePacketThroughput": "50 kpps",
+            "ulPeakPacketThroughput": "100 kpps"
+          }
+        },
+        {
+          "flowInfo": {
+            "flowDescription": "permit out 6 from 192.168.1.11/32 80 to 192.168.1.21/32 8080",
+            "packFiltId": "filter-001-dl"
+          },
+          "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-1",
+          "volumeMeasurement": {
+            "dlVolume": "9 GB",
+            "dlNbOfPackets": 6000
+          },
+          "throughputStatisticsMeasurement": {
+            "dlAverageThroughput": "150 Mbps",
+            "dlPeakThroughput": "300 Mbps",
+            "dlAveragePacketThroughput": "500 kpps",
+            "dlPeakPacketThroughput": "300 kpps"
+          }
+        },
+        {
+          "flowInfo": {
+            "flowDescription": "permit in 6 from 192.168.1.22/32 8080 to 192.168.1.12/32 80",
+            "packFiltId": "filter-002-ul"
+          },
+          "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-1",
+          "volumeMeasurement": {
+            "ulVolume": "3 GB",
+            "ulNbOfPackets": 6000
+          },
+          "throughputStatisticsMeasurement": {
+            "ulAverageThroughput": "50 Mbps",
+            "ulPeakThroughput": "100 Mbps",
+            "ulAveragePacketThroughput": "50 kpps",
+            "ulPeakPacketThroughput": "100 kpps"
+          }
+        },
+        {
+          "flowInfo": {
+            "flowDescription": "permit out 6 from 192.168.1.12/32 80 to 192.168.1.22/32 8080",
+            "packFiltId": "filter-002-dl"
+          },
+          "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-1",
+          "volumeMeasurement": {
+            "dlVolume": "9 GB",
+            "dlNbOfPackets": 6000
+          },
+          "throughputStatisticsMeasurement": {
+            "dlAverageThroughput": "150 Mbps",
+            "dlPeakThroughput": "300 Mbps",
+            "dlAveragePacketThroughput": "500 kpps",
+            "dlPeakPacketThroughput": "300 kpps"
+          }
+        },
+        {
+          "flowInfo": {
+            "flowDescription": "permit in 6 from 192.168.1.23/32 8080 to 192.168.1.13/32 80",
+            "packFiltId": "filter-003-ul"
+          },
+          "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-2",
+          "volumeMeasurement": {
+            "ulVolume": "3 GB",
+            "ulNbOfPackets": 6000
+          },
+          "throughputStatisticsMeasurement": {
+            "ulAverageThroughput": "50 Mbps",
+            "ulPeakThroughput": "100 Mbps",
+            "ulAveragePacketThroughput": "50 kpps",
+            "ulPeakPacketThroughput": "100 kpps"
+          }
+        },
+        {
+          "flowInfo": {
+            "flowDescription": "permit out 6 from 192.168.1.13/32 80 to 192.168.1.23/32 8080",
+            "packFiltId": "filter-003-dl"
+          },
+          "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-2",
+          "volumeMeasurement": {
+            "dlVolume": "9 GB",
+            "dlNbOfPackets": 6000
+          },
+          "throughputStatisticsMeasurement": {
+            "dlAverageThroughput": "150 Mbps",
+            "dlPeakThroughput": "300 Mbps",
+            "dlAveragePacketThroughput": "500 kpps",
+            "dlPeakPacketThroughput": "300 kpps"
+          }
+        },
+        {
+          "flowInfo": {
+            "flowDescription": "permit in 6 from 192.168.1.24/32 8080 to 192.168.1.14/32 80",
+            "packFiltId": "filter-004-ul"
+          },
+          "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-2",
+          "volumeMeasurement": {
+            "ulVolume": "3 GB",
+            "ulNbOfPackets": 6000
+          },
+          "throughputStatisticsMeasurement": {
+            "ulAverageThroughput": "50 Mbps",
+            "ulPeakThroughput": "100 Mbps",
+            "ulAveragePacketThroughput": "50 kpps",
+            "ulPeakPacketThroughput": "100 kpps"
+          }
+        },
+        {
+          "flowInfo": {
+            "flowDescription": "permit out 6 from 192.168.1.14/32 80 to 192.168.1.24/32 8080",
+            "packFiltId": "filter-004-dl"
+          },
+          "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-2",
+          "volumeMeasurement": {
+            "dlVolume": "9 GB",
+            "dlNbOfPackets": 6000
+          },
+          "throughputStatisticsMeasurement": {
+            "dlAverageThroughput": "150 Mbps",
+            "dlPeakThroughput": "300 Mbps",
+            "dlAveragePacketThroughput": "500 kpps",
+            "dlPeakPacketThroughput": "300 kpps"
+          }
+        }
+      ]
+    }
+  ]
+}

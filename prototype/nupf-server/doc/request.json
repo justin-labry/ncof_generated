@@ -1,0 +1,44 @@
+{
+  "subscription": {
+    "eventList": [
+      {
+        "type": "USER_DATA_USAGE_MEASURES",
+        "immediateFlag": false,
+        "measurementTypes": ["VOLUME_MEASUREMENT", "THROUGHPUT_MEASUREMENT"],
+        "appIds": ["APP123"],
+        "trafficFilters": [
+          {
+            "flow_direction": "DOWNLINK",
+            "flow_description": "permit out ip from any to 192.168.1.1 80",
+            "eth_flow_description": {
+              "eth_type": "IPv4",
+              "eth_src": "00:11:22:33:44:55",
+              "eth_dst": "AA:BB:CC:DD:EE:FF"
+            }
+          }
+        ],
+        "granularityOfMeasurement": "PER_APPLICATION",
+        "reportingSuggestionInfo": {
+          "reportingUrgency": "DELAY_TOLERANT",
+          "reportingSuggestion": "PERIODIC"
+        },
+        "remoteIpv4Addr": "192.168.1.1",
+        "remotePortNumber": 80,
+        "ipDomain": "example.com"
+      }
+    ],
+    "eventNotifyUri": "https://example.com/notify",
+    "notifyCorrelationId": "correlation-123",
+    "eventReportingMode": {
+      "mode": "ON_EVENT",
+      "trigger": "ONE_TIME"
+    },
+    "nfId": "12345678-1234-1234-1234-123456789012",
+    "anyUe": false,
+    "dnn": "internet",
+    "snssai": {
+      "sst": 1,
+      "sd": "012345"
+    }
+  }
+}
