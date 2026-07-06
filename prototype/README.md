@@ -1,5 +1,17 @@
 # NCOF 
 
+## 저장소 내 위치
+
+이 디렉터리(`prototype/`)는 `ncof_generated` 저장소의 **동작하는 PoC 구현**이다. 병합(modutech → main) 이후 저장소는 세 영역으로 구성된다.
+
+| 디렉터리 | 내용 |
+|---|---|
+| `prototype/` | **이 문서** — uv 워크스페이스 기반 서버들 + Vue UI (실제 실행/시연) |
+| `generated/` | OpenAPI Generator 가 만든 FastAPI 스텁 원본 + `test_server.py`(단일 포트 통합 실행). 자체 `README.md` 보유 |
+| `gym_for_ncof/` | gNB#2 sleep/active 결정용 RL 환경(Gymnasium + PPO). 학습된 정책 JSON 을 NCOF 가 로드 |
+
+아래 실행 절차의 모든 명령은 `prototype/` 디렉터리 안에서 수행한다.
+
 ## 사전설치
 
 NOCF 프로젝트 실행을 위해서 아래 사항들을 준비한다.
@@ -8,16 +20,16 @@ NOCF 프로젝트 실행을 위해서 아래 사항들을 준비한다.
 - python 설치 (3.12.9)
 - nodejs 설치 (v24.13.1): UI 개발용
 
-## 환경설정 (.env)
+## 환경설정 (.env, 선택)
 
-`nncof-server/` 에 `.env` 파일이 필요하다. 제공된 예시를 복사해서 사용한다.
+`nncof-server/` 는 `.env` 없이도 기본값으로 기동된다(`APP_TITLE` 등에 기본값이 내장됨). 알림 base URI·결정 엔진 등 기본 동작을 바꿀 때만 제공된 예시를 복사해 **선택적으로** 설정한다.
 
 ```sh
 cd nncof-server
-cp .env.example .env
+cp .env.example .env   # 선택 — 기본 동작을 바꿀 때만
 ```
 
-> `APP_TITLE` 이 비어 있으면 FastAPI 가 `A title must be provided for OpenAPI` 로 기동에 실패하므로 반드시 값이 있어야 한다.
+> 최초 1회 `uv sync --all-packages`(아래) 만 해두면 `.env` 없이 그대로 실행된다.
 
 ## 의존성 설치 (uv 워크스페이스)
 
@@ -95,7 +107,7 @@ PCF 또는 RICF 에서 NCOF로 구독요청을 보내기 위해서 Postman, VS C
 
 ### NCOF로 구독요청 보내기
 
-./api-client/ 로 이동후 아래 명령을 실행한다. ./api-client/의 json 파일의 내용을 확인한다.
+./api-clients/ 로 이동후 아래 명령을 실행한다. ./api-clients/의 json 파일의 내용을 확인한다.
 
 ```sh
 sh run.sh
