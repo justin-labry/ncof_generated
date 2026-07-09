@@ -12,7 +12,7 @@ from nncof.models.nncof_events_subscription import NncofEventsSubscription
 from nupf.models.notification_data import NotificationData
 
 from .data_store import NotificationDataStore
-from .gnb2_rule_engine import Gnb2RuleEngine
+from .gnb2_rl_engine import create_decision_engine
 from .websocket_manager import broadcast_web_message
 
 logger = logging.getLogger(__name__)
@@ -53,7 +53,12 @@ class DataAnalyzer:
 
         self.is_running = False
         self._task: asyncio.Task | None = None
-        self.rule_engine = Gnb2RuleEngine()
+        # 결정 엔진 선택: NCOF_DECISION_ENGINE(rule|rl) 환경변수에 따라
+        # 룰 베이스 또는 RL 정책 엔진을 생성한다 (RL 로드 실패 시 룰로 폴백).
+        self.decision_engine = create_decision_engine()
+        logger.info(
+            f"[{subscription_id}] 결정 엔진: {type(self.decision_engine).__name__}"
+        )
         self._qos_template: list[dict] | None = None
         self._qos_template_path = Path(
             qos_template_path
@@ -87,7 +92,7 @@ class DataAnalyzer:
                 await self._task
             except asyncio.CancelledError:
                 pass
-        self.rule_engine = Gnb2RuleEngine()
+        self.decision_engine = create_decision_engine()
         logger.info(f"[{self.subscription_id}] DataAnalyzer 중단됨")
 
     async def _notify_analyzing(self):
@@ -199,7 +204,7 @@ class DataAnalyzer:
             return
 
         try:
-            result = self.rule_engine.generate_notification(
+            result = self.decision_engine.generate_notification(
                 notif.to_dict(),
                 qos_template,
                 _now_iso_kst(),
