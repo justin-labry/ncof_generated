@@ -60,6 +60,29 @@ def _generate_notif_id(type: str):
     return f"NOTIFICATION_{type}_{now.isoformat()}"
 
 
+# 감시 창(monitoring window) 기본 길이 — 요청에 monDur 가 없을 때만 사용
+DEFAULT_MON_DURATION = timedelta(hours=1)
+
+
+def _build_target_period(evt_req) -> TimeWindow:
+    """구독 생성 시점(now)을 startTime 으로 하는 TimeWindow 를 생성한다.
+
+    stopTime 은 요청의 monDur(절대 만료 시각)를 사용하되, monDur 가 없거나
+    이미 과거이면 now + DEFAULT_MON_DURATION 으로 보정한다 (start < stop 보장).
+    기존에는 start/stop 이 2026-03-01/2026-12-30 고정값이라, 대상 NF 가
+    "start_time 이 과거이면 drop" 하는 경우 항상 폐기되는 문제가 있었다.
+    """
+    now = datetime.now(tz)
+    stop = now + DEFAULT_MON_DURATION
+    mon_dur = evt_req.mon_dur if evt_req is not None else None
+    if mon_dur is not None:
+        # tz 정보가 없는 값은 KST(+09:00) 로 간주하여 now 와 비교한다.
+        m = mon_dur if mon_dur.tzinfo is not None else mon_dur.replace(tzinfo=tz)
+        if m > now:
+            stop = m
+    return TimeWindow(startTime=now, stopTime=stop)
+
+
 def _convert_flow_info_to_permit_rules(flow_info: dict) -> List[str]:
     """
     플로우 정보(dict)를 입력받아 permit in/out 규칙 리스트를 반환한다.
@@ -255,10 +278,7 @@ def _handle_service_experience(
     evt_sub_smf = NsmfEventSubscription(event="UPF_EVENT")
 
     # evt_sub_smf.network_area
-    evt_sub_smf.target_period = TimeWindow(
-        startTime=datetime(2026, 3, 1, 12, 0, 0),
-        stopTime=datetime(2026, 12, 30, 12, 0, 0),
-    )
+    evt_sub_smf.target_period = _build_target_period(nncof_events_subscription.evt_req)
 
     if event_subscription.network_area is not None:
 
@@ -517,10 +537,7 @@ def _handle_ricf_wlan_performance(
 
     evt_sub_smf = NsmfEventSubscription(event="UPF_EVENT", upfEvents=upf_events)
 
-    evt_sub_smf.target_period = TimeWindow(
-        startTime=datetime(2026, 3, 1, 12, 0, 0),
-        stopTime=datetime(2026, 12, 30, 12, 0, 0),
-    )
+    evt_sub_smf.target_period = _build_target_period(nncof_events_subscription.evt_req)
 
     if event_subscription.network_area is not None:
         evt_sub_smf.network_area = NetworkAreaInfo.from_dict(
