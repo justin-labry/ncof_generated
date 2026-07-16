@@ -14,7 +14,7 @@
 
 ## 사전설치
 
-NOCF 프로젝트 실행을 위해서 아래 사항들을 준비한다.
+NCOF 프로젝트 실행을 위해서 아래 사항들을 준비한다.
 
 - uv 설치 (0.6.12)
 - python 설치 (3.12.9)
@@ -40,31 +40,51 @@ cd prototype
 uv sync --all-packages
 ```
 
-> 일부 서버는 형제 패키지를 import 한다(예: nnef-server → `nncof_cb`, `nncof`). 공유 venv 에서 특정 서버만 동기화되면 형제 패키지가 제거되어 `ModuleNotFoundError` 가 날 수 있으므로, 위 `uv sync --all-packages` 로 전체를 한 번 설치해 둔다. 각 `run.sh` 는 `uv run --no-sync` 로 실행되어 venv 를 다시 건드리지 않으므로, **최초 1회 전체 동기화 후에는 추가 환경변수 없이 그대로 동작한다.**
+> 일부 서버는 형제 패키지를 import 한다(예: nnef-server → `nncof_cb`, `nncof`). 공유 venv 에서 특정 서버만 동기화되면 형제 패키지가 제거되어 `ModuleNotFoundError` 가 날 수 있으므로, 위 `uv sync --all-packages` 로 전체를 한 번 설치해 둔다. 각 실행 스크립트는 `uv run --no-sync` 로 실행되어 venv 를 다시 건드리지 않으므로, **최초 1회 전체 동기화 후에는 추가 환경변수 없이 그대로 동작한다.**
+
+> ⚠️ **HTTP/2 관련 재동기화 주의.** HTTP/2 서버는 `hypercorn[h2]` 로 구동된다(아래). 이 의존성은 `nncof-server/pyproject.toml` 에 이미 선언되어 있으므로 위 `uv sync --all-packages` 가 함께 설치한다. 단, **HTTP/2 변경 이전에 만들어 둔 기존 venv 를 쓰는 경우** 반드시 `uv sync --all-packages` 를 다시 실행해야 한다. (실행 스크립트가 `--no-sync` 이므로, hypercorn 미설치 상태로는 `run_http2.sh` 가 `ModuleNotFoundError: hypercorn` 로 실패한다.)
+
+## 프로토콜: HTTP/2 + TLS
+
+5G SBI 규격(TS 29.500)과 장비업체(㈜두두원) 연동을 위해 NF 간 통신을 **HTTP/2 + TLS** 로 운용한다.
+
+- **서버**: 각 NF 는 `hypercorn` 으로 기동하며 `prototype/cert.pem` / `prototype/key.pem`(사전 생성된 self-signed 인증서)로 TLS 를 종단한다. TLS ALPN 으로 `h2` 를 협상하므로 모든 엔드포인트가 `https://` + HTTP/2 로 열린다.
+- **클라이언트**: 각 서버의 SBI 호출은 `httpx.AsyncClient(http2=True, verify=…)` 를 사용한다. 현재는 self-signed 인증서를 신뢰하기 위해 `verify=False`(각 서버 `impl/utils.py`, `core/subscription_handler.py` 의 `TLS_VERIFY`) 로 동작한다.
+- **인증서 교체 / mTLS**: `cert.pem`·`key.pem` 을 교체하면 서버 인증서가 바뀐다. 상호 TLS(mTLS)·CA 검증은 후속 단계(`TLS_VERIFY` 를 CA 경로로 지정 + 클라이언트 인증서)로 예정.
+
+> HTTP/1.1(평문) 로 띄우고 싶으면 각 서버의 기존 `run.sh` 를 사용한다. 아래 실행 절차는 **HTTP/2 기준(`run_http2.sh`)** 이다.
 
 ## 실행절차
 
-- 5개의 터미널을 실행 후 서브프로젝트별 디렉토리로 이동하여 스크립트를 실행한다.
+- 5개의 터미널을 실행 후 서브프로젝트별 디렉터리로 이동하여 스크립트를 실행한다.
+- 포트는 `prototype/nf_ports.conf` 단일 출처에서 읽는다. 포트를 바꾸려면 이 파일만 수정하고 재기동한다.
 
-### 포트 할당 정보
+### 포트 할당 정보 (`nf_ports.conf`)
 
-1. NCOF: 8000
-2. SMF(UPF): 8001
-3. AF: 8002
-4. RICF: 8003
-5. PCF: 8004
+| NF (서버 디렉터리) | 포트 | 비고 |
+|---|---|---|
+| NCOF (`nncof-server`) | 9000 | 결정 엔진 · UI 정적 서빙 |
+| SMF (`nsmf-server`) | 9001 | SMF 이벤트 목업(UPF 트래픽 시뮬레이션 포함) |
+| NEF = AF + RICF (`nnef-server`) | 9002 | 경로로 AF(`/…/af/v1`)·RICF(`/…/ricf/v1`) 구분 |
+| UPF (`nupf-server`) | 9003 | UPF 이벤트 노출 목업 |
+| PCF (`callback-server`) | 9004 | NCOF 제어명령 수신(PCF 목업) |
 
-### 실행 방법
+### 실행 방법 (HTTP/2)
+
+각 서버 디렉터리로 이동해 `run_http2.sh` 를 실행한다.
 
 ```sh
-sh run.sh # ./nncof-server
-sh run_af.sh # ./nnef-server
-sh run_ricf.sh # ./nnef-server (subscription, notification 모두 수행)
-sh run.sh # ./nsmf-server (UPF Mockup 도 함께 수행)
-sh run.sh # callback-server, NCOF 로부터 notification 수신을 위한 서버 (PCF Mockup 으로 활용)
+cd nncof-server    && sh run_http2.sh   # NCOF  → https://0.0.0.0:9000
+cd nsmf-server     && sh run_http2.sh   # SMF   → https://0.0.0.0:9001
+cd nnef-server     && sh run_http2.sh   # NEF(AF+RICF, APP_MODE=NEF) → https://0.0.0.0:9002
+cd nupf-server     && sh run_http2.sh   # UPF   → https://0.0.0.0:9003
+cd callback-server && sh run_http2.sh   # PCF   → https://0.0.0.0:9004
 ```
-- nnef-server 는 `sh run.sh` 하나로 NEF 목업(AF+RICF 통합, 기본 8002 포트)으로 실행할 수도 있다. (기존 `run_af.sh`/`run_ricf.sh` 분리 실행도 그대로 가능)
-- 현재 구현에서 callback-server 는 PCF 가 NCOF로 부터 제어 명령을 수신하는 기능만 제공하고, 구독요청 보내는 기능은 별도의 방법을 이용한다.
+
+- `nnef-server` 는 `run_http2.sh` 하나로 NEF 목업(AF+RICF 통합, 9002 포트)으로 실행된다. (스크립트가 `APP_MODE=NEF` 를 지정)
+- 각 `run_http2.sh` 는 `hypercorn … --certfile ../cert.pem --keyfile ../key.pem --reload` 로 기동하며, 기동 로그에 `Running on https://0.0.0.0:<포트>` 가 보이면 정상이다.
+- 현재 구현에서 callback-server 는 PCF 가 NCOF 로부터 제어 명령을 수신하는 기능만 제공하고, 구독요청을 보내는 기능은 별도의 방법(아래 `## 확인`)을 이용한다.
+- 평문 HTTP/1.1 로 띄우려면 위 명령의 `run_http2.sh` 를 `run.sh` 로 바꾼다(단 UPF 등 일부 동작은 HTTP/2 기준으로 검증됨).
 
 ## UI 실행 (nncof-ui)
 
@@ -81,7 +101,7 @@ npm run dev      # 개발 서버 → http://localhost:5173
 ```
 
 - 브라우저에서 `http://localhost:5173` 에 접속한다.
-- UI 는 `/api`, `/subscriptions`, `/api/ws` 요청을 NCOF(`localhost:8000`)로 프록시한다. 따라서 실시간 데이터를 확인하려면 NCOF 서버(8000)가 함께 실행 중이어야 한다.
+- UI 는 `/api`, `/subscriptions`, `/api/ws` 요청을 NCOF 로 프록시한다. 프록시 타깃은 `vite.config.ts` 가 `nf_ports.conf` 의 `NCOF_PORT` 를 읽어 **`https://127.0.0.1:9000`**(WebSocket 은 `wss://`)로 구성하며, self-signed 인증서를 허용하도록 `secure:false` 로 설정되어 있다. 따라서 실시간 데이터를 확인하려면 NCOF 서버(HTTP/2, 9000)가 함께 실행 중이어야 한다.
 
 ### 원격(리모트) 접속 시 포트포워딩
 
@@ -97,32 +117,37 @@ npm run dev      # 개발 서버 → http://localhost:5173
 npm run build    # 타입체크(vue-tsc) → 빌드 → dist 를 nncof-server/src/nncof/static/ 로 복사
 ```
 
-빌드 결과물은 NCOF 서버의 정적 파일 경로로 복사되어 `http://localhost:8000` 에서 서빙된다.
+빌드 결과물은 NCOF 서버의 정적 파일 경로로 복사되어 **`https://localhost:9000`** 에서 서빙된다. (self-signed 인증서이므로 브라우저에서 최초 1회 인증서 예외 허용 필요)
 
 ## 확인
 
-PCF 또는 RICF 에서 NCOF로 구독요청을 보내기 위해서 Postman, VS Code REST Client Plugin, Python 클라이언트 등을 사용할 수 있다.
-- 방법1: VSCode 를 사용하는 경우 확장자가 .http 인 파일을 선택하여 요청을 보낸다.
-- 방법2: 터미널에서 client.py 를 실행한다. (추천)
+PCF 또는 RICF 에서 NCOF 로 구독요청을 보내기 위해서 Postman, VS Code REST Client Plugin, Python 클라이언트 등을 사용할 수 있다.
+- 방법1: VSCode 를 사용하는 경우 확장자가 `.http` 인 파일을 선택하여 요청을 보낸다. (URL 이 `https://…:9000` 인지 확인)
+- 방법2: 터미널에서 HTTP/2 클라이언트(`client2.py`)를 실행한다. (추천)
 
-### NCOF로 구독요청 보내기
+### NCOF 로 구독요청 보내기
 
-./api-clients/ 로 이동후 아래 명령을 실행한다. ./api-clients/의 json 파일의 내용을 확인한다.
+`./api-clients/` 로 이동 후 아래 명령을 실행한다. `./api-clients/` 의 json 파일 내용을 확인한다.
 
 ```sh
-sh run.sh
+sh run_http2.sh   # client2.py — https://127.0.0.1:9000 로 HTTP/2 구독요청
 ```
-메뉴가 출력되면 1번 또는 2번을 선택하여 구독 요청을 보낸다.
+
+- 메뉴가 출력되면 `1`(PCF → NCOF) 또는 `2`(RICF → NCOF)를 선택하여 구독 요청을 보낸다.
+- 응답 줄에 협상된 프로토콜이 표시된다 — 정상 시 `[응답] HTTP 201 Created (HTTP/2)`.
+- 평문 HTTP/1.1 클라이언트가 필요하면 `sh run.sh`(구 `client.py`)를 사용한다.
 
 ### 동작 확인
 
 1. 개별 터미널에서 로그를 확인한다.
+2. NCOF 로그에서 아웃바운드 SBI·콜백이 `"HTTP/2 201 …"` / `"HTTP/2 204 …"` 로 찍히면 HTTP/2 로 통신 중이다.
+3. 필요 시 직접 확인: `curl -k --http2 -v https://127.0.0.1:9000/openapi.json` → `ALPN: server accepted h2` · `using HTTP/2`.
 
 ### 제어 출력 위치 (참고)
 
 NCOF 의 결정 결과는 이를 수신하는 NF 측 콘솔에서 확인한다.
 
-- gNB2 전력 상태(DEEP_SLEEP/ACTIVE): nnef-server(RICF) — `cell_power_state: ***...***`
-- QoS(gbrDl/mbrDl) 변경: callback-server(PCF) 페이로드의 `qosParamSet`
+- gNB2 전력 상태(DEEP_SLEEP/ACTIVE): nnef-server(RICF, 9002) — `cell_power_state: ***...***`
+- QoS(gbrDl/mbrDl) 변경: callback-server(PCF, 9004) 페이로드의 `qosParamSet`
 
 > 결정은 상태가 바뀔 때만(emit-on-change) 발송되므로, WLAN DL 처리량이 임계(기본 500 Mbps)를 오갈 때 전환이 관찰된다.
