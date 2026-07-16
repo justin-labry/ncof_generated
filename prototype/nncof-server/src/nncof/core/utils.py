@@ -97,7 +97,7 @@ def system_info():
         "version": version,
         "port": port,
         "ip": ip,
-        "notification_base_uri": f"http://{ip}:{port}/notifications",
+        "notification_base_uri": f"https://{ip}:{port}/notifications",
     }
 
 

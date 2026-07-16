@@ -8,7 +8,8 @@ import urllib.error
 
 from rich.pretty import pprint
 
-BASE_URL = "http://localhost:8000"
+# BASE_URL = "http://localhost:8000"
+BASE_URL = "https://localhost:8000"
 ENDPOINT = "/subscriptions"
 HEADERS = {"Content-Type": "application/json"}
 

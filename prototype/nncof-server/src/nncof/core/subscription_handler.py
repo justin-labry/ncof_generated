@@ -23,6 +23,7 @@ from .data_analyzer import DataAnalyzer
 from .websocket_manager import broadcast_web_message
 
 logger = logging.getLogger(__name__)
+TLS_VERIFY: bool | str = False
 
 
 class SubscriptionHandler:
@@ -47,7 +48,9 @@ class SubscriptionHandler:
         self.control_data_store = NotificationDataStore()
         self.is_running = False
         self.external_subscriptions: List[ExternalSubscriptionRequest] = []
-        self._client = httpx.AsyncClient(timeout=httpx.Timeout(5.0))
+        self._client = httpx.AsyncClient(
+            http2=True, verify=TLS_VERIFY, timeout=httpx.Timeout(5.0)
+        )
 
         self._analyzer = DataAnalyzer(
             subscription_id=subscription_id,

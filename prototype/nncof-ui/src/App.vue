@@ -89,10 +89,12 @@ const fetchInitialRelations = async () => {
   }
 };
 
+const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+
 
 // WebSocket — useWebSocket composable 으로 위임
 const ws = useWebSocket({
-  url: `ws://${window.location.host}/api/ws`,
+  url: `${protocol}://${window.location.host}/api/ws`,
   onOpen: () => {
     ws.send('Hello NCOF Server!');
     store.pushLog('[Sent] Hello NCOF Server!');

@@ -1,5 +1,5 @@
 
-@baseUrl = http://localhost:8000
+@baseUrl = https://localhost:8000
 POST {{baseUrl}}/subscriptions
 Content-Type: application/json
 

@@ -1,5 +1,5 @@
 {
-  "notificationURI": "http://localhost:8004/notifications/pcf",
+  "notificationURI": "https://localhost:8004/notifications/pcf",
   "notifCorrId": "NOTIF_PCF_2026-03-01T12:00:00+09:00_1",
   "evtReq": {
     "notificationMethod": "PERIODIC",

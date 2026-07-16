@@ -21,9 +21,14 @@ def load_json(filename: str) -> dict:
         return json.load(f)
 
 
+TLS_VERIFY: bool | str = False
+
+
 async def notify(sub_id: str, notif_uri: str, payload: Any):
     try:
-        async with httpx.AsyncClient(verify=False) as client:
+        async with httpx.AsyncClient(
+            http2=True, verify=TLS_VERIFY, timeout=httpx.Timeout(5.0)
+        ) as client:
             resp = await client.post(
                 notif_uri,
                 json=payload,

@@ -19,7 +19,7 @@ pip3 install -r requirements.txt
 PYTHONPATH=src uvicorn nncof_cb.main:app --host 0.0.0.0 --port 8080
 ```
 
-and open your browser at `http://localhost:8080/docs/` to see the docs.
+and open your browser at `https://localhost:8080/docs/` to see the docs.
 
 ## Running with Docker
 
