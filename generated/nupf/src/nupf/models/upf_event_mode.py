@@ -37,7 +37,7 @@ class UpfEventMode(BaseModel):
     """ # noqa: E501
     trigger: StrictStr = Field(description="Upf Event Trigger")
     max_reports: Optional[StrictInt] = Field(default=None, alias="maxReports")
-    expiry: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.")
+    expiry: Optional[datetime] = Field(default=None, description="string with format \"date-time\" as defined in OpenAPI.")
     rep_period: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="repPeriod")
     samp_ratio: Optional[Annotated[int, Field(le=100, strict=True, ge=1)]] = Field(default=None, description="Unsigned integer indicating Sampling Ratio (see clauses 4.15.1 of 3GPP TS 23.502), expressed in percent.  ", alias="sampRatio")
     partitioning_criteria: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="partitioningCriteria")

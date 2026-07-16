@@ -32,8 +32,8 @@ class ValidTimePeriod(BaseModel):
     """
     Contains the validity time period
     """ # noqa: E501
-    start_time: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="startTime")
-    end_time: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="endTime")
+    start_time: Optional[datetime] = Field(default=None, description="string with format \"date-time\" as defined in OpenAPI.", alias="startTime")
+    end_time: Optional[datetime] = Field(default=None, description="string with format \"date-time\" as defined in OpenAPI.", alias="endTime")
     __properties: ClassVar[List[str]] = ["startTime", "endTime"]
 
     model_config = {

@@ -24052,7 +24052,7 @@ components:
         eventsRepInfo:
           $ref: '#/components/schemas/ReportingInformation'
         notifUri:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: notifUri
           type: string
         notifId:
@@ -57055,7 +57055,7 @@ components:
           title: NefEvent
           type: string
         timeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -59463,7 +59463,7 @@ components:
         ts: 2000-01-23T04:56:07.000+00:00
       properties:
         ts:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -59711,7 +59711,7 @@ components:
         perfData:
           $ref: '#/components/schemas/PerformanceData'
         timeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -60049,7 +60049,7 @@ components:
             _rsrq: _rsrq
       properties:
         _timestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -60095,7 +60095,7 @@ components:
           $ref: '#/components/schemas/_RfSignalData'
       required:
       - _rfSignalData
-      - _timeStamp
+      - _timestamp
       title: _RfSignalInfo
       type: object
     _RfSignalData:
@@ -60122,7 +60122,7 @@ components:
           _rsrq: _rsrq
       properties:
         _startTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -60459,7 +60459,7 @@ components:
             geodeticInformation: geodeticInformation
       properties:
         _timestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -60527,7 +60527,7 @@ components:
         _power: _power
       properties:
         _startTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -60597,7 +60597,7 @@ components:
       description: Provides additional information in an error response.
       properties:
         type:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: notifUri
           type: string
         title:
@@ -60612,7 +60612,7 @@ components:
           title: detail
           type: string
         instance:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: notifUri
           type: string
         cause:
@@ -60649,7 +60649,7 @@ components:
       title: ProblemDetails
       type: object
     Uri:
-      description: String providing an URI formatted according to RFC 3986.
+      description: string providing an URI formatted according to IETF RFC 3986.
       title: notifUri
       type: string
     InvalidParam:
@@ -60695,11 +60695,11 @@ components:
           title: cause
           type: string
         targetScp:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: notifUri
           type: string
         targetSepp:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: notifUri
           type: string
       title: RedirectResponse
@@ -60742,7 +60742,7 @@ components:
           title: Uinteger
           type: integer
         monDur:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -60791,7 +60791,7 @@ components:
       title: NotificationMethod
       type: string
     DateTime:
-      description: string with format 'date-time' as defined in OpenAPI.
+      description: string with format "date-time" as defined in OpenAPI.
       format: date-time
       title: DateTime
       type: string
@@ -60898,7 +60898,7 @@ components:
         ueAddr:
           $ref: '#/components/schemas/IpAddr'
         timeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -61592,7 +61592,7 @@ components:
         averageSpeed:
           $ref: '#/components/schemas/VelocityEstimate'
         timeOfArrival:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -62030,7 +62030,7 @@ components:
         ts: 2000-01-23T04:56:07.000+00:00
       properties:
         ts:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -62695,17 +62695,17 @@ components:
       description: Abstract base data type describing a collection of event records
       properties:
         collectionTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         startTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         endTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -62751,7 +62751,7 @@ components:
       - $ref: '#/components/schemas/BaseEventRecord'
       - properties:
           metricType:
-            $ref: '#/components/schemas/Uri_1'
+            $ref: '#/components/schemas/Uri'
           samples:
             items:
               $ref: '#/components/schemas/QoEMetricsEvent_allOf_samples'
@@ -63075,7 +63075,7 @@ components:
           title: EventRecordType
           type: string
         recordTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -68636,23 +68636,18 @@ components:
         startTime:
           description: string with format "date-time" as defined in OpenAPI.
           format: date-time
-          title: DateTime_1
+          title: DateTime
           type: string
         stopTime:
           description: string with format "date-time" as defined in OpenAPI.
           format: date-time
-          title: DateTime_1
+          title: DateTime
           type: string
       required:
       - startTime
       - stopTime
       title: TimeWindow
       type: object
-    DateTime_1:
-      description: string with format "date-time" as defined in OpenAPI.
-      format: date-time
-      title: DateTime_1
-      type: string
     Supi:
       description: "String identifying a Supi that shall contain either an IMSI, a\
         \ network specific identifier,\na Global Cable Identifier (GCI) or a Global\
@@ -68878,12 +68873,12 @@ components:
         ulVol: 0
       properties:
         startTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         endTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -69162,7 +69157,7 @@ components:
           title: ageOfLocationInformation
           type: integer
         ueLocationTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -69223,8 +69218,7 @@ components:
       title: Tai
       type: object
     PlmnId:
-      description: |
-        When PlmnId needs to be converted to string (e.g. when used in maps as key), the string  shall be composed of three digits "mcc" followed by "-" and two or three digits "mnc".
+      description: Represents the identifier of a PLMN.
       example:
         mnc: mnc
         mcc: mcc
@@ -69546,7 +69540,7 @@ components:
           title: ageOfLocationInformation
           type: integer
         ueLocationTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -69922,7 +69916,7 @@ components:
           title: ageOfLocationInformation
           type: integer
         ueLocationTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -70106,7 +70100,7 @@ components:
           title: ageOfLocationInformation
           type: integer
         ueLocationTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -70991,9 +70985,6 @@ components:
     ProvisioningSessionType:
       title: ProvisioningSessionType
       type: string
-    Uri_1:
-      description: string providing an URI formatted according to IETF RFC 3986.
-      type: string
     Duration:
       description: "String with format \"duration\" as defined by JSON Schema (referencing\
         \ IETF RFC 3339, appendix A and, ultimately, ISO 8601)."
@@ -71798,7 +71789,7 @@ components:
         sampleDuration: sampleDuration
       properties:
         sampleTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string

@@ -1084,7 +1084,7 @@ components:
           title: SamplingRatio
           type: integer
         eventNotifyUri:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
       required:
@@ -1361,12 +1361,12 @@ components:
           title: Supi
           type: string
         timeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         startTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -1756,7 +1756,7 @@ components:
           title: eventList
           type: array
         eventNotifyUri:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
         notifyCorrelationId:
@@ -1813,7 +1813,7 @@ components:
           title: Uint32
           type: integer
         bundledEventNotifyUri:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
       required:
@@ -1848,7 +1848,7 @@ components:
           title: maxReports
           type: integer
         expiry:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -3250,7 +3250,7 @@ components:
         subscription:
           $ref: '#/components/schemas/UpfEventSubscription'
         subscriptionId:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
         reportList:
@@ -3980,24 +3980,24 @@ components:
           title: cause
           type: string
         targetScp:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
         targetSepp:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
       title: RedirectResponse
       type: object
     Uri:
-      description: String providing an URI formatted according to RFC 3986.
+      description: string providing an URI formatted according to IETF RFC 3986.
       title: Uri
       type: string
     ProblemDetails:
       description: Provides additional information in an error response.
       properties:
         type:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
         title:
@@ -4012,7 +4012,7 @@ components:
           title: detail
           type: string
         instance:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: Uri
           type: string
         cause:
@@ -4238,7 +4238,7 @@ components:
       title: Supi
       type: string
     DateTime:
-      description: string with format 'date-time' as defined in OpenAPI.
+      description: string with format "date-time" as defined in OpenAPI.
       format: date-time
       title: DateTime
       type: string
@@ -4741,7 +4741,7 @@ components:
           title: recurDate
           type: array
         recurEndTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -4754,12 +4754,12 @@ components:
         endTime: 2000-01-23T04:56:07.000+00:00
       properties:
         startTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         endTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string

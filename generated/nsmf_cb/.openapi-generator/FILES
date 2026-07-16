@@ -1,6 +1,5 @@
 .flake8
 .gitignore
-.openapi-generator-ignore
 Dockerfile
 README.md
 docker-compose.yaml
@@ -54,4 +53,3 @@ src/nsmf_cb/models/upf_information.py
 src/nsmf_cb/models/volume_timed_report.py
 src/nsmf_cb/security_api.py
 tests/conftest.py
-tests/test_smf_event_exposure_notification_callback_receiver_api.py

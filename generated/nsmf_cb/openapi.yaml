@@ -291,7 +291,7 @@ components:
       title: DataVolumeInformation
       type: object
     DateTime:
-      description: string with format 'date-time' as defined in OpenAPI.
+      description: string with format "date-time" as defined in OpenAPI.
       format: date-time
       title: DateTime
       type: string
@@ -846,7 +846,7 @@ components:
           title: referenceId
           type: integer
         timeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -1010,7 +1010,7 @@ components:
         dddTraDescriptor:
           $ref: '#/components/schemas/DddTrafficDescriptor'
         maxWaitTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -1157,12 +1157,12 @@ components:
           title: bssId
           type: string
         startWlan:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         endWlan:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -2387,7 +2387,7 @@ components:
           title: eventNotifs
           type: array
         ackUri:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: targetScp
           type: string
       required:
@@ -2517,7 +2517,7 @@ components:
       description: Provides additional information in an error response.
       properties:
         type:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: targetScp
           type: string
         title:
@@ -2532,7 +2532,7 @@ components:
           title: detail
           type: string
         instance:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: targetScp
           type: string
         cause:
@@ -2710,11 +2710,11 @@ components:
           title: cause
           type: string
         targetScp:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: targetScp
           type: string
         targetSepp:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: targetScp
           type: string
       title: RedirectResponse
@@ -2799,7 +2799,7 @@ components:
           title: smNasType
           type: string
         timeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -2831,7 +2831,7 @@ components:
           title: smNasType
           type: string
         timeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -3011,12 +3011,12 @@ components:
         stopTime: 2000-01-23T04:56:07.000+00:00
       properties:
         startTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         stopTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -3246,7 +3246,7 @@ components:
       title: UpfInformation
       type: object
     Uri:
-      description: String providing an URI formatted according to RFC 3986.
+      description: string providing an URI formatted according to IETF RFC 3986.
       title: targetScp
       type: string
     VolumeTimedReport:
@@ -3258,12 +3258,12 @@ components:
         uplinkVolume: 9
       properties:
         startTimeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         endTimeStamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string

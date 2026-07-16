@@ -34,7 +34,7 @@ class WlanPerTsPerformanceInfo(BaseModel):
     """
     WLAN performance information per Time Slot during the analytics target period.
     """ # noqa: E501
-    ts_start: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="tsStart")
+    ts_start: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="tsStart")
     ts_duration: StrictInt = Field(description="indicating a time in seconds.", alias="tsDuration")
     rssi: Optional[StrictInt] = None
     rtt: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.")

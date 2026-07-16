@@ -6,16 +6,56 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import logging
+import os
+from typing import Any
+
+from dotenv import dotenv_values
+
 import httpx
 from rich.pretty import pprint
 
-BASE_URL = "https://localhost:8000"
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("NCOF_Client")
+
+
+def _find_upwards(filename: str) -> str | None:
+    """__file__ 기준 상위 디렉토리로 올라가며 filename 을 찾는다."""
+    current = os.path.dirname(os.path.abspath(__file__))
+    while True:
+        candidate = os.path.join(current, filename)
+        if os.path.isfile(candidate):
+            return candidate
+        parent = os.path.dirname(current)
+        if parent == current:
+            return None
+        current = parent
+
+
+# 포트 단일 출처(prototype/nf_ports.conf)를 읽어온다.
+_ports_file = _find_upwards("nf_ports.conf")
+_conf: dict[str, str | None] = dict(dotenv_values(_ports_file)) if _ports_file else {}
+if _ports_file:
+    logger.info(f"[NRF] NF ports loaded from {_ports_file}")
+else:
+    logger.warning("[NRF] nf_ports.conf not found; using built-in default ports.")
+
+
+def _cfg(key: str, default: str) -> str:
+    """조회 우선순위: OS 환경변수 > nf_ports.conf > 기본값."""
+    return os.getenv(key) or _conf.get(key) or default
+
+
+NCOF_PORT = _cfg("NCOF_PORT", "9000")
+HOST = _cfg("NF_HOST", "127.0.0.1")
+
+logger.info(f"NCOF_PORT: {NCOF_PORT}")
+
+BASE_URL = f"https://{HOST}:{NCOF_PORT}"
 ENDPOINT = "/subscriptions"
 
-# 운영 및 공인 인증서: True
-# 자체 서명 인증서: 인증서를 발급한 CA 파일 경로
 TLS_VERIFY: bool | str = False
-# TLS_VERIFY = "./certs/ca.pem"
 
 MENU = [
     ("1", "[SUBSCRIPTION] PCF -> NCOF", "subscription_pcf_to_ncof.json"),

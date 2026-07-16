@@ -38,7 +38,7 @@ class ReportingInformation(BaseModel):
     imm_rep: Optional[StrictBool] = Field(default=None, alias="immRep")
     notif_method: Optional[StrictStr] = Field(default=None, description="Represents the notification methods that can be subscribed.   Possible values are: - PERIODIC: The notification is periodically sent. - ONE_TIME: The notification is only sent one time. - ON_EVENT_DETECTION: The notification is sent each time the event is detected. ", alias="notifMethod")
     max_report_nbr: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="maxReportNbr")
-    mon_dur: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="monDur")
+    mon_dur: Optional[datetime] = Field(default=None, description="string with format \"date-time\" as defined in OpenAPI.", alias="monDur")
     rep_period: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="repPeriod")
     samp_ratio: Optional[Annotated[int, Field(le=100, strict=True, ge=1)]] = Field(default=None, description="Unsigned integer indicating Sampling Ratio (see clauses 4.15.1 of 3GPP TS 23.502), expressed in percent.  ", alias="sampRatio")
     partition_criteria: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, description="Criteria for partitioning the UEs before applying the sampling ratio.", alias="partitionCriteria")

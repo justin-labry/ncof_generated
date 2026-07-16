@@ -35,7 +35,7 @@ class CellPowerParamSetsPerTS(BaseModel):
     """
     The QoS and policy assistance parameter sets per Time Slot.
     """ # noqa: E501
-    ts_start: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="_tsStart")
+    ts_start: Optional[datetime] = Field(default=None, description="string with format \"date-time\" as defined in OpenAPI.", alias="_tsStart")
     ts_duration: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="_tsDuration")
     rat_freq: Optional[RatFreqInformation] = Field(default=None, alias="_ratFreq")
     confidence: Optional[Annotated[int, Field(strict=True, ge=0)]] = Field(default=None, description="Unsigned Integer, i.e. only value 0 and integers above 0 are permissible.", alias="_confidence")

@@ -33,7 +33,7 @@ class SmNasFromSmf(BaseModel):
     Represents information on the SM congestion control applied SM NAS messages that SMF sends  to UE for PDU Session. 
     """ # noqa: E501
     sm_nas_type: StrictStr = Field(alias="smNasType")
-    time_stamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="timeStamp")
+    time_stamp: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="timeStamp")
     backoff_timer: StrictInt = Field(description="indicating a time in seconds.", alias="backoffTimer")
     applied_smcc_type: StrictStr = Field(description="Represents the type of applied SM congestion control.   Possible values are: - DNN_CC: Indicates the DNN based congestion control. - SNSSAI_CC: Indicates the S-NSSAI based congestion control. ", alias="appliedSmccType")
     __properties: ClassVar[List[str]] = ["smNasType", "timeStamp", "backoffTimer", "appliedSmccType"]

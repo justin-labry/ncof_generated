@@ -33,8 +33,8 @@ class CommunicationCollection(BaseModel):
     """
     Contains communication information.
     """ # noqa: E501
-    start_time: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="startTime")
-    end_time: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="endTime")
+    start_time: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="startTime")
+    end_time: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="endTime")
     ul_vol: Annotated[int, Field(strict=True, ge=0)] = Field(description="Unsigned integer identifying a volume in units of bytes.", alias="ulVol")
     dl_vol: Annotated[int, Field(strict=True, ge=0)] = Field(description="Unsigned integer identifying a volume in units of bytes.", alias="dlVol")
     __properties: ClassVar[List[str]] = ["startTime", "endTime", "ulVol", "dlVol"]

@@ -45,7 +45,7 @@ class PerformanceDataInfo(BaseModel):
     app_locs: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="appLocs")
     as_addr: Optional[AddrFqdn] = Field(default=None, alias="asAddr")
     perf_data: PerformanceData = Field(alias="perfData")
-    time_stamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="timeStamp")
+    time_stamp: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="timeStamp")
     __properties: ClassVar[List[str]] = ["appId", "ueIpAddr", "ipTrafficFilter", "userLoc", "appLocs", "asAddr", "perfData", "timeStamp"]
 
     model_config = {

@@ -35,7 +35,7 @@ class NsmfEventExposureNotification(BaseModel):
     """ # noqa: E501
     notif_id: StrictStr = Field(description="Notification correlation ID", alias="notifId")
     event_notifs: Annotated[List[EventNotification], Field(min_length=1)] = Field(description="Notifications about Individual Events", alias="eventNotifs")
-    ack_uri: Optional[StrictStr] = Field(default=None, description="String providing an URI formatted according to RFC 3986.", alias="ackUri")
+    ack_uri: Optional[StrictStr] = Field(default=None, description="string providing an URI formatted according to IETF RFC 3986.", alias="ackUri")
     __properties: ClassVar[List[str]] = ["notifId", "eventNotifs", "ackUri"]
 
     model_config = {

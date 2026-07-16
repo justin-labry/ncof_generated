@@ -46,7 +46,7 @@ class ExpectedUeBehaviourData(BaseModel):
     trajectory_segments: Optional[Annotated[List[TrajectorySegment], Field(min_length=1)]] = Field(default=None, alias="trajectorySegments")
     traffic_profile: Optional[StrictStr] = Field(default=None, description="Possible values are: - SINGLE_TRANS_UL: Uplink single packet transmission. - SINGLE_TRANS_DL: Downlink single packet transmission. - DUAL_TRANS_UL_FIRST: Dual packet transmission, firstly uplink packet transmission   with subsequent downlink packet transmission. - DUAL_TRANS_DL_FIRST: Dual packet transmission, firstly downlink packet transmission   with subsequent uplink packet transmission.  ", alias="trafficProfile")
     battery_indication: Optional[BatteryIndication] = Field(default=None, alias="batteryIndication")
-    validity_time: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="validityTime")
+    validity_time: Optional[datetime] = Field(default=None, description="string with format \"date-time\" as defined in OpenAPI.", alias="validityTime")
     confidence_level: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, alias="confidenceLevel")
     accuracy_level: Optional[Annotated[str, Field(strict=True)]] = Field(default=None, alias="accuracyLevel")
     accept_deviate_time: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="acceptDeviateTime")

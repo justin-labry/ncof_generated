@@ -1,6 +1,5 @@
 .flake8
 .gitignore
-.openapi-generator-ignore
 Dockerfile
 README.md
 docker-compose.yaml
@@ -56,6 +55,9 @@ src/nnef_cb/models/ip_addr.py
 src/nnef_cb/models/ip_packet_filter_set.py
 src/nnef_cb/models/ipv6_addr.py
 src/nnef_cb/models/ipv6_prefix.py
+src/nnef_cb/models/local2d_point_uncertainty_ellipse.py
+src/nnef_cb/models/local3d_point_uncertainty_ellipsoid.py
+src/nnef_cb/models/local_origin.py
 src/nnef_cb/models/location_area5_g.py
 src/nnef_cb/models/location_area_id.py
 src/nnef_cb/models/media_streaming_access.py
@@ -105,6 +107,7 @@ src/nnef_cb/models/qo_e_metrics_event_all_of_samples.py
 src/nnef_cb/models/radial_velocity.py
 src/nnef_cb/models/redirect_response.py
 src/nnef_cb/models/ref_signal_measurements.py
+src/nnef_cb/models/relative_cartesian_location.py
 src/nnef_cb/models/relative_velocity_with_uncertainty.py
 src/nnef_cb/models/rf_signal_data.py
 src/nnef_cb/models/rf_signal_info.py
@@ -125,6 +128,7 @@ src/nnef_cb/models/ue_mobility_info.py
 src/nnef_cb/models/ue_trajectory_collection.py
 src/nnef_cb/models/ue_trajectory_info.py
 src/nnef_cb/models/uncertainty_ellipse.py
+src/nnef_cb/models/uncertainty_ellipsoid.py
 src/nnef_cb/models/unidirectional_qo_s_specification.py
 src/nnef_cb/models/usage_threshold.py
 src/nnef_cb/models/user_data_congestion_collection.py
@@ -134,4 +138,3 @@ src/nnef_cb/models/velocity_estimate.py
 src/nnef_cb/models/vertical_direction.py
 src/nnef_cb/security_api.py
 tests/conftest.py
-tests/test_nef_event_exposure_notification_callback_receiver_api.py

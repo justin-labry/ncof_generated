@@ -33,7 +33,7 @@ class UeTrajectoryCollection(BaseModel):
     """
     Contains UE trajectory information associated with an application.
     """ # noqa: E501
-    ts: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.")
+    ts: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.")
     loc_area: LocationArea5G = Field(alias="locArea")
     __properties: ClassVar[List[str]] = ["ts", "locArea"]
 

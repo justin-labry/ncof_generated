@@ -1,6 +1,5 @@
 .flake8
 .gitignore
-.openapi-generator-ignore
 Dockerfile
 README.md
 docker-compose.yaml
@@ -42,4 +41,3 @@ src/nupf_cb/models/user_data_usage_measurements.py
 src/nupf_cb/models/volume_measurement.py
 src/nupf_cb/security_api.py
 tests/conftest.py
-tests/test_upf_event_exposure_notification_callback_receiver_api.py

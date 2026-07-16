@@ -37,7 +37,7 @@ class NncofEventsSubscriptionNotification(BaseModel):
     subscription_id: StrictStr = Field(description="String identifying a subscription to the Nncof_EventsSubscription Service", alias="subscriptionId")
     notif_corr_id: Optional[StrictStr] = Field(default=None, description="Notification correlation identifier.", alias="notifCorrId")
     old_subscription_id: Optional[StrictStr] = Field(default=None, description="Subscription ID which was allocated by the source NCOF. This parameter shall be present if the notification is for informing the assignment of a new Subscription Id by the target NCOF. ", alias="oldSubscriptionId")
-    resource_uri: Optional[StrictStr] = Field(default=None, description="String providing an URI formatted according to RFC 3986.", alias="resourceUri")
+    resource_uri: Optional[StrictStr] = Field(default=None, description="string providing an URI formatted according to IETF RFC 3986.", alias="resourceUri")
     term_cause: Optional[StrictStr] = Field(default=None, description="Represents the cause for the analytics subscription termination request.   Possible values are:     - USER_CONSENT_REVOKED: The user consent has been revoked.   - NCOF_OVERLOAD: The NCOF is overloaded.   - UE_LEFT_AREA: The UE has moved out of the NCOF serving area. ", alias="termCause")
     trans_events: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, alias="transEvents")
     __properties: ClassVar[List[str]] = ["eventNotifications", "subscriptionId", "notifCorrId", "oldSubscriptionId", "resourceUri", "termCause", "transEvents"]

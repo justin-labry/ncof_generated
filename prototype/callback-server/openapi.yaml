@@ -593,7 +593,7 @@ components:
       title: DatasetStatisticalProperty
       type: string
     DateTime:
-      description: string with format 'date-time' as defined in OpenAPI.
+      description: string with format "date-time" as defined in OpenAPI.
       format: date-time
       title: DateTime
       type: string
@@ -2663,7 +2663,7 @@ components:
               geodeticInformation: geodeticInformation
       properties:
         tsStart:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -3337,7 +3337,7 @@ components:
           title: ageOfLocationInformation
           type: integer
         ueLocationTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -11082,17 +11082,17 @@ components:
           title: event
           type: string
         start:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         expiry:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         timeStampGen:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -11609,7 +11609,7 @@ components:
           title: ageOfLocationInformation
           type: integer
         ueLocationTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -11746,6 +11746,13 @@ components:
       - hfcNId
       title: HfcNodeId
       type: object
+    HorizAxesOrientation:
+      description: Horizontal axes orientation angle clockwise from northing in 0.1
+        degrees.
+      maximum: 3600
+      minimum: 0
+      title: HorizAxesOrientation
+      type: integer
     InnerRadius:
       description: Indicates value of the inner radius.
       format: int32
@@ -11840,6 +11847,67 @@ components:
         - PON: Identifies a PON line
       title: LineType
       type: string
+    Local2dPointUncertaintyEllipse:
+      allOf:
+      - $ref: '#/components/schemas/GADShape'
+      - properties:
+          localOrigin:
+            $ref: '#/components/schemas/LocalOrigin'
+          point:
+            $ref: '#/components/schemas/RelativeCartesianLocation'
+          uncertaintyEllipse:
+            $ref: '#/components/schemas/UncertaintyEllipse'
+          confidence:
+            $ref: '#/components/schemas/Confidence'
+        required:
+        - confidence
+        - localOrigin
+        - point
+        - uncertaintyEllipse
+        type: object
+      description: Local 2D point with uncertainty ellipse
+    Local3dPointUncertaintyEllipsoid:
+      allOf:
+      - $ref: '#/components/schemas/GADShape'
+      - properties:
+          localOrigin:
+            $ref: '#/components/schemas/LocalOrigin'
+          point:
+            $ref: '#/components/schemas/RelativeCartesianLocation'
+          uncertaintyEllipsoid:
+            $ref: '#/components/schemas/UncertaintyEllipsoid'
+          confidence:
+            $ref: '#/components/schemas/Confidence'
+          vConfidence:
+            $ref: '#/components/schemas/Confidence'
+        required:
+        - confidence
+        - localOrigin
+        - point
+        - uncertaintyEllipsoid
+        type: object
+      description: Local 3D point with uncertainty ellipsoid
+    LocalOrigin:
+      description: Indicates a Local origin in a reference system
+      properties:
+        coordinateId:
+          title: coordinateId
+          type: string
+        point:
+          $ref: '#/components/schemas/GeographicalCoordinates'
+        area:
+          $ref: '#/components/schemas/GeographicArea'
+        horizAxesOrientation:
+          description: Horizontal axes orientation angle clockwise from northing in
+            0.1 degrees.
+          maximum: 3600
+          minimum: 0
+          title: HorizAxesOrientation
+          type: integer
+      required:
+      - coordinateId
+      title: LocalOrigin
+      type: object
     LocationAreaId:
       description: "Contains a Location area identification as defined in 3GPP TS\
         \ 23.003, clause 4.1."
@@ -28212,7 +28280,7 @@ components:
           title: oldSubscriptionId
           type: string
         resourceUri:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: targetScp
           type: string
         termCause:
@@ -28302,7 +28370,7 @@ components:
           title: ageOfLocationInformation
           type: integer
         ueLocationTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -28435,8 +28503,7 @@ components:
       title: PduSessionType
       type: string
     PlmnId:
-      description: |
-        When PlmnId needs to be converted to string (e.g. when used in maps as key), the string  shall be composed of three digits "mcc" followed by "-" and two or three digits "mnc".
+      description: Represents the identifier of a PLMN.
       example:
         mnc: mnc
         mcc: mcc
@@ -28598,7 +28665,7 @@ components:
       description: Provides additional information in an error response.
       properties:
         type:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: targetScp
           type: string
         title:
@@ -28613,7 +28680,7 @@ components:
           title: detail
           type: string
         instance:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: targetScp
           type: string
         cause:
@@ -29734,7 +29801,7 @@ components:
             avgWin: 2487
       properties:
         tsStart:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -29848,14 +29915,37 @@ components:
           title: cause
           type: string
         targetScp:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: targetScp
           type: string
         targetSepp:
-          description: String providing an URI formatted according to RFC 3986.
+          description: string providing an URI formatted according to IETF RFC 3986.
           title: targetScp
           type: string
       title: RedirectResponse
+      type: object
+    RelativeCartesianLocation:
+      description: Relative Cartesian Location
+      properties:
+        x:
+          description: string with format 'float' as defined in OpenAPI.
+          format: float
+          title: varTransTimeUl
+          type: number
+        "y":
+          description: string with format 'float' as defined in OpenAPI.
+          format: float
+          title: varTransTimeUl
+          type: number
+        z:
+          description: string with format 'float' as defined in OpenAPI.
+          format: float
+          title: varTransTimeUl
+          type: number
+      required:
+      - x
+      - "y"
+      title: RelativeCartesianLocation
       type: object
     RoutingAreaId:
       description: "Contains a Routing Area Identification as defined in 3GPP TS 23.003,\
@@ -31522,12 +31612,12 @@ components:
         stopTime: 2000-01-23T04:56:07.000+00:00
       properties:
         startTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
         stopTime:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -31689,6 +31779,40 @@ components:
       - semiMinor
       title: UncertaintyEllipse
       type: object
+    UncertaintyEllipsoid:
+      description: Ellipsoid with uncertainty
+      properties:
+        semiMajor:
+          description: Indicates value of uncertainty.
+          format: float
+          minimum: 0
+          title: Uncertainty
+          type: number
+        semiMinor:
+          description: Indicates value of uncertainty.
+          format: float
+          minimum: 0
+          title: Uncertainty
+          type: number
+        vertical:
+          description: Indicates value of uncertainty.
+          format: float
+          minimum: 0
+          title: Uncertainty
+          type: number
+        orientationMajor:
+          description: Indicates value of orientation angle.
+          maximum: 180
+          minimum: 0
+          title: Orientation
+          type: integer
+      required:
+      - orientationMajor
+      - semiMajor
+      - semiMinor
+      - vertical
+      title: UncertaintyEllipsoid
+      type: object
     UpfInformation:
       description: Represents the ID/address/FQDN of the UPF.
       example:
@@ -31708,7 +31832,7 @@ components:
       title: UpfInformation
       type: object
     Uri:
-      description: String providing an URI formatted according to RFC 3986.
+      description: string providing an URI formatted according to IETF RFC 3986.
       title: targetScp
       type: string
     UserLocation:
@@ -31946,7 +32070,7 @@ components:
           title: ageOfLocationInformation
           type: integer
         ueLocationTimestamp:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -32045,7 +32169,7 @@ components:
       nullable: true
       properties:
         tsStart:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string
@@ -33116,7 +33240,7 @@ components:
           allRat: true
       properties:
         _tsStart:
-          description: string with format 'date-time' as defined in OpenAPI.
+          description: string with format "date-time" as defined in OpenAPI.
           format: date-time
           title: DateTime
           type: string

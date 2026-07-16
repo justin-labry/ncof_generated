@@ -52,7 +52,7 @@ class EventSubscription(BaseModel):
     upf_events: Optional[Annotated[List[UpfEvent], Field(min_length=1)]] = Field(default=None, description="Indicates UPF event exposure information.", alias="upfEvents")
     bundling_allowed: Optional[StrictBool] = Field(default=None, description="This attribute may be included for event \"UPF_EVENT\" and indicates whether it is requested to allow the bundling of event reports in UPF notifications. Possible values: -\"true\": it is requested to allow the bundling of event reports in UPF notifications. The presence of this attribute with the value \"false\" shall be prohibited. ", alias="bundlingAllowed")
     bundle_id: Optional[Annotated[int, Field(le=4294967295, strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 32-bit integer. ", alias="bundleId")
-    bundled_event_notify_uri: Optional[StrictStr] = Field(default=None, description="String providing an URI formatted according to RFC 3986.", alias="bundledEventNotifyUri")
+    bundled_event_notify_uri: Optional[StrictStr] = Field(default=None, description="string providing an URI formatted according to IETF RFC 3986.", alias="bundledEventNotifyUri")
     flow_descs: Optional[Annotated[List[StrictStr], Field(min_length=1)]] = Field(default=None, description="Descriptor(s) of IP traffic.", alias="flowDescs")
     __properties: ClassVar[List[str]] = ["event", "referenceId", "dnaiChgType", "dddTraDescriptors", "dddStati", "appIds", "networkArea", "targetPeriod", "tws", "transacDispInd", "transacMetrics", "ueIpAddr", "upfEvents", "bundlingAllowed", "bundleId", "bundledEventNotifyUri", "flowDescs"]
 

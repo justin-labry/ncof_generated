@@ -37,7 +37,7 @@ class ConsumptionReportingEvent(BaseModel):
     A Consumption Reporting Event record, corresponding to a Consumption Reporting Unit.
     """ # noqa: E501
     record_type: StrictStr = Field(description="Enumeration of event record types.", alias="recordType")
-    record_timestamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="recordTimestamp")
+    record_timestamp: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="recordTimestamp")
     app_id: StrictStr = Field(description="String providing an application identifier.", alias="appId")
     provisioning_session_id: Optional[StrictStr] = Field(default=None, description="String chosen by the 5GMS AF to serve as an identifier in a resource URI.", alias="provisioningSessionId")
     session_id: Optional[StrictStr] = Field(default=None, description="A unique identifier for a media delivery session.", alias="sessionId")

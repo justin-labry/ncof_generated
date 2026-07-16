@@ -32,8 +32,8 @@ class RedirectResponse(BaseModel):
     The response shall include a Location header field containing a different URI  (pointing to a different URI of an other service instance), or the same URI if a request  is redirected to the same target resource via a different SCP. 
     """ # noqa: E501
     cause: Optional[StrictStr] = None
-    target_scp: Optional[StrictStr] = Field(default=None, description="String providing an URI formatted according to RFC 3986.", alias="targetScp")
-    target_sepp: Optional[StrictStr] = Field(default=None, description="String providing an URI formatted according to RFC 3986.", alias="targetSepp")
+    target_scp: Optional[StrictStr] = Field(default=None, description="string providing an URI formatted according to IETF RFC 3986.", alias="targetScp")
+    target_sepp: Optional[StrictStr] = Field(default=None, description="string providing an URI formatted according to IETF RFC 3986.", alias="targetSepp")
     __properties: ClassVar[List[str]] = ["cause", "targetScp", "targetSepp"]
 
     model_config = {

@@ -37,7 +37,7 @@ class UpfEventSubscription(BaseModel):
     UPF Event Subscription
     """ # noqa: E501
     event_list: Annotated[List[UpfEvent], Field(min_length=1)] = Field(alias="eventList")
-    event_notify_uri: StrictStr = Field(description="String providing an URI formatted according to RFC 3986.", alias="eventNotifyUri")
+    event_notify_uri: StrictStr = Field(description="string providing an URI formatted according to IETF RFC 3986.", alias="eventNotifyUri")
     notify_correlation_id: StrictStr = Field(alias="notifyCorrelationId")
     event_reporting_mode: UpfEventMode = Field(alias="eventReportingMode")
     nf_id: StrictStr = Field(description="String uniquely identifying a NF instance. The format of the NF Instance ID shall be a  Universally Unique Identifier (UUID) version 4.  ", alias="nfId")
@@ -48,7 +48,7 @@ class UpfEventSubscription(BaseModel):
     snssai: Optional[Snssai] = None
     bundling_allowed: Optional[StrictBool] = Field(default=None, alias="bundlingAllowed")
     bundle_id: Optional[Annotated[int, Field(le=4294967295, strict=True, ge=0)]] = Field(default=None, description="Integer where the allowed values correspond to the value range of an unsigned 32-bit integer. ", alias="bundleId")
-    bundled_event_notify_uri: Optional[StrictStr] = Field(default=None, description="String providing an URI formatted according to RFC 3986.", alias="bundledEventNotifyUri")
+    bundled_event_notify_uri: Optional[StrictStr] = Field(default=None, description="string providing an URI formatted according to IETF RFC 3986.", alias="bundledEventNotifyUri")
     __properties: ClassVar[List[str]] = ["eventList", "eventNotifyUri", "notifyCorrelationId", "eventReportingMode", "nfId", "ueIpAddress", "anyUe", "supi", "dnn", "snssai", "bundlingAllowed", "bundleId", "bundledEventNotifyUri"]
 
     @field_validator('supi')

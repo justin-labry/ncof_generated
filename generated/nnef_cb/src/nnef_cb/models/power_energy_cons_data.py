@@ -32,7 +32,7 @@ class PowerEnergyConsData(BaseModel):
     """
     Contains RF signal Data.
     """ # noqa: E501
-    start_time: Optional[datetime] = Field(default=None, description="string with format 'date-time' as defined in OpenAPI.", alias="_startTime")
+    start_time: Optional[datetime] = Field(default=None, description="string with format \"date-time\" as defined in OpenAPI.", alias="_startTime")
     duration: Optional[StrictInt] = Field(default=None, description="indicating a time in seconds.", alias="_duration")
     power: Optional[StrictStr] = Field(default=None, alias="_power")
     min_power: Optional[StrictStr] = Field(default=None, alias="_minPower")

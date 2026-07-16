@@ -34,9 +34,9 @@ class DynamicPolicyInvocationsCollection(BaseModel):
     """
     A collection of Dynamic Policy Invocation Event records.
     """ # noqa: E501
-    collection_timestamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="collectionTimestamp")
-    start_timestamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="startTimestamp")
-    end_timestamp: datetime = Field(description="string with format 'date-time' as defined in OpenAPI.", alias="endTimestamp")
+    collection_timestamp: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="collectionTimestamp")
+    start_timestamp: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="startTimestamp")
+    end_timestamp: datetime = Field(description="string with format \"date-time\" as defined in OpenAPI.", alias="endTimestamp")
     sample_count: Annotated[int, Field(strict=True, ge=1)] = Field(description="The number of data samples included in or summarised by this collection.", alias="sampleCount")
     streaming_direction: StrictStr = Field(alias="streamingDirection")
     summarisations: Annotated[List[StrictStr], Field(min_length=1)] = Field(description="One or more data aggregation functions that have been applied to the UE data to produce summary records present in this collection.")
