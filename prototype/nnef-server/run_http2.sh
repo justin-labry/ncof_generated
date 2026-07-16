@@ -8,5 +8,4 @@ uv run --no-sync hypercorn nnef.main:app \
     --bind "0.0.0.0:$PORT" \
     --certfile ../cert.pem \
     --keyfile ../key.pem \
-    --log-config "./log_config.ini" \
-    --reload
+    --log-config "./log_config.ini"
