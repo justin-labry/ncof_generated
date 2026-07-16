@@ -57,18 +57,21 @@ NF 간 통신은 **HTTP/2** 로 운용한다. 기본은 **h2c(평문 HTTP/2, TLS
 
 ## 실행절차
 
-- 5개의 터미널을 실행 후 서브프로젝트별 디렉터리로 이동하여 스크립트를 실행한다.
+- 4개의 터미널을 실행 후 서브프로젝트별 디렉터리로 이동하여 스크립트를 실행한다.
 - 포트·TLS 등 설정은 `prototype/ncof_setting.conf` 단일 출처에서 읽는다. 바꾸려면 이 파일만 수정하고 재기동한다. (CLI 환경변수가 파일값보다 우선)
 
 ### 포트 할당 정보 (`ncof_setting.conf`)
 
+동작에 필요한 서버는 **4개**다.
+
 | NF (서버 디렉터리) | 포트 | 비고 |
 |---|---|---|
 | NCOF (`nncof-server`) | 9000 | 결정 엔진 · UI 정적 서빙 |
-| SMF (`nsmf-server`) | 9001 | SMF 이벤트 목업(UPF 트래픽 시뮬레이션 포함) |
+| SMF (`nsmf-server`) | 9001 | **SMF + UPF 목업** (`APP_MODE=SMF & UPF`) — UPF 이벤트도 이 서버가 생성·전송 |
 | NEF = AF + RICF (`nnef-server`) | 9002 | 경로로 AF(`/…/af/v1`)·RICF(`/…/ricf/v1`) 구분 |
-| UPF (`nupf-server`) | 9003 | UPF 이벤트 노출 목업 |
 | PCF (`callback-server`) | 9004 | NCOF 제어명령 수신(PCF 목업) |
+
+> **UPF 는 별도 서버가 아니다.** NCOF 는 UPF 이벤트를 **SMF 구독에 포함해서** 받는다(`subscription_request_builder` 가 NSMF 구독에 `upf_events` 를 첨부 → SMF 목업이 `NotificationData_from_UPF_to_NCOF` 샘플을 NCOF 의 `/notifications/upf` 로 전송). NRF 조회표에도 UPF 항목이 없어 NCOF 가 UPF 서버를 직접 호출하지 않는다. 워크스페이스의 `nupf-server`(9003)는 아무도 호출하지 않는 **독립 목업**이라 결정 루프에 띄울 필요가 없다(패키지의 Pydantic 모델만 라이브러리로 사용됨). 단독으로 띄워보려면 `cd nupf-server && sh run.sh`.
 
 ### 실행 방법 (HTTP/2)
 
@@ -77,11 +80,10 @@ NF 간 통신은 **HTTP/2** 로 운용한다. 기본은 **h2c(평문 HTTP/2, TLS
 기본(h2c, 평문 HTTP/2):
 
 ```sh
-cd nncof-server    && sh run_http2.sh   # NCOF  → http://0.0.0.0:9000
-cd nsmf-server     && sh run_http2.sh   # SMF   → http://0.0.0.0:9001
-cd nnef-server     && sh run_http2.sh   # NEF(AF+RICF, APP_MODE=NEF) → http://0.0.0.0:9002
-cd nupf-server     && sh run_http2.sh   # UPF   → http://0.0.0.0:9003
-cd callback-server && sh run_http2.sh   # PCF   → http://0.0.0.0:9004
+cd nncof-server    && sh run_http2.sh   # NCOF           → http://0.0.0.0:9000
+cd nsmf-server     && sh run_http2.sh   # SMF(+UPF 목업)  → http://0.0.0.0:9001
+cd nnef-server     && sh run_http2.sh   # NEF(AF+RICF)   → http://0.0.0.0:9002
+cd callback-server && sh run_http2.sh   # PCF            → http://0.0.0.0:9004
 ```
 
 TLS(HTTP/2 over TLS)로 띄우려면 `ncof_setting.conf` 의 `NCOF_TLS=1` 로 바꾸거나(지속), 각 명령 앞에 `NCOF_TLS=1` 을 붙인다(일시 — 파일값보다 우선). 엔드포인트가 `https://` 로 바뀐다. 서버·클라이언트·UI 를 **같은 값**으로 맞춰야 한다:
