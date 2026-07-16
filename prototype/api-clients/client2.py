@@ -52,10 +52,17 @@ HOST = _cfg("NF_HOST", "127.0.0.1")
 
 logger.info(f"NCOF_PORT: {NCOF_PORT}")
 
-BASE_URL = f"https://{HOST}:{NCOF_PORT}"
+_TLS_ENABLED = _cfg("NCOF_TLS", "").strip().lower() in ("1", "true", "yes", "on")
+SCHEME = "https" if _TLS_ENABLED else "http"
+
+BASE_URL = f"{SCHEME}://{HOST}:{NCOF_PORT}"
 ENDPOINT = "/subscriptions"
 
-TLS_VERIFY: bool | str = False
+
+def _httpx_kwargs() -> dict:
+    """NCOF_TLS 설정 시 HTTP/2 over TLS(self-signed 허용), 기본은 h2c(평문 HTTP/2).
+    평문 h2c 는 http1=False 로 prior-knowledge 를 강제해야 한다."""
+    return {"http2": True, "verify": False} if _TLS_ENABLED else {"http1": False, "http2": True}
 
 MENU = [
     ("1", "[SUBSCRIPTION] PCF -> NCOF", "subscription_pcf_to_ncof.json"),
@@ -128,8 +135,7 @@ def main() -> None:
     try:
         with httpx.Client(
             base_url=BASE_URL,
-            http2=True,
-            verify=TLS_VERIFY,
+            **_httpx_kwargs(),
             timeout=timeout,
             headers={
                 "Content-Type": "application/json",
@@ -162,6 +168,11 @@ def main() -> None:
 
                 try:
                     payload = load_json(filename)
+                    # notificationURI 스킴을 현재 모드(기본 http/h2c, NCOF_TLS 시 https)에 맞춰 정규화
+                    if isinstance(payload, dict):
+                        _uri = payload.get("notificationURI", "")
+                        if "://" in _uri:
+                            payload["notificationURI"] = SCHEME + _uri[_uri.index("://") :]
                 except FileNotFoundError:
                     print(f"[오류] 파일을 찾을 수 없음: {filename}")
                     continue

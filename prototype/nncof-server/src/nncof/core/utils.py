@@ -90,6 +90,8 @@ def system_info():
     version = os.getenv("APP_VERSION", "0.1.0")
     title = os.getenv("APP_TITLE", "Nncof_EventsSubscription")
     ip = _get_local_ip()
+    # 기본 h2c(평문 HTTP/2, http). NCOF_TLS 설정 시 HTTP/2 over TLS(https).
+    scheme = "https" if os.getenv("NCOF_TLS", "").strip().lower() in ("1", "true", "yes", "on") else "http"
     return {
         "status": "online",
         "title": title,
@@ -97,7 +99,7 @@ def system_info():
         "version": version,
         "port": port,
         "ip": ip,
-        "notification_base_uri": f"https://{ip}:{port}/notifications",
+        "notification_base_uri": f"{scheme}://{ip}:{port}/notifications",
     }
 
 

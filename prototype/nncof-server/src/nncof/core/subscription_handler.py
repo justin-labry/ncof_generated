@@ -1,6 +1,7 @@
 # NF 구독 생애주기 관리 및 데이터 수신을 담당하는 SubscriptionHandler 클래스
 
 import logging
+import os
 import asyncio
 from typing import Any, List, Literal, Optional
 
@@ -23,7 +24,15 @@ from .data_analyzer import DataAnalyzer
 from .websocket_manager import broadcast_web_message
 
 logger = logging.getLogger(__name__)
-TLS_VERIFY: bool | str = False
+
+_TLS_ENABLED = os.getenv("NCOF_TLS", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _httpx_kwargs() -> dict:
+    """NCOF_TLS 설정 시 HTTP/2 over TLS(self-signed 허용), 기본은 h2c(평문 HTTP/2).
+    평문에서 HTTP/2 를 쓰려면 http1=False 로 prior-knowledge h2c 를 강제해야 한다
+    (http1=True 이면 평문 연결이 조용히 HTTP/1.1 로 떨어짐)."""
+    return {"http2": True, "verify": False} if _TLS_ENABLED else {"http1": False, "http2": True}
 
 
 class SubscriptionHandler:
@@ -49,7 +58,7 @@ class SubscriptionHandler:
         self.is_running = False
         self.external_subscriptions: List[ExternalSubscriptionRequest] = []
         self._client = httpx.AsyncClient(
-            http2=True, verify=TLS_VERIFY, timeout=httpx.Timeout(5.0)
+            **_httpx_kwargs(), timeout=httpx.Timeout(5.0)
         )
 
         self._analyzer = DataAnalyzer(

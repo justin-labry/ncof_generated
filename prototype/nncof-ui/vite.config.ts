@@ -20,8 +20,10 @@ function ncofPort(): string {
 }
 
 const PORT = ncofPort();
-const httpTarget = `https://127.0.0.1:${PORT}`;
-const wsTarget = `wss://127.0.0.1:${PORT}`;
+// 기본 h2c(http/ws). NCOF_TLS=1 이면 https/wss.
+const TLS = /^(1|true|yes|on)$/i.test(process.env.NCOF_TLS ?? "");
+const httpTarget = `${TLS ? "https" : "http"}://127.0.0.1:${PORT}`;
+const wsTarget = `${TLS ? "wss" : "ws"}://127.0.0.1:${PORT}`;
 
 export default defineConfig({
   plugins: [vue(), tailwindcss()],

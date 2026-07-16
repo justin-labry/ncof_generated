@@ -1,5 +1,5 @@
 {
-  "notificationURI": "https://localhost:9002/notifications/ricf",
+  "notificationURI": "http://localhost:9002/notifications/ricf",
   "notifCorrId": "NOTIF_RICF_2026-03-01T12:00:00+09:00_1",
   "evtReq": {
     "notificationMethod": "PERIODIC",

@@ -19,13 +19,19 @@ def load_json(filename: str) -> dict:
         return json.load(f)
 
 
-TLS_VERIFY: bool | str = False
+_TLS_ENABLED = os.getenv("NCOF_TLS", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _httpx_kwargs() -> dict:
+    """NCOF_TLS 설정 시 HTTP/2 over TLS(self-signed 허용), 기본은 h2c(평문 HTTP/2).
+    평문 h2c 는 http1=False 로 prior-knowledge 를 강제해야 한다."""
+    return {"http2": True, "verify": False} if _TLS_ENABLED else {"http1": False, "http2": True}
 
 
 async def notify(sub_id: str, notif_uri: str, payload: Any):
     try:
         async with httpx.AsyncClient(
-            http2=True, verify=TLS_VERIFY, timeout=httpx.Timeout(5.0)
+            **_httpx_kwargs(), timeout=httpx.Timeout(5.0)
         ) as client:
             resp = await client.post(
                 notif_uri,

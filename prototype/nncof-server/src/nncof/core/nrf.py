@@ -46,21 +46,23 @@ def _build_dummy_nfs() -> dict[str, Any]:
     smf_port = _cfg("SMF_PORT", "9001")
     nef_port = _cfg("NEF_PORT", "9002")  # AF/RICF 는 NEF 서버가 경로로 구분해 함께 처리
     pcf_port = _cfg("PCF_PORT", "9004")
+    # 기본 h2c(평문 HTTP/2, http). NCOF_TLS 설정 시 HTTP/2 over TLS(https).
+    scheme = "https" if _cfg("NCOF_TLS", "").strip().lower() in ("1", "true", "yes", "on") else "http"
     return {
         "SMF": {
-            "base_uri": f"https://{host}:{smf_port}",
+            "base_uri": f"{scheme}://{host}:{smf_port}",
             "services": {"nsmf-eventexposure": "/nsmf-eventexposure/v1"},
         },
         "AF": {
-            "base_uri": f"https://{host}:{nef_port}/nnef-eventexposure/af/v1",
+            "base_uri": f"{scheme}://{host}:{nef_port}/nnef-eventexposure/af/v1",
             "services": {"naf-eventexposure": "/naf-eventexposure/v1"},
         },
         "RICF": {
-            "base_uri": f"https://{host}:{nef_port}/nnef-eventexposure/ricf/v1",
+            "base_uri": f"{scheme}://{host}:{nef_port}/nnef-eventexposure/ricf/v1",
             "services": {"nsmf-eventexposure": "/nsmf-eventexposure/v1"},
         },
         "PCF": {
-            "base_uri": f"https://{host}:{pcf_port}",
+            "base_uri": f"{scheme}://{host}:{pcf_port}",
             "services": {"npcf-eventexposure": "/npcf-eventexposure/v1"},
         },
     }
