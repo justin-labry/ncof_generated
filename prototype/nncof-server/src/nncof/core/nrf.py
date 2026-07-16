@@ -22,25 +22,25 @@ def _find_upwards(filename: str) -> str | None:
         current = parent
 
 
-# 포트 단일 출처(prototype/nf_ports.conf)를 읽어온다.
-_ports_file = _find_upwards("nf_ports.conf")
+# 포트 단일 출처(prototype/ncof_setting.conf)를 읽어온다.
+_ports_file = _find_upwards("ncof_setting.conf")
 _conf: dict[str, str | None] = dict(dotenv_values(_ports_file)) if _ports_file else {}
 if _ports_file:
     logger.info(f"[NRF] NF ports loaded from {_ports_file}")
 else:
-    logger.warning("[NRF] nf_ports.conf not found; using built-in default ports.")
+    logger.warning("[NRF] ncof_setting.conf not found; using built-in default ports.")
 
 
 def _cfg(key: str, default: str) -> str:
-    """조회 우선순위: OS 환경변수 > nf_ports.conf > 기본값."""
+    """조회 우선순위: OS 환경변수 > ncof_setting.conf > 기본값."""
     return os.getenv(key) or _conf.get(key) or default
 
 
 def _build_dummy_nfs() -> dict[str, Any]:
-    """nf_ports.conf 의 host/port 로 NF 조회 테이블을 조립한다.
+    """ncof_setting.conf 의 host/port 로 NF 조회 테이블을 조립한다.
 
     서비스 경로(/nnef-eventexposure/af/v1 등)는 구조적이고 거의 바뀌지 않으므로
-    코드에 유지하고, 자주 바뀌는 host/port 만 nf_ports.conf 로 외부화한다.
+    코드에 유지하고, 자주 바뀌는 host/port 만 ncof_setting.conf 로 외부화한다.
     """
     host = _cfg("NF_HOST", "127.0.0.1")
     smf_port = _cfg("SMF_PORT", "9001")

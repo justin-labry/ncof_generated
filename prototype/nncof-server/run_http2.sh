@@ -1,6 +1,8 @@
 #!/bin/bash
-# 포트 단일 출처: prototype/nf_ports.conf
-set -a; . "$(dirname "$0")/../nf_ports.conf"; set +a
+# 설정 단일 출처: prototype/ncof_setting.conf (CLI 환경변수가 파일값보다 우선)
+_cli_tls="${NCOF_TLS-}"
+set -a; . "$(dirname "$0")/../ncof_setting.conf"; set +a
+[ -n "$_cli_tls" ] && export NCOF_TLS="$_cli_tls"
 export PORT=${PORT:-$NCOF_PORT}
 # 기본 h2c(평문 HTTP/2). NCOF_TLS=1 이면 HTTP/2 over TLS.
 TLS_ARGS=""

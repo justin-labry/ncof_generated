@@ -48,7 +48,7 @@ uv sync --all-packages
 
 NF 간 통신은 **HTTP/2** 로 운용한다. 기본은 **h2c(평문 HTTP/2, TLS 없음)** 이며, 환경변수 `NCOF_TLS` 로 **HTTP/2 over TLS** 를 켤 수 있다.
 
-- **모드 전환**: `NCOF_TLS` 미설정(기본) → h2c(`http://`). `NCOF_TLS=1`(또는 `true`/`yes`/`on`) → TLS(`https://`). 서버·클라이언트·URL scheme·UI 프록시가 모두 이 값을 읽어 일관되게 동작한다.
+- **모드 전환**: `ncof_setting.conf` 의 `NCOF_TLS=0`(기본) → h2c(`http://`). `NCOF_TLS=1`(또는 `true`/`yes`/`on`) → TLS(`https://`). 서버·클라이언트·URL scheme·UI 프록시가 모두 이 값을 읽어 일관되게 동작한다. (CLI 환경변수가 파일값보다 우선 — 예: `NCOF_TLS=1 sh run_http2.sh`)
 - **서버**: `hypercorn` 으로 단일 프로세스 기동. 기본은 평문(h2c — 연결 preface 로 HTTP/2 자동감지). `NCOF_TLS=1` 이면 `run_http2.sh` 가 `--certfile ../cert.pem --keyfile ../key.pem`(사전 생성 self-signed)을 자동으로 붙여 TLS ALPN `h2` 로 연다.
 - **클라이언트**: `httpx` 사용. h2c 는 `http1=False, http2=True`(평문에서 HTTP/2 prior-knowledge 강제 — `http1` 을 켜두면 평문 연결이 조용히 HTTP/1.1 로 떨어짐), TLS 는 `http2=True, verify=False`(self-signed 허용). 각 서버 `impl/utils.py`·`core/subscription_handler.py`·`api-clients/client2.py` 의 `_httpx_kwargs()` 가 `NCOF_TLS` 로 분기한다.
 - **왜 기본 h2c 인가**: 로컬/데모에서 TLS 종료 시 나오는 `SSL shutdown timed out` 잡음이 없고 설정이 단순하다. 두두원 등 TLS 연동(5G SBI 규격 TS 29.500)이 필요하면 `NCOF_TLS=1` 로 켠다. mTLS·CA 검증은 후속 단계.
@@ -58,9 +58,9 @@ NF 간 통신은 **HTTP/2** 로 운용한다. 기본은 **h2c(평문 HTTP/2, TLS
 ## 실행절차
 
 - 5개의 터미널을 실행 후 서브프로젝트별 디렉터리로 이동하여 스크립트를 실행한다.
-- 포트는 `prototype/nf_ports.conf` 단일 출처에서 읽는다. 포트를 바꾸려면 이 파일만 수정하고 재기동한다.
+- 포트·TLS 등 설정은 `prototype/ncof_setting.conf` 단일 출처에서 읽는다. 바꾸려면 이 파일만 수정하고 재기동한다. (CLI 환경변수가 파일값보다 우선)
 
-### 포트 할당 정보 (`nf_ports.conf`)
+### 포트 할당 정보 (`ncof_setting.conf`)
 
 | NF (서버 디렉터리) | 포트 | 비고 |
 |---|---|---|
@@ -84,10 +84,11 @@ cd nupf-server     && sh run_http2.sh   # UPF   → http://0.0.0.0:9003
 cd callback-server && sh run_http2.sh   # PCF   → http://0.0.0.0:9004
 ```
 
-TLS(HTTP/2 over TLS)로 띄우려면 각 명령 앞에 `NCOF_TLS=1` 을 붙인다(엔드포인트가 `https://` 로 바뀜). 서버·클라이언트를 **같은 값**으로 맞춰야 한다:
+TLS(HTTP/2 over TLS)로 띄우려면 `ncof_setting.conf` 의 `NCOF_TLS=1` 로 바꾸거나(지속), 각 명령 앞에 `NCOF_TLS=1` 을 붙인다(일시 — 파일값보다 우선). 엔드포인트가 `https://` 로 바뀐다. 서버·클라이언트·UI 를 **같은 값**으로 맞춰야 한다:
 
 ```sh
-NCOF_TLS=1 sh run_http2.sh
+NCOF_TLS=1 sh run_http2.sh          # 일시(환경변수)
+# 또는 ncof_setting.conf 에서 NCOF_TLS=1 로 지속 설정
 ```
 
 - `nnef-server` 는 `run_http2.sh` 하나로 NEF 목업(AF+RICF 통합, 9002 포트)으로 실행된다. (스크립트가 `APP_MODE=NEF` 를 지정)
@@ -110,7 +111,7 @@ npm run dev      # 개발 서버 → http://localhost:5173
 ```
 
 - 브라우저에서 `http://localhost:5173` 에 접속한다.
-- UI 는 `/api`, `/subscriptions`, `/api/ws` 요청을 NCOF 로 프록시한다. 프록시 타깃은 `vite.config.ts` 가 `nf_ports.conf` 의 `NCOF_PORT` 를 읽어 기본 **`http://127.0.0.1:9000`**(WebSocket 은 `ws://`)로 구성한다. `NCOF_TLS=1 npm run dev` 로 실행하면 `https://`/`wss://` 로 바뀌며 self-signed 인증서를 허용하도록 `secure:false` 가 적용된다. 실시간 데이터를 확인하려면 NCOF 서버(9000)가 함께 실행 중이어야 한다.
+- UI 는 `/api`, `/subscriptions`, `/api/ws` 요청을 NCOF 로 프록시한다. 프록시 타깃은 `vite.config.ts` 가 `ncof_setting.conf` 의 `NCOF_PORT`/`NCOF_TLS` 를 읽어 기본 **`http://127.0.0.1:9000`**(WebSocket 은 `ws://`)로 구성한다. `ncof_setting.conf` 에서 `NCOF_TLS=1` 로 설정하거나 `NCOF_TLS=1 npm run dev` 로 실행하면 `https://`/`wss://` 로 바뀌며 self-signed 인증서를 허용하도록 `secure:false` 가 적용된다. 실시간 데이터를 확인하려면 NCOF 서버(9000)가 함께 실행 중이어야 한다.
 
 ### 원격(리모트) 접속 시 포트포워딩
 

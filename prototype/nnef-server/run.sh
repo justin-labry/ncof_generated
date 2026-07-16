@@ -1,5 +1,5 @@
-# 포트 단일 출처: prototype/nf_ports.conf
-set -a; . "$(dirname "$0")/../nf_ports.conf"; set +a
+# 설정 단일 출처: prototype/ncof_setting.conf
+set -a; . "$(dirname "$0")/../ncof_setting.conf"; set +a
 export PORT=${PORT:-$NEF_PORT}
 APP_MODE=NEF \
 uv run --no-sync uvicorn nnef.main:app \
