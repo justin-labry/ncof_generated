@@ -4,20 +4,7 @@ import { ref, inject } from 'vue';
 import type { Ref } from 'vue';
 import { Globe,RefreshCw } from 'lucide-vue-next';
 
-import { useNetworkStore } from '../store/network';
-
-const store = useNetworkStore();
-
 const refreshKey = inject<Ref<number>>('refreshKey', ref(0));
-
-const isSaving = ref(false);
-const handleSave = async () => {
-  isSaving.value = true;
-  store.saveNodes();
-  // Visual feedback
-  await new Promise(resolve => setTimeout(resolve, 800));
-  isSaving.value = false;
-};
 
 const isRefreshing = ref(false);
 const handleRefreshAll = async () => {

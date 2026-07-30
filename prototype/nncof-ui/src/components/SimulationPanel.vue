@@ -43,8 +43,8 @@ const getMessageTypeStyle = (type: Message['type']) => {
       return 'bg-red-500/30 text-red-400 border-red-500/20';
     case 'NOTIFICATION':
       return 'bg-amber-500/30 text-amber-500 border-amber-500/20';
-    case 'ANALIZING':
-    case 'ANALIZED':
+    case 'ANALYZING':
+    case 'ANALYZED':
       return 'bg-emerald-500/30 text-emerald-400 border-emerald-500/20';
     default:
       return 'bg-slate-800 text-slate-400 border-white/5';
