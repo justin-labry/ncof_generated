@@ -277,7 +277,7 @@ requires-dist = [
     { name = "colorlog", specifier = ">=6.10.1" },
     { name = "fastapi", specifier = ">=0.136.1" },
     { name = "httpx", specifier = ">=0.28.1" },
-    { name = "hypercorn", extras = ["h2"], specifier = ">=0.18.0" },
+    { name = "hypercorn", specifier = ">=0.18.0" },
     { name = "nnef-server", editable = "nnef-server" },
     { name = "nsmf-server", editable = "nsmf-server" },
     { name = "nupf-server", editable = "nupf-server" },
