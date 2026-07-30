@@ -10,6 +10,8 @@ dependencies = [
     "httpx>=0.28.1",
     "rich>=15.0.0",
     "uvicorn>=0.46.0",
+    "callback-server",
+    "nncof-server",
 ]
 
 [build-system]
@@ -18,3 +20,10 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/nnef"] # 실제 소스코드가 위치한 경로
+
+# nnef 는 nncof_cb(callback-server) 와 nncof(nncof-server) 패키지를 import 한다.
+# 선언하지 않으면 멤버 디렉터리에서 `uv sync` 했을 때 해당 패키지가 venv 에서
+# 제거되어 ModuleNotFoundError 가 난다.
+[tool.uv.sources]
+callback-server = { workspace = true }
+nncof-server = { workspace = true }
