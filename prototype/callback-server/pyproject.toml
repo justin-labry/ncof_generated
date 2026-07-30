@@ -8,6 +8,7 @@ dependencies = [
     "colorlog>=6.10.1",
     "fastapi>=0.136.1",
     "httpx>=0.28.1",
+    "hypercorn>=0.18.0",
     "nupf-server",
     "nncof-server",
     "rich>=15.0.0",
