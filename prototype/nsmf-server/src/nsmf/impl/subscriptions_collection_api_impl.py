@@ -93,19 +93,28 @@ async def _periodic_notification_sender(sub_id: str, interval_seconds: int):
 
         notif_uri = event_subscription.notif_uri
         await asyncio.sleep(interval_seconds)
-        notification_data = simulate_notification_data(sub_id, event_notification)
-        pprint(notification_data.notification_items[0])
 
-        # print(f"[{sub_id}] 💡---[Notification]---> [NCOF] [Begin]")
-        # for item in notification_data.notification_items:
-        #     if item is None:
-        #         continue
-        #     for item2 in (
-        #         item.user_data_usage_measurements
-        #         if item.user_data_usage_measurements
-        #         else []
-        #     ):
-        #         pprint(item2)
-        # print(f"[{sub_id}] 💡---[Notification]---> [NCOF] [End]")
-        # pprint(notification_data.model_dump(mode="json"))
-        await utils.notify(sub_id, notif_uri, notification_data.model_dump(mode="json"))
+        # 한 주기의 실패가 구독 전체의 주기 전송을 영구히 중단시키면 안 된다.
+        # (예전에는 여기서 예외가 나면 태스크가 조용히 죽고, NCOF 는 갱신되지 않는
+        #  마지막 데이터를 계속 읽어 분석 결과가 고정됐다.)
+        try:
+            notification_data = simulate_notification_data(sub_id, event_notification)
+            pprint(notification_data.notification_items[0])
+
+            # print(f"[{sub_id}] 💡---[Notification]---> [NCOF] [Begin]")
+            # for item in notification_data.notification_items:
+            #     if item is None:
+            #         continue
+            #     for item2 in (
+            #         item.user_data_usage_measurements
+            #         if item.user_data_usage_measurements
+            #         else []
+            #     ):
+            #         pprint(item2)
+            # print(f"[{sub_id}] 💡---[Notification]---> [NCOF] [End]")
+            # pprint(notification_data.model_dump(mode="json"))
+            await utils.notify(
+                sub_id, notif_uri, notification_data.model_dump(mode="json")
+            )
+        except Exception as e:
+            logger.warning(f"[{sub_id}] 주기 통지 실패, 다음 주기에 재시도: {e}")

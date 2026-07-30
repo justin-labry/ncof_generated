@@ -23,6 +23,10 @@ def _now_iso_kst() -> str:
     return datetime.now().astimezone().isoformat(timespec="seconds")
 
 
+# timeStamp 가 없는 데이터를 "가장 오래된 것"으로 취급하기 위한 하한값
+_MIN_TS = datetime.min.replace(tzinfo=timezone.utc)
+
+
 class DataAnalyzer:
     """
     구독 데이터의 주기적 분석과 제어 명령 생성을 담당한다.
@@ -170,25 +174,42 @@ class DataAnalyzer:
             logger.error(f"JSON 파싱 실패: {e}")
             return None
 
+    @staticmethod
+    def _udum_timestamp(notif: Any) -> datetime | None:
+        """USER_DATA_USAGE_MEASURES 항목이 있으면 그중 가장 늦은 timeStamp 를,
+        해당 항목이 없으면 None 을 반환한다. (timeStamp 가 비어 있으면 최소값 취급)"""
+        if not isinstance(notif, NotificationData):
+            return None
+
+        latest: datetime | None = None
+        for item in notif.notification_items or []:
+            if item is None or item.event_type != "USER_DATA_USAGE_MEASURES":
+                continue
+            ts = item.time_stamp or _MIN_TS
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+            if latest is None or ts > latest:
+                latest = ts
+        return latest
+
     def _get_wlan_performance_data(self) -> NotificationData | None:
         """
         UPF WLAN 성능 데이터를 notif_data_store 에서 조회한다.
 
-        USER_DATA_USAGE_MEASURES 이벤트 타입의 NotificationData 를 반환하며,
-        단순히 notification_items 개수만 확인하던 기존 로직을 개선하여
-        실제 이벤트 타입으로 필터링한다.
+        USER_DATA_USAGE_MEASURES 이벤트 타입의 NotificationData 중 timeStamp 가
+        가장 최신인 것을 반환한다. 저장 순서상 첫 번째 것을 고르면, 그 스트림의
+        주기 통지가 끊겼을 때 갱신되지 않는 값을 계속 읽어 분석 결과가 고정된다.
         """
-        notifications = self.notif_data_store.get_all()
-        for notif in notifications.values():
-            if not isinstance(notif, NotificationData):
+        newest: NotificationData | None = None
+        newest_ts: datetime | None = None
+
+        for notif in self.notif_data_store.get_all().values():
+            ts = self._udum_timestamp(notif)
+            if ts is None:
                 continue
-            items = notif.notification_items
-            if not items:
-                continue
-            for item in items:
-                if item is not None and item.event_type == "USER_DATA_USAGE_MEASURES":
-                    return notif
-        return None
+            if newest_ts is None or ts > newest_ts:
+                newest, newest_ts = notif, ts
+        return newest
 
     async def _analyze_and_generate(self, nf_type: str) -> None:
         logger.info(f"[{self.subscription_id}] 데이터 분석 시작")

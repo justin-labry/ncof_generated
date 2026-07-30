@@ -153,6 +153,12 @@ def simulate_notification_data(
                 else:
                     _total_mbps = random.randint(1, 100)
 
+                # 아래 배분 루프는 tsm 하나당 최소 1Mbps 를 보장하므로, 총량이 tsm
+                # 개수보다 작으면 마지막 tsm 몫이 음수가 된다. 그 값은 모델의 정규식
+                # 검증(^\d+(\.\d+)? (bps|Kbps|Mbps|Gbps|Tbps)$)에 걸려 ValidationError
+                # 를 내고 주기 전송 태스크를 통째로 죽인다. 총량에 하한을 둔다.
+                _total_mbps = max(_total_mbps, _num)
+
                 _props = [random.random() for _ in range(_num)]
                 _sum_prop = sum(_props)
                 _assigned_values = []
