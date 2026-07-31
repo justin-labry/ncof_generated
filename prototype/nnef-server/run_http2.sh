@@ -12,4 +12,4 @@ case "${NCOF_TLS:-}" in 1|true|TRUE|yes|on) TLS_ARGS="--certfile ../cert.pem --k
 uv run --no-sync hypercorn nnef.main:app \
     --bind "0.0.0.0:$PORT" \
     $TLS_ARGS \
-    --log-config "./log_config.ini"
+    --log-config "../log_config.ini"
