@@ -1,5 +1,10 @@
-from rich.pretty import pprint
-from rich import print
+
+import logging
+
+from typing import List
+from rich.pretty import pretty_repr
+
+logger = logging.getLogger(__name__)
 
 from nncof.models.nncof_events_subscription_notification import (
     NncofEventsSubscriptionNotification,
@@ -9,18 +14,14 @@ from nncof_cb.apis.ncof_events_subscription_notification_callback_receiver_api_b
     BaseNCOFEventsSubscriptionNotificationCallbackReceiverApi,
 )
 
-
 class NCOFEventNotificationImpl(
     BaseNCOFEventsSubscriptionNotificationCallbackReceiverApi
 ):
     async def receive_ncof_events_subscription_notification(
         self,
         type: str,
-        notification: NncofEventsSubscriptionNotification,
+        notification: List[NncofEventsSubscriptionNotification],
     ) -> None:
-        # Add color code below print statement
-        print("\n[bold blue]===== BEGIN =====[/bold blue]")
-        print(f"**** NF Type: {type.upper()} ****")
-        pprint(notification)
-        print("[bold blue]===== END =====[/bold blue]\n")
+        for item in notification:
+            logger.info("\n%s", pretty_repr(item, expand_all=True))
         return None
