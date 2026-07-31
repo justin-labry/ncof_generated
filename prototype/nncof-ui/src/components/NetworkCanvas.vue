@@ -27,16 +27,33 @@ let signalsGroup: d3.Selection<SVGGElement, unknown, null, undefined>;
 let zoomBehavior: d3.ZoomBehavior<SVGSVGElement, unknown>;
 let containerWidth = 0;
 let containerHeight = 0;
+let isNetworkMounted = false;
+
+const stopSignalAnimations = () => {
+  signalsGroup.selectAll('*').interrupt().remove();
+  nodesGroup.selectAll('rect').interrupt();
+};
+
+const handleVisibilityChange = () => {
+  if (document.hidden) {
+    stopSignalAnimations();
+  }
+};
 
 onMounted(() => {
   if (!svgRef.value) return;
   initNetwork();
   render();
+  isNetworkMounted = true;
   window.addEventListener('resize', handleResize);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
 });
 
 onUnmounted(() => {
+  isNetworkMounted = false;
+  stopSignalAnimations();
   window.removeEventListener('resize', handleResize);
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
 });
 
 const handleResize = () => {
@@ -479,7 +496,30 @@ const getNodeDimensions = (size?: NodeSize) => {
   }
 };
 
+const applyMessageResult = (msg: Message) => {
+  if (msg.type === 'NOTIFICATION') {
+    if (!document.hidden) {
+      animateNotificationPulse(msg.to);
+    }
+  } else if (msg.type === 'SUBSCRIBED') {
+    store.addSubscription(msg.from, msg.to, msg?.subId, msg.type);
+    renderLinks();
+  } else if (msg.type === 'UNSUBSCRIBED') {
+    store.removeSubscription(msg.from, msg.to, msg?.subId);
+    renderLinks();
+  } else if (msg.type === 'ANALYZING' && (msg.to === 'ncof' || msg.from === 'ncof')) {
+    store.isAnalyzing = true;
+  } else if (msg.type === 'ANALYZED' && (msg.to === 'ncof' || msg.from === 'ncof')) {
+    store.isAnalyzing = false;
+  }
+};
+
 const animateMessage = async (msg: Message) => {
+  if (document.hidden) {
+    applyMessageResult(msg);
+    return;
+  }
+
   const source = store.nodes.find(n => n.id === msg.from);
   const target = store.nodes.find(n => n.id === msg.to);
   if (!source || !target) return;
@@ -510,38 +550,32 @@ const animateMessage = async (msg: Message) => {
     .attr('d', 'M -10 -5 L 0 0 L -10 5 z')
     .attr('fill', strokeColor);
 
-  await signalPath.transition()
-    .duration(800)
-    .ease(d3.easeQuadInOut)
-    .attr('stroke-dashoffset', 0)
-    .tween('arrowTween', () => {
-      return (t: number) => {
-        const l = t * totalLength;
-        const p = pathNode.getPointAtLength(l);
-        const p1 = pathNode.getPointAtLength(Math.max(0, l - 1));
-        const p2 = pathNode.getPointAtLength(Math.min(totalLength, l + 1));
-        const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI);
-        arrowHead.attr('transform', `translate(${p.x},${p.y}) rotate(${angle})`);
-      };
-    })
-    .end();
+  try {
+    await signalPath.transition()
+      .duration(800)
+      .ease(d3.easeQuadInOut)
+      .attr('stroke-dashoffset', 0)
+      .tween('arrowTween', () => {
+        return (t: number) => {
+          const l = t * totalLength;
+          const p = pathNode.getPointAtLength(l);
+          const p1 = pathNode.getPointAtLength(Math.max(0, l - 1));
+          const p2 = pathNode.getPointAtLength(Math.min(totalLength, l + 1));
+          const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * (180 / Math.PI);
+          arrowHead.attr('transform', `translate(${p.x},${p.y}) rotate(${angle})`);
+        };
+      })
+      .end();
+  } catch {
+    // 탭이 숨겨져 전환이 취소된 경우에도 메시지 상태는 반영한다.
+  } finally {
+    signalPath.remove();
+    arrowHead.remove();
+    pathNode.remove();
+  }
 
-  signalPath.remove();
-  arrowHead.remove();
-  pathNode.remove();
-
-  if (msg.type === 'NOTIFICATION') {
-    animateNotificationPulse(msg.to);
-  } else if (msg.type === 'SUBSCRIBED') {
-    store.addSubscription(msg.from, msg.to, msg?.subId, msg.type);
-    renderLinks();
-  } else if (msg.type === 'UNSUBSCRIBED') {
-    store.removeSubscription(msg.from, msg.to, msg?.subId);
-    renderLinks();
-  } else if (msg.type === 'ANALYZING' && (msg.to === 'ncof' || msg.from === 'ncof')) {
-    store.isAnalyzing = true;
-  } else if (msg.type === 'ANALYZED' && (msg.to === 'ncof' || msg.from === 'ncof')) {
-    store.isAnalyzing = false;
+  if (isNetworkMounted) {
+    applyMessageResult(msg);
   }
 };
 
