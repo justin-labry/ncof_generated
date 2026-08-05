@@ -4,6 +4,8 @@ import asyncio
 import json
 import logging
 import os
+import time
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -49,9 +51,25 @@ class JsonStateStore:
 
     def _save_sync(self, state: dict[str, Any]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        temporary_path = self.path.with_suffix(self.path.suffix + ".tmp")
-        with temporary_path.open("w", encoding="utf-8") as state_file:
-            json.dump(jsonable_encoder(state), state_file, ensure_ascii=False, indent=2)
-            state_file.flush()
-            os.fsync(state_file.fileno())
-        os.replace(temporary_path, self.path)
+        temporary_path = self.path.with_name(
+            f"{self.path.name}.{uuid.uuid4().hex}.tmp"
+        )
+        try:
+            with temporary_path.open("w", encoding="utf-8") as state_file:
+                json.dump(
+                    jsonable_encoder(state), state_file, ensure_ascii=False, indent=2
+                )
+                state_file.flush()
+                os.fsync(state_file.fileno())
+
+            for attempt in range(3):
+                try:
+                    os.replace(temporary_path, self.path)
+                    return
+                except PermissionError:
+                    if attempt == 2:
+                        raise
+                    time.sleep(0.05 * (attempt + 1))
+        finally:
+            if temporary_path.exists():
+                temporary_path.unlink()

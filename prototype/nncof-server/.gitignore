@@ -143,4 +143,5 @@ src/nncof/static/assets/*
 # NCOF 런타임 영속 상태
 data/ncof_state.json
 data/ncof_state.json.tmp
+data/ncof_state.json.*.tmp
 data/ncof_state.json.corrupt

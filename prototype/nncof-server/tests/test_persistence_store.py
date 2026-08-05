@@ -4,6 +4,7 @@ import asyncio
 from datetime import datetime, timezone
 
 from nncof.core.data_store import NotificationDataStore
+from nncof.core import persistence_store
 from nncof.core.persistence_store import JsonStateStore
 
 
@@ -32,6 +33,28 @@ def test_json_state_store_serializes_datetime_values(tmp_path):
     )
 
     assert store.load()["subscriptions"]["sub-1"]["mon_dur"] == saved_at.isoformat()
+
+
+def test_json_state_store_retries_locked_destination(tmp_path, monkeypatch):
+    state_path = tmp_path / "ncof_state.json"
+    store = JsonStateStore(state_path)
+    original_replace = persistence_store.os.replace
+    calls = 0
+
+    def replace_once_locked(source, destination):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise PermissionError(5, "Access is denied")
+        original_replace(source, destination)
+
+    monkeypatch.setattr(persistence_store.os, "replace", replace_once_locked)
+    monkeypatch.setattr(persistence_store.time, "sleep", lambda _: None)
+
+    asyncio.run(store.save({"schema_version": 1, "subscriptions": {}}))
+
+    assert calls == 2
+    assert store.load() == {"schema_version": 1, "subscriptions": {}}
 
 
 def test_json_state_store_quarantines_invalid_file(tmp_path):
