@@ -41,7 +41,7 @@ class NefEventsNotificationsApiImpl(
 
         try:
             # 핸들러를 통해 수신된 데이터 저장
-            handler.handle_notification(nf_type, notif_data)
+            await handler.handle_notification(nf_type, notif_data)
 
             # ext_sub = handler.get_external_subscription_by_target(sub_id)
             from_node = nf_type

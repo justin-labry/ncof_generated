@@ -3,6 +3,7 @@
 import logging
 import os
 import asyncio
+from collections.abc import Awaitable, Callable
 from typing import Any, List, Literal, Optional
 
 import httpx
@@ -49,14 +50,20 @@ class SubscriptionHandler:
         subscription: NncofEventsSubscription,
         max_data_entries: int = 100,
         relation_manager: Any = None,
+        on_state_change: Callable[[], Awaitable[None]] | None = None,
+        restored_notifications: list[dict] | None = None,
+        restored_control_notifications: list[dict] | None = None,
+        stale_external_subscriptions: list[dict] | None = None,
     ):
         self.subscription_id = subscription_id
         self.subscription = subscription
         self._relation_manager = relation_manager
+        self._on_state_change = on_state_change
         self.notif_data_store = NotificationDataStore()
         self.control_data_store = NotificationDataStore()
         self.is_running = False
         self.external_subscriptions: List[ExternalSubscriptionRequest] = []
+        self._stale_external_subscriptions = stale_external_subscriptions or []
         self._client = httpx.AsyncClient(
             **_httpx_kwargs(), timeout=httpx.Timeout(5.0)
         )
@@ -68,6 +75,32 @@ class SubscriptionHandler:
             control_data_store=self.control_data_store,
             notify_callback=self._notify_subscriber,
         )
+        self._restore_data_store(
+            self.notif_data_store, restored_notifications or [], is_control=False
+        )
+        self._restore_data_store(
+            self.control_data_store, restored_control_notifications or [], is_control=True
+        )
+
+    def _restore_data_store(
+        self, data_store: NotificationDataStore, entries: list[dict], is_control: bool
+    ) -> None:
+        """JSON 상태의 Notify 데이터를 분석기에 사용할 모델로 복원한다."""
+        restored_entries = []
+        for entry in entries:
+            data = entry.get("data")
+            source_nf = entry.get("source_nf", "unknown")
+            if not is_control and isinstance(data, dict):
+                if source_nf.lower() == "upf":
+                    data = NotificationData.from_dict(data)
+                else:
+                    data = NefEventExposureNotif.from_dict(data)
+            restored_entries.append({**entry, "data": data})
+        data_store.restore_state(restored_entries)
+
+    async def _state_changed(self) -> None:
+        if self._on_state_change is not None:
+            await self._on_state_change()
 
     def get_source_nf_type(self) -> Literal["PCF", "RICF"] | None:
         return self._analyzer.get_source_nf_type()
@@ -144,6 +177,7 @@ class SubscriptionHandler:
 
     async def _notify_subscriber(self, nf_type: str, ncof_control_event: list[dict]):
         """제어 명령을 NF(PCF 또는 RICF)로 전송한다."""
+        await self._state_changed()
         if not self.subscription.notification_uri:
             logger.warning("notification_uri is missing")
             return
@@ -221,6 +255,14 @@ class SubscriptionHandler:
         self.is_running = True
         logger.info(f"[{self.subscription_id}] 시작됨. 외부 NF 구독 절차 실행.")
 
+        for sub_info in self._stale_external_subscriptions:
+            external_sub_id = sub_info.get("external_sub_id")
+            if external_sub_id:
+                await self._send_external_unsubscription(
+                    sub_info["target"], external_sub_id
+                )
+        self._stale_external_subscriptions.clear()
+
         subscription_requests = build_subscription_requests(
             self.subscription_id, self.subscription
         )
@@ -282,6 +324,7 @@ class SubscriptionHandler:
 
         if self.subscription.evt_req and self.subscription.evt_req.rep_period:
             await self._analyzer.start()
+        await self._state_changed()
 
     async def stop(self):
         """
@@ -305,7 +348,13 @@ class SubscriptionHandler:
         await self._client.aclose()
         logger.info(f"[{self.subscription_id}] 정지됨.")
 
-    def handle_notification(
+    async def shutdown(self):
+        """서버 종료 시 하위 NF 구독은 유지하고 로컬 실행 자원만 정리한다."""
+        self.is_running = False
+        await self._analyzer.stop()
+        await self._client.aclose()
+
+    async def handle_notification(
         self, source_nf: str, notif_data: NotificationData | NefEventExposureNotif
     ):
         notif_id = None
@@ -321,6 +370,7 @@ class SubscriptionHandler:
             return
 
         self.notif_data_store.add_data(source_nf, notif_id, notif_data)
+        await self._state_changed()
         logger.debug(
             f"[{self.subscription_id}] [{source_nf}] 데이터 수신, notif_id: [{notif_id}]"
         )

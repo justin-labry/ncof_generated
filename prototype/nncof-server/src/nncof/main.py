@@ -13,6 +13,7 @@ Do not edit the class manually.
 
 import logging
 import os
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 from fastapi import FastAPI
@@ -47,6 +48,7 @@ from nncof.apis.web_api import (
 from nncof.core.utils import system_info
 
 from nncof.core import utils
+from nncof.core.subscription_manager import SubscriptionManager
 
 load_dotenv()
 
@@ -62,10 +64,22 @@ utils.print_logo(title, description, version)
 logger = logging.getLogger(__name__)
 
 
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """서버 재시작 시 저장 구독을 복원하고 종료 전에 상태를 보존한다."""
+    subscription_manager = SubscriptionManager()
+    await subscription_manager.restore_persisted_subscriptions()
+    try:
+        yield
+    finally:
+        await subscription_manager.shutdown()
+
+
 app = FastAPI(
     title=title,
     description=description,
     version=version,
+    lifespan=lifespan,
 )
 app.add_middleware(
     CORSMiddleware,

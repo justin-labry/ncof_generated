@@ -1,6 +1,7 @@
 import uuid
 import logging
 import json
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, TypedDict
 
 from fastapi.encoders import jsonable_encoder
@@ -10,6 +11,7 @@ from nncof.models.nncof_events_subscription import NncofEventsSubscription
 from .websocket_manager import broadcast_web_message
 from .subscription_handler import SubscriptionHandler
 from .utils import _normalize_subscription
+from .persistence_store import JsonStateStore
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +53,7 @@ class SubscriptionManager:
         self.nf_service_discovery = nf_service_discovery
         self.subscriptions: Dict[str, SubscriptionHandler] = {}
         self.active_relations: list[Relation] = []
+        self._state_store = JsonStateStore()
         self._initialized = True
         logger.info("[SubscriptionManager] 싱글톤 인스턴스가 초기화.")
 
@@ -92,9 +95,8 @@ class SubscriptionManager:
         subscription_id = str(uuid.uuid4())
 
         # 2. 핸들러 인스턴스 생성 (관계 관리를 위해 self 전달)
-        handler = SubscriptionHandler(
-            subscription_id, subscription_request, relation_manager=self
-        )
+        handler = self._build_handler(subscription_id, subscription_request)
+        self.subscriptions[subscription_id] = handler
 
         # 상태 변경 통보 (SUBSCRIBED)
         await self.add_relation(
@@ -108,8 +110,8 @@ class SubscriptionManager:
         # 3. 핸들러 시작 (비동기 작업 수행: 외부 NF 구독 등)
         await handler.start()
 
-        # 4. 관리 목록에 추가
-        self.subscriptions[subscription_id] = handler
+        # 4. 활성 상태 영속화
+        await self.persist_state()
 
         logger.info(f"[{subscription_id}]새로운 구독 생성 완료")
 
@@ -125,7 +127,7 @@ class SubscriptionManager:
         Returns:
             bool: 삭제 성공 여부
         """
-        handler = self.subscriptions[subscription_id]
+        handler = self.subscriptions.get(subscription_id)
         if handler is None:
             logger.warning(f"[{subscription_id}] 삭제하려는 구독 ID가 존재하지 않음")
             return False
@@ -156,6 +158,7 @@ class SubscriptionManager:
         await handler.stop()
         # 관련 관계 제거
         await self.remove_relations_by_sub_id(subscription_id)
+        await self.persist_state()
         logger.info(f"[{subscription_id}] 구독 삭제 완료")
         return True
 
@@ -182,11 +185,10 @@ class SubscriptionManager:
         await self.delete_subscription(subscription_id)
 
         # 동일한 ID로 핸들러 재생성 (관계 관리를 위해 self 전달)
-        handler = SubscriptionHandler(
-            subscription_id, subscription_request, relation_manager=self
-        )
+        handler = self._build_handler(subscription_id, subscription_request)
         await handler.start()
         self.subscriptions[subscription_id] = handler
+        await self.persist_state()
 
         return True
 
@@ -392,3 +394,82 @@ class SubscriptionManager:
             return {}
         data = handler.notif_data_store.get_all()
         return jsonable_encoder(data) if data else {}
+
+    def _build_handler(
+        self,
+        subscription_id: str,
+        subscription: NncofEventsSubscription,
+        **kwargs: Any,
+    ) -> SubscriptionHandler:
+        """상태 변경이 저장소에 반영되는 구독 핸들러를 생성한다."""
+        return SubscriptionHandler(
+            subscription_id,
+            subscription,
+            relation_manager=self,
+            on_state_change=self.persist_state,
+            **kwargs,
+        )
+
+    def _export_state(self) -> dict[str, Any]:
+        """현재 활성 구독을 JSON 저장 형식으로 변환한다."""
+        subscriptions: dict[str, Any] = {}
+        for subscription_id, handler in self.subscriptions.items():
+            subscriptions[subscription_id] = {
+                "subscription": handler.subscription.to_dict(),
+                "notifications": handler.notif_data_store.export_state(),
+                "control_notifications": handler.control_data_store.export_state(),
+                "external_subscriptions": [
+                    {
+                        "target": external["target"],
+                        "external_sub_id": external["external_sub_id"],
+                        "subscription": jsonable_encoder(external.get("subscription")),
+                    }
+                    for external in handler.external_subscriptions
+                ],
+            }
+        return {"schema_version": 1, "subscriptions": subscriptions}
+
+    async def persist_state(self) -> None:
+        """현재 활성 구독 상태를 파일에 저장한다."""
+        await self._state_store.save(self._export_state())
+
+    @staticmethod
+    def _is_expired(subscription: NncofEventsSubscription) -> bool:
+        mon_dur = subscription.evt_req.mon_dur if subscription.evt_req else None
+        if mon_dur is None:
+            return False
+        if mon_dur.tzinfo is None:
+            mon_dur = mon_dur.replace(tzinfo=timezone.utc)
+        return mon_dur <= datetime.now(timezone.utc)
+
+    async def restore_persisted_subscriptions(self) -> None:
+        """유효한 저장 구독을 복원하고 하위 NF 구독과 분석 태스크를 재개한다."""
+        state = self._state_store.load()
+        for subscription_id, saved in state["subscriptions"].items():
+            try:
+                subscription = NncofEventsSubscription.from_dict(saved["subscription"])
+                if self._is_expired(subscription):
+                    logger.info("[%s] 만료된 저장 구독을 복구하지 않음", subscription_id)
+                    continue
+                handler = self._build_handler(
+                    subscription_id,
+                    subscription,
+                    restored_notifications=saved.get("notifications", []),
+                    restored_control_notifications=saved.get(
+                        "control_notifications", []
+                    ),
+                    stale_external_subscriptions=saved.get("external_subscriptions", []),
+                )
+                self.subscriptions[subscription_id] = handler
+                await handler.start()
+                logger.info("[%s] 저장 구독 복구 완료", subscription_id)
+            except Exception:
+                self.subscriptions.pop(subscription_id, None)
+                logger.exception("[%s] 저장 구독 복구 실패", subscription_id)
+        await self.persist_state()
+
+    async def shutdown(self) -> None:
+        """서버 종료 전에 상태를 저장하고 핸들러의 로컬 자원을 해제한다."""
+        await self.persist_state()
+        for handler in self.subscriptions.values():
+            await handler.shutdown()

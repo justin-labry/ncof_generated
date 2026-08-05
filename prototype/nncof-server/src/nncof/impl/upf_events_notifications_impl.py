@@ -39,7 +39,7 @@ class UpfEventExposureNotificationCallbackReceiverApiImpl(
 
         try:
             # 핸들러를 통해 수신된 데이터 저장
-            handler.handle_notification("UPF", notif_data)
+            await handler.handle_notification("UPF", notif_data)
 
             # 웹 소켓을 통해 실시간 알림 브로드캐스트
             await broadcast_web_message(

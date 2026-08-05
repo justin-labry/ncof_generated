@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Dict
 
+from fastapi.encoders import jsonable_encoder
+
 from nncof.models.nncof_events_subscription_notification import (
     NncofEventsSubscriptionNotification,
 )
@@ -17,6 +19,7 @@ class NotificationDataStore:
 
     def __init__(self):
         self._data = {}
+        self._sources: Dict[str | None, str] = {}
         self._last_updated = datetime.now()
 
     def add_data(
@@ -37,6 +40,7 @@ class NotificationDataStore:
         """
 
         self._data[notif_id] = data
+        self._sources[notif_id] = target_nf
 
         self._last_updated = datetime.now()
         # logger.debug(
@@ -74,7 +78,29 @@ class NotificationDataStore:
     def clear(self):
         """데이터를 초기화한다."""
         self._data.clear()
+        self._sources.clear()
 
     def is_empty(self) -> bool:
         """데이터가 비어있는지 확인한다."""
         return len(self._data) == 0
+
+    def export_state(self) -> list[dict]:
+        """영속 저장을 위해 Notify 출처와 데이터를 JSON 형태로 반환한다."""
+        return [
+            {
+                "source_nf": self._sources.get(notif_id),
+                "notif_id": notif_id,
+                "data": jsonable_encoder(data),
+            }
+            for notif_id, data in self._data.items()
+        ]
+
+    def restore_state(self, entries: list[dict]) -> None:
+        """영속 저장된 Notify 데이터를 복원한다."""
+        self.clear()
+        for entry in entries:
+            self.add_data(
+                entry.get("source_nf", "unknown"),
+                entry.get("notif_id"),
+                entry.get("data"),
+            )
