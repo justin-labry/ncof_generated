@@ -8,3 +8,4 @@
 - 2026-08-05. `data/ncof_state.json`과 임시 및 손상 파일은 런타임 산출물이므로 Git 추적에서 제외한다.
 - 2026-08-05. 새 영속성 테스트 3건은 통과했다. 전체 기존 테스트는 자동 생성 테스트 데이터에 정의되지 않은 Python `null` 식별자가 있어 4건 실패했다.
 - 2026-08-05. 상태 파일에 Pydantic 모델의 datetime이 포함될 수 있으므로 `JsonStateStore`에서 `jsonable_encoder`로 모든 저장 상태를 변환한다.
+- 2026-08-05. 복원 경로에서도 최초 요청의 NF ID로 PCF 또는 RICF를 계산해 최초 NF에서 NCOF로 향하는 `SUBSCRIBED` 관계를 재구성한다.

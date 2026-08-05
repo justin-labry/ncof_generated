@@ -461,6 +461,15 @@ class SubscriptionManager:
                     stale_external_subscriptions=saved.get("external_subscriptions", []),
                 )
                 self.subscriptions[subscription_id] = handler
+                nf_id = self.get_nf_id(subscription)
+                from_node = self._get_src_nf(nf_id)
+                await self.add_relation(
+                    from_node=from_node if from_node else "unknown",
+                    to_node="ncof",
+                    msg_type="SUBSCRIBED",
+                    data=jsonable_encoder(subscription),
+                    sub_id=subscription_id,
+                )
                 await handler.start()
                 logger.info("[%s] 저장 구독 복구 완료", subscription_id)
             except Exception:
