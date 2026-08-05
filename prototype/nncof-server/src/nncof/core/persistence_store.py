@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 from typing import Any
 
+from fastapi.encoders import jsonable_encoder
+
 logger = logging.getLogger(__name__)
 
 
@@ -49,7 +51,7 @@ class JsonStateStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         temporary_path = self.path.with_suffix(self.path.suffix + ".tmp")
         with temporary_path.open("w", encoding="utf-8") as state_file:
-            json.dump(state, state_file, ensure_ascii=False, indent=2)
+            json.dump(jsonable_encoder(state), state_file, ensure_ascii=False, indent=2)
             state_file.flush()
             os.fsync(state_file.fileno())
         os.replace(temporary_path, self.path)

@@ -1,6 +1,7 @@
 # JSON 영속 저장소와 Notify 데이터 저장소를 검증하는 테스트
 
 import asyncio
+from datetime import datetime, timezone
 
 from nncof.core.data_store import NotificationDataStore
 from nncof.core.persistence_store import JsonStateStore
@@ -14,6 +15,23 @@ def test_json_state_store_round_trip(tmp_path):
     asyncio.run(store.save(expected))
 
     assert store.load() == expected
+
+
+def test_json_state_store_serializes_datetime_values(tmp_path):
+    state_path = tmp_path / "ncof_state.json"
+    store = JsonStateStore(state_path)
+    saved_at = datetime(2026, 8, 5, 15, 47, 19, tzinfo=timezone.utc)
+
+    asyncio.run(
+        store.save(
+            {
+                "schema_version": 1,
+                "subscriptions": {"sub-1": {"mon_dur": saved_at}},
+            }
+        )
+    )
+
+    assert store.load()["subscriptions"]["sub-1"]["mon_dur"] == saved_at.isoformat()
 
 
 def test_json_state_store_quarantines_invalid_file(tmp_path):
