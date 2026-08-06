@@ -6,14 +6,14 @@ import logging
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 from nncof.models.nncof_events_subscription import NncofEventsSubscription
-from nupf.models.notification_data import NotificationData
 from nncof.models.nncof_events_subscription_notification import (
     NncofEventsSubscriptionNotification,
 )
 from nnef.models.nef_event_exposure_notif import NefEventExposureNotif
+from nupf.models.notification_data import NotificationData
 
 from .data_store import NotificationDataStore
 from .gnb2_rl_engine import create_decision_engine
@@ -263,5 +263,5 @@ class DataAnalyzer:
                 )
                 await self._notify_callback("pcf", qos_notif)
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning(f"[{self.subscription_id}] 분석 중 오류 발생: {e}")
