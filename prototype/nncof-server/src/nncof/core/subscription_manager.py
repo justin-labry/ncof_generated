@@ -443,6 +443,7 @@ class SubscriptionManager:
         """유효한 저장 구독을 복원하고 하위 NF 구독과 분석 태스크를 재개한다."""
         state = self._state_store.load()
         for subscription_id, saved in state["subscriptions"].items():
+            logger.info(f"✔️ [{subscription_id}] 기존구독 복구 시작")
             try:
                 subscription = NncofEventsSubscription.from_dict(saved["subscription"])
                 if self._is_expired(subscription):
@@ -472,7 +473,7 @@ class SubscriptionManager:
                     sub_id=subscription_id,
                 )
                 await handler.start()
-                logger.info("✔️ [%s] 저장 구독 복구 완료", subscription_id)
+                logger.info("✔️ [%s] 기존구독 복구 완료", subscription_id)
             except Exception:
                 self.subscriptions.pop(subscription_id, None)
                 logger.exception("[%s] 저장 구독 복구 실패", subscription_id)

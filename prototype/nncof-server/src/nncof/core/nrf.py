@@ -6,7 +6,7 @@ from dotenv import dotenv_values
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("NF_Discovery")
+logger = logging.getLogger(__name__)
 
 
 def _find_upwards(filename: str) -> str | None:
@@ -26,9 +26,9 @@ def _find_upwards(filename: str) -> str | None:
 _ports_file = _find_upwards("ncof_setting.conf")
 _conf: dict[str, str | None] = dict(dotenv_values(_ports_file)) if _ports_file else {}
 if _ports_file:
-    logger.info(f"[NRF] NF ports loaded from {_ports_file}")
+    logger.info(f"NF ports loaded from {_ports_file}")
 else:
-    logger.warning("[NRF] ncof_setting.conf not found; using built-in default ports.")
+    logger.warning("ncof_setting.conf not found; using built-in default ports.")
 
 
 def _cfg(key: str, default: str) -> str:
@@ -47,7 +47,11 @@ def _build_dummy_nfs() -> dict[str, Any]:
     nef_port = _cfg("NEF_PORT", "9002")  # AF/RICF 는 NEF 서버가 경로로 구분해 함께 처리
     pcf_port = _cfg("PCF_PORT", "9004")
     # 기본 h2c(평문 HTTP/2, http). NCOF_TLS 설정 시 HTTP/2 over TLS(https).
-    scheme = "https" if _cfg("NCOF_TLS", "").strip().lower() in ("1", "true", "yes", "on") else "http"
+    scheme = (
+        "https"
+        if _cfg("NCOF_TLS", "").strip().lower() in ("1", "true", "yes", "on")
+        else "http"
+    )
     return {
         "SMF": {
             "base_uri": f"{scheme}://{host}:{smf_port}",

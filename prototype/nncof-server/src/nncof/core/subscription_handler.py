@@ -148,7 +148,9 @@ class SubscriptionHandler:
             )
         return None
 
-    async def _send_external_unsubscription(self, target: str, external_sub_id: str):
+    async def _send_external_unsubscription(
+        self, target: str, external_sub_id: str
+    ) -> bool:
         """
         대상 NF 로 구독 해지 요청을 보낸다.
         """
@@ -158,15 +160,24 @@ class SubscriptionHandler:
             logger.warning(
                 f"[{self.subscription_id}] NF URI 를 찾을 수 없음: {target}. 구독 해지 취소."
             )
-            return
+            return False
 
         unsubscription_url = f"{nf_uri}/subscriptions/{external_sub_id}"
 
         try:
 
             response = await self._client.delete(unsubscription_url)
-            if response.status_code in (204, 200):
-                logger.info(f"[NCOF] --- [구독해지요청] ---> [{target.upper()}]")
+            if response.status_code in (204, 200, 404):
+                if response.status_code == 404:
+                    logger.info(
+                        f"[{self.subscription_id}] {target.upper()} 하위 구독이 이미 없음"
+                    )
+                else:
+                    logger.info(f"[NCOF] --- [구독해지요청] ---> [{target.upper()}]")
+                if self._relation_manager is not None:
+                    await self._relation_manager.remove_relations_by_sub_id(
+                        external_sub_id
+                    )
                 return True
             else:
                 logger.warning(
@@ -178,10 +189,7 @@ class SubscriptionHandler:
                 f"[{self.subscription_id}] {target.upper()} 구독 해지 중 오류 발생: {e}"
             )
 
-        try:
-            await self._relation_manager.remove_relations_by_sub_id(external_sub_id)
-        except Exception as e:
-            logger.error(f"Failed to remove relation: {e}")
+        return False
 
     async def _notify_subscriber(self, nf_type: str, ncof_control_event: list[dict]):
         """제어 명령을 NF(PCF 또는 RICF)로 전송한다."""
@@ -259,7 +267,9 @@ class SubscriptionHandler:
         2. 주기적 분석 태스크 시작 (DataAnalyzer 에 위임)
         """
         self.is_running = True
-        logger.info(f"[{self.subscription_id}] 시작됨. 외부 NF 구독 절차 실행.")
+        logger.info(
+            f"[{self.subscription_id}] 구독 핸들러 시작. 외부 NF 구독 절차 실행."
+        )
 
         for sub_info in self._stale_external_subscriptions:
             external_sub_id = sub_info.get("external_sub_id")
@@ -351,6 +361,8 @@ class SubscriptionHandler:
                 await self._send_external_unsubscription(target, ext_id)
 
         self.external_subscriptions.clear()
+        self.notif_data_store.clear()
+        self.control_data_store.clear()
         await self._client.aclose()
         logger.info(f"[{self.subscription_id}] 정지됨.")
 
