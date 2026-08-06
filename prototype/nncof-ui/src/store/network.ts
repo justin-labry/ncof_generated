@@ -108,6 +108,10 @@ export const useNetworkStore = defineStore("network", () => {
     { id: "e-n3iwf-amf", from: "amf", to: "n3iwf", label: "N2" },
     { id: "e-n3iwf-upf", from: "upf", to: "n3iwf", label: "N3" },
     { id: "e-wifi-ue2", from: "wifi", to: "ue2" },
+
+    { id: "e-ncof-nef", from: "ncof", to: "nef" },
+    { id: "e-nef-af", from: "nef", to: "af" },
+    { id: "e-nef-ricf", from: "nef", to: "ricf" },
   ]);
   const currentMessageIndex = ref(-1);
 
