@@ -55,7 +55,6 @@ class SubscriptionManager:
         self.active_relations: list[Relation] = []
         self._state_store = JsonStateStore()
         self._initialized = True
-        logger.info("[SubscriptionManager] 싱글톤 인스턴스가 초기화.")
 
     def _get_src_nf(self, nf_id: str) -> str | None:
         """
@@ -245,9 +244,7 @@ class SubscriptionManager:
             data=data,
         )
 
-        logger.info(
-            f"[] [{from_node.upper()}] --- [{msg_type}] ---> [{to_node.upper()}]"
-        )
+        logger.info(f"[{from_node.upper()}] --- [{msg_type}] ---> [{to_node.upper()}]")
 
     async def remove_relations_by_sub_id(self, sub_id: str):
         """특정 구독 ID와 관련된 모든 관계를 제거한다."""
@@ -449,7 +446,9 @@ class SubscriptionManager:
             try:
                 subscription = NncofEventsSubscription.from_dict(saved["subscription"])
                 if self._is_expired(subscription):
-                    logger.info("[%s] 만료된 저장 구독을 복구하지 않음", subscription_id)
+                    logger.info(
+                        "[%s] 만료된 저장 구독을 복구하지 않음", subscription_id
+                    )
                     continue
                 handler = self._build_handler(
                     subscription_id,
@@ -458,7 +457,9 @@ class SubscriptionManager:
                     restored_control_notifications=saved.get(
                         "control_notifications", []
                     ),
-                    stale_external_subscriptions=saved.get("external_subscriptions", []),
+                    stale_external_subscriptions=saved.get(
+                        "external_subscriptions", []
+                    ),
                 )
                 self.subscriptions[subscription_id] = handler
                 nf_id = self.get_nf_id(subscription)

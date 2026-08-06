@@ -67,6 +67,28 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """서버 재시작 시 저장 구독을 복원하고 종료 전에 상태를 보존한다."""
+
+    root_logger = logging.getLogger()
+    nncof_logger = logging.getLogger(__name__)
+
+    # 공통으로 사용할 Formatter 정의
+    formatter = logging.Formatter(
+        "[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s [%(filename)s:%(lineno)d]"
+    )
+
+    # 1. Root 로거에 이미 핸들러가 존재하는 경우 -> 기존 핸들러들의 Formatter만 변경
+    if root_logger.handlers:
+        for handler in root_logger.handlers:
+            handler.setFormatter(formatter)
+
+    # 2. Root 및 nncof 로거 모두 핸들러가 없는 경우 -> 핸들러 신규 생성 및 Formatter 설정
+    elif not nncof_logger.handlers and not logger.handlers:
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.INFO)
+        ch.setFormatter(formatter)
+        root_logger.addHandler(ch)
+        root_logger.setLevel(logging.INFO)
+
     subscription_manager = SubscriptionManager()
     await subscription_manager.restore_persisted_subscriptions()
     try:
