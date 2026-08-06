@@ -364,7 +364,7 @@ class SubscriptionHandler:
         self.notif_data_store.clear()
         self.control_data_store.clear()
         await self._client.aclose()
-        logger.info(f"[{self.subscription_id}] 정지됨.")
+        logger.info(f"[{self.subscription_id}] 구독핸들러 정지됨.")
 
     async def shutdown(self):
         """서버 종료 시 하위 NF 구독은 유지하고 로컬 실행 자원만 정리한다."""

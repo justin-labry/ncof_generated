@@ -285,9 +285,6 @@ class SubscriptionManager:
         ]
 
         after_count = len(self.active_relations)
-        logger.info(
-            f"[SubscriptionManager] Relation 제거: {sub_id} (개수: {before_count} -> {after_count})"
-        )
 
     def get_active_relations(self) -> list[Any]:
         """현재 모든 활성 구독 관계를 반환한다."""

@@ -55,19 +55,19 @@ def _build_dummy_nfs() -> dict[str, Any]:
     return {
         "SMF": {
             "base_uri": f"{scheme}://{host}:{smf_port}",
-            "services": {"nsmf-eventexposure": "/nsmf-eventexposure/v1"},
+            "services": {"nsmf-eventexposure": ""},
         },
         "AF": {
             "base_uri": f"{scheme}://{host}:{nef_port}/nnef-eventexposure/af/v1",
-            "services": {"naf-eventexposure": "/naf-eventexposure/v1"},
+            "services": {"naf-eventexposure": ""},
         },
         "RICF": {
             "base_uri": f"{scheme}://{host}:{nef_port}/nnef-eventexposure/ricf/v1",
-            "services": {"nsmf-eventexposure": "/nsmf-eventexposure/v1"},
+            "services": {"nsmf-eventexposure": ""},
         },
         "PCF": {
             "base_uri": f"{scheme}://{host}:{pcf_port}",
-            "services": {"npcf-eventexposure": "/npcf-eventexposure/v1"},
+            "services": {"npcf-eventexposure": ""},
         },
     }
 

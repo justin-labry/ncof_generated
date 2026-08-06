@@ -33,7 +33,7 @@ class NefEventsNotificationsApiImpl(
         handler = manager.get_handler(sub_id)
 
         if not handler:
-            logger.warning(f"[{sub_id}] 구독 핸들러를 찾을 수 없습니다.")
+            logger.warning(f"[{sub_id}] 구독 핸들러를 없음")
             # 404를 반환하거나 무시할 수 있음. 여기서는 404 처리.
             raise HTTPException(
                 status_code=404, detail=f"Subscription {sub_id} not found"
