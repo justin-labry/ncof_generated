@@ -10,6 +10,10 @@ from typing import Any, Dict, List, Literal, Optional
 
 from nncof.models.nncof_events_subscription import NncofEventsSubscription
 from nupf.models.notification_data import NotificationData
+from nncof.models.nncof_events_subscription_notification import (
+    NncofEventsSubscriptionNotification,
+)
+from nnef.models.nef_event_exposure_notif import NefEventExposureNotif
 
 from .data_store import NotificationDataStore
 from .gnb2_rl_engine import create_decision_engine
@@ -86,7 +90,7 @@ class DataAnalyzer:
     async def start(self):
         self.is_running = True
         self._task = asyncio.create_task(self._periodic_process())
-        logger.info(f"[{self.subscription_id}] DataAnalyzer 시작됨")
+        logger.info(f"[{self.subscription_id}] 데이터분석 태스크 시작")
 
     async def stop(self):
         self.is_running = False
@@ -145,8 +149,6 @@ class DataAnalyzer:
                 sleep_time = min(period, remain)
                 await asyncio.sleep(sleep_time)
 
-                logger.info(f"[{self.subscription_id}] 주기적 분석 시작")
-
                 asyncio.create_task(self._notify_analyzing())
 
                 nf_type = self.get_source_nf_type()
@@ -192,7 +194,14 @@ class DataAnalyzer:
                 latest = ts
         return latest
 
-    def _get_wlan_performance_data(self) -> NotificationData | None:
+    def _get_wlan_performance_data(
+        self,
+    ) -> (
+        NncofEventsSubscriptionNotification
+        | NefEventExposureNotif
+        | NotificationData
+        | None
+    ):
         """
         UPF WLAN 성능 데이터를 notif_data_store 에서 조회한다.
 
@@ -200,7 +209,12 @@ class DataAnalyzer:
         가장 최신인 것을 반환한다. 저장 순서상 첫 번째 것을 고르면, 그 스트림의
         주기 통지가 끊겼을 때 갱신되지 않는 값을 계속 읽어 분석 결과가 고정된다.
         """
-        newest: NotificationData | None = None
+        newest: (
+            NncofEventsSubscriptionNotification
+            | NefEventExposureNotif
+            | NotificationData
+            | None
+        ) = None
         newest_ts: datetime | None = None
 
         for notif in self.notif_data_store.get_all().values():
@@ -212,7 +226,6 @@ class DataAnalyzer:
         return newest
 
     async def _analyze_and_generate(self, nf_type: str) -> None:
-        logger.info(f"[{self.subscription_id}] 데이터 분석 시작")
 
         qos_template = self._load_qos_template()
         if qos_template is None:

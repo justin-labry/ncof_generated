@@ -244,7 +244,7 @@ class SubscriptionManager:
             data=data,
         )
 
-        logger.info(f"[{from_node.upper()}] --- [{msg_type}] ---> [{to_node.upper()}]")
+        # logger.info(f"[{from_node.upper()}] --- [{msg_type}] ---> [{to_node.upper()}]")
 
     async def remove_relations_by_sub_id(self, sub_id: str):
         """특정 구독 ID와 관련된 모든 관계를 제거한다."""
@@ -472,7 +472,7 @@ class SubscriptionManager:
                     sub_id=subscription_id,
                 )
                 await handler.start()
-                logger.info("[%s] 저장 구독 복구 완료", subscription_id)
+                logger.info("✔️ [%s] 저장 구독 복구 완료", subscription_id)
             except Exception:
                 self.subscriptions.pop(subscription_id, None)
                 logger.exception("[%s] 저장 구독 복구 실패", subscription_id)

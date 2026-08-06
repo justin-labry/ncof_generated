@@ -133,7 +133,7 @@ async def replace_individual_subcription(
 
 
 @router.delete(
-    "/subscriptions/{subscriptionId}",
+    "/nnef-eventexposure/{type}/v1/subscriptions/{subscriptionId}",
     responses={
         204: {"description": "No Content. Resource was succesfully deleted"},
         307: {"model": RedirectResponse, "description": "Temporary Redirect"},
@@ -156,12 +156,14 @@ async def delete_individual_subcription(
     subscriptionId: Annotated[
         StrictStr, Field(description="Event Subscription ID")
     ] = Path(..., description="Event Subscription ID"),
+    type: str = Path(..., description="NF service type"),
     token_oAuth2ClientCredentials: TokenModel = Security(
         get_token_oAuth2ClientCredentials, scopes=["nnef-eventexposure"]
     ),
 ) -> None:
 
-    app_mode = os.getenv("APP_MODE", "AF").upper()
+    # app_mode = os.getenv("APP_MODE", "AF").upper()
+    app_mode = type.upper()
     target_cls = None
     for cls in BaseIndividualSubscriptionDocumentApi.subclasses:
         if app_mode == "AF" and cls.__name__ == "AFIndividualSubscriptionDocumentApi":

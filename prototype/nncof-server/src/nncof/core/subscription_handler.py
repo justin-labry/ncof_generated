@@ -33,7 +33,11 @@ def _httpx_kwargs() -> dict:
     """NCOF_TLS 설정 시 HTTP/2 over TLS(self-signed 허용), 기본은 h2c(평문 HTTP/2).
     평문에서 HTTP/2 를 쓰려면 http1=False 로 prior-knowledge h2c 를 강제해야 한다
     (http1=True 이면 평문 연결이 조용히 HTTP/1.1 로 떨어짐)."""
-    return {"http2": True, "verify": False} if _TLS_ENABLED else {"http1": False, "http2": True}
+    return (
+        {"http2": True, "verify": False}
+        if _TLS_ENABLED
+        else {"http1": False, "http2": True}
+    )
 
 
 class SubscriptionHandler:
@@ -64,9 +68,7 @@ class SubscriptionHandler:
         self.is_running = False
         self.external_subscriptions: List[ExternalSubscriptionRequest] = []
         self._stale_external_subscriptions = stale_external_subscriptions or []
-        self._client = httpx.AsyncClient(
-            **_httpx_kwargs(), timeout=httpx.Timeout(5.0)
-        )
+        self._client = httpx.AsyncClient(**_httpx_kwargs(), timeout=httpx.Timeout(5.0))
 
         self._analyzer = DataAnalyzer(
             subscription_id=subscription_id,
@@ -79,7 +81,9 @@ class SubscriptionHandler:
             self.notif_data_store, restored_notifications or [], is_control=False
         )
         self._restore_data_store(
-            self.control_data_store, restored_control_notifications or [], is_control=True
+            self.control_data_store,
+            restored_control_notifications or [],
+            is_control=True,
         )
 
     def _restore_data_store(
@@ -113,6 +117,7 @@ class SubscriptionHandler:
         """
 
         nf_uri = nrf.get_nf_uri(target)
+
         if not nf_uri:
             logger.warning(f"[{self.subscription_id}] NF URI 를 찾을 수 없음: {target}")
             return None
@@ -135,6 +140,7 @@ class SubscriptionHandler:
                         f"[{self.subscription_id}] {target.upper()} 로부터 ID 를 획득하지 못함 "
                         f"(Status: {response.status_code})."
                     )
+                logger.info(f"[NCOF] --- [구독요청] ---> [{target.upper()}]")
                 return external_sub_id
         except Exception as e:
             logger.warning(
@@ -157,8 +163,10 @@ class SubscriptionHandler:
         unsubscription_url = f"{nf_uri}/subscriptions/{external_sub_id}"
 
         try:
+
             response = await self._client.delete(unsubscription_url)
             if response.status_code in (204, 200):
+                logger.info(f"[NCOF] --- [구독해지요청] ---> [{target.upper()}]")
                 return True
             else:
                 logger.warning(
@@ -188,9 +196,7 @@ class SubscriptionHandler:
             )
 
             if response.status_code in (204, 200):
-                logger.info(
-                    f"[{self.subscription_id}] [{nf_type.upper()}]에게 제어명령 전송 완료"
-                )
+                logger.info(f"[NCOF] --- [제어명령] ---> [{nf_type.upper()}]")
 
                 # if self._relation_manager is not None:
                 #     await self._relation_manager.add_relation(
