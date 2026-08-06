@@ -1,27 +1,27 @@
 # NF 구독 생애주기 관리 및 데이터 수신을 담당하는 SubscriptionHandler 클래스
 
+import asyncio
+import json
 import logging
 import os
-import asyncio
 from collections.abc import Awaitable, Callable
-from typing import Any, List, Literal, Optional
+from typing import Any, Literal
 
 import httpx
 from fastapi.encoders import jsonable_encoder
-
 from nncof.models.nncof_events_subscription import NncofEventsSubscription
 from nnef.models.nef_event_exposure_notif import NefEventExposureNotif
-from nsmf.models.nsmf_event_exposure import NsmfEventExposure
 from nnef.models.nef_event_exposure_subsc import NefEventExposureSubsc
+from nsmf.models.nsmf_event_exposure import NsmfEventExposure
 from nupf.models.notification_data import NotificationData
 
+from .data_analyzer import DataAnalyzer
 from .data_store import NotificationDataStore
 from .nrf import nrf
 from .subscription_request_builder import (
-    build_subscription_requests,
     ExternalSubscriptionRequest,
+    build_subscription_requests,
 )
-from .data_analyzer import DataAnalyzer
 from .websocket_manager import broadcast_web_message
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class SubscriptionHandler:
         self.notif_data_store = NotificationDataStore()
         self.control_data_store = NotificationDataStore()
         self.is_running = False
-        self.external_subscriptions: List[ExternalSubscriptionRequest] = []
+        self.external_subscriptions: list[ExternalSubscriptionRequest] = []
         self._stale_external_subscriptions = stale_external_subscriptions or []
         self._client = httpx.AsyncClient(**_httpx_kwargs(), timeout=httpx.Timeout(5.0))
 
@@ -111,7 +111,7 @@ class SubscriptionHandler:
 
     async def _send_external_subscription(
         self, target: str, req_body: NsmfEventExposure | NefEventExposureSubsc
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         데이터 수집을 위한 대상 NF 로 구독 요청을 보낸다.
         """
@@ -142,7 +142,7 @@ class SubscriptionHandler:
                     )
                 logger.info(f"[NCOF] --- [구독요청] ---> [{target.upper()}]")
                 return external_sub_id
-        except Exception as e:
+        except (httpx.RequestError, json.JSONDecodeError) as e:
             logger.warning(
                 f"[{self.subscription_id}] {target.upper()} 연결 중 오류 발생: {e}"
             )
@@ -165,7 +165,6 @@ class SubscriptionHandler:
         unsubscription_url = f"{nf_uri}/subscriptions/{external_sub_id}"
 
         try:
-
             response = await self._client.delete(unsubscription_url)
             if response.status_code in (204, 200, 404):
                 if response.status_code == 404:
@@ -184,7 +183,7 @@ class SubscriptionHandler:
                     f"[{self.subscription_id}] {target.upper()} 구독 해지 실패 "
                     f"(Status: {response.status_code})."
                 )
-        except Exception as e:
+        except httpx.RequestError as e:
             logger.error(
                 f"[{self.subscription_id}] {target.upper()} 구독 해지 중 오류 발생: {e}"
             )
@@ -202,63 +201,55 @@ class SubscriptionHandler:
             response = await self._client.post(
                 self.subscription.notification_uri, json=ncof_control_event
             )
-
-            if response.status_code in (204, 200):
-                logger.info(f"[NCOF] --- [제어명령] ---> [{nf_type.upper()}]")
-
-                # if self._relation_manager is not None:
-                #     await self._relation_manager.add_relation(
-                #         from_node="ncof",
-                #         to_node=nf_type.lower(),
-                #         msg_type="NOTIFICATION",
-                #         data=jsonable_encoder(ncof_control_event),
-                #         sub_id=self.subscription_id,
-                #     )
-
-                _data = jsonable_encoder(ncof_control_event)
-                if nf_type.lower() == "af" or nf_type.lower() == "ricf":
-                    await broadcast_web_message(
-                        sub_id=self.subscription_id,
-                        from_node="ncof",
-                        to_node="nef",
-                        msg_type="NOTIFICATION",
-                        data=_data,
-                    )
-                    await asyncio.sleep(0.5)
-                    await broadcast_web_message(
-                        sub_id=self.subscription_id,
-                        from_node="nef",
-                        to_node=nf_type.lower(),
-                        msg_type="NOTIFICATION",
-                        data=_data,
-                    )
-                else:
-                    await broadcast_web_message(
-                        sub_id=self.subscription_id,
-                        from_node="ncof",
-                        to_node=nf_type.lower(),
-                        msg_type="NOTIFICATION",
-                        data=_data,
-                    )
-            else:
-                logger.warning(
-                    f"[{self.subscription_id}] 제어명령 실패\n"
-                    f"  status_code: {response.status_code}\n"
-                    f"  url: {response.url}\n"
-                    f"  reason: {response.reason_phrase}\n"
-                    f"  response: {response.text}"
-                )
-
-        except httpx.HTTPStatusError as e:
-            logger.error(
-                f"[{self.subscription_id}] HTTP 상태 오류\n"
-                f"  status_code: {e.response.status_code}\n"
-                f"  url: {e.request.url}\n"
-                f"  response: {e.response.text}"
-            )
-
-        except Exception as e:
+        except httpx.RequestError as e:
             logger.error(f"[{self.subscription_id}] 제어명령 전송 중 오류 발생: {e}")
+            return
+
+        if response.status_code in (204, 200):
+            logger.info(f"[NCOF] --- [제어명령] ---> [{nf_type.upper()}]")
+
+            # if self._relation_manager is not None:
+            #     await self._relation_manager.add_relation(
+            #         from_node="ncof",
+            #         to_node=nf_type.lower(),
+            #         msg_type="NOTIFICATION",
+            #         data=jsonable_encoder(ncof_control_event),
+            #         sub_id=self.subscription_id,
+            #     )
+
+            _data = jsonable_encoder(ncof_control_event)
+            if nf_type.lower() == "af" or nf_type.lower() == "ricf":
+                await broadcast_web_message(
+                    sub_id=self.subscription_id,
+                    from_node="ncof",
+                    to_node="nef",
+                    msg_type="NOTIFICATION",
+                    data=_data,
+                )
+                await asyncio.sleep(0.5)
+                await broadcast_web_message(
+                    sub_id=self.subscription_id,
+                    from_node="nef",
+                    to_node=nf_type.lower(),
+                    msg_type="NOTIFICATION",
+                    data=_data,
+                )
+            else:
+                await broadcast_web_message(
+                    sub_id=self.subscription_id,
+                    from_node="ncof",
+                    to_node=nf_type.lower(),
+                    msg_type="NOTIFICATION",
+                    data=_data,
+                )
+        else:
+            logger.warning(
+                f"[{self.subscription_id}] 제어명령 실패\n"
+                f"  status_code: {response.status_code}\n"
+                f"  url: {response.url}\n"
+                f"  reason: {response.reason_phrase}\n"
+                f"  response: {response.text}"
+            )
 
     async def start(self):
         """
@@ -304,11 +295,9 @@ class SubscriptionHandler:
                 )
 
         # Phase 2: 성공한 구독에 대해 relation 을 지연 시간을 두고 순차적으로 추가 (시각적 효과)
-        # if self._relation_manager is not None:
-        await asyncio.sleep(1)
-        for target, subscription, external_sub_id in successful:
-            try:
-
+        if self._relation_manager is not None:
+            await asyncio.sleep(1)
+            for target, subscription, external_sub_id in successful:
                 if target.lower() == "af" or target.lower() == "ricf":
                     await self._relation_manager.add_relation(
                         from_node="ncof",
@@ -335,8 +324,6 @@ class SubscriptionHandler:
                     )
 
                 await asyncio.sleep(0.5)
-            except Exception as e:
-                logger.error(f"Failed to add relation: {e}")
 
         if self.subscription.evt_req and self.subscription.evt_req.rep_period:
             await self._analyzer.start()
@@ -393,5 +380,5 @@ class SubscriptionHandler:
             f"[{self.subscription_id}] [{source_nf}] 데이터 수신, notif_id: [{notif_id}]"
         )
 
-    def get_external_subscriptions(self) -> List[ExternalSubscriptionRequest]:
+    def get_external_subscriptions(self) -> list[ExternalSubscriptionRequest]:
         return list(self.external_subscriptions)
