@@ -3,6 +3,7 @@
 
 import json
 import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -86,6 +87,44 @@ def load_json(filepath: str) -> Any:
 
     with path.open("r", encoding="utf-8") as file:
         return json.load(file)
+
+
+def refresh_mon_dur(payload: Any) -> None:
+    """evtReq.monDur 가 과거 시각이면 현재시각 + MON_DUR_MINUTES 로 갱신한다.
+
+    monDur 는 '감시 종료 절대시각'이라 파일에 고정해 두면 그 시점 이후로는
+    NCOF·NEF·SMF 가 구독 즉시 만료 처리해서 알림이 한 건도 흐르지 않는다.
+    파일 값이 아직 유효하면 그대로 둔다(파일이 단일 출처).
+    """
+    if not isinstance(payload, dict):
+        return
+
+    evt_req = payload.get("evtReq")
+    if not isinstance(evt_req, dict):
+        return
+
+    raw = evt_req.get("monDur")
+    if not raw:
+        return
+
+    try:
+        current = datetime.fromisoformat(raw)
+    except (TypeError, ValueError):
+        logger.warning(f"[monDur] 파싱 실패로 원본 유지: {raw!r}")
+        return
+
+    now = datetime.now(current.tzinfo) if current.tzinfo else datetime.now()
+    if current > now:
+        return
+
+    try:
+        minutes = int(_cfg("MON_DUR_MINUTES", "10"))
+    except ValueError:
+        minutes = 10
+
+    renewed = (now + timedelta(minutes=minutes)).isoformat(timespec="seconds")
+    evt_req["monDur"] = renewed
+    logger.warning(f"[monDur] 만료된 값 {raw} → {renewed} 로 갱신 (+{minutes}분)")
 
 
 def send_request(
@@ -173,6 +212,8 @@ def main() -> None:
                         _uri = payload.get("notificationURI", "")
                         if "://" in _uri:
                             payload["notificationURI"] = SCHEME + _uri[_uri.index("://") :]
+                    # 만료된 monDur 를 갱신(그대로면 모든 NF 가 구독 즉시 만료 처리)
+                    refresh_mon_dur(payload)
                 except FileNotFoundError:
                     print(f"[오류] 파일을 찾을 수 없음: {filename}")
                     continue
