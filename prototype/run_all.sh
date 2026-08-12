@@ -50,6 +50,26 @@ if [ -z "$RUN_DIRS" ]; then
   exit 1
 fi
 
+# GUI 는 NCOF 가 빌드 산출물을 직접 서빙한다(→ NCOF 포트 하나로 접속, ssh -L 불필요).
+# 이 브랜치에서 static/ 이 gitignore 로 빠져 clone 직후에는 비어 있으므로,
+# index.html 이 없을 때만 한 번 빌드해 넣는다. 세션 생성 전에 해야 진행 상황이 보인다.
+UI_DIR="$BASE_DIR/nncof-ui"
+STATIC_INDEX="$BASE_DIR/nncof-server/src/nncof/static/index.html"
+if [ ! -f "$STATIC_INDEX" ]; then
+  if [ ! -f "$UI_DIR/package.json" ]; then
+    echo "⚠️ GUI 빌드 건너뜀: nncof-ui (package.json 없음)"
+  elif ! command -v npm >/dev/null 2>&1; then
+    echo "⚠️ GUI 빌드 건너뜀: npm 을 찾을 수 없음 (nvm 사용 시 로그인 셸에서 실행)"
+  else
+    echo "🖥️  GUI 빌드 산출물이 없어 한 번 빌드합니다..."
+    if ( cd "$UI_DIR" && { [ -d node_modules ] || npm install; } && npm run build ); then
+      echo "   GUI 빌드 완료"
+    else
+      echo "⚠️ GUI 빌드 실패 — NCOF 포트에서 GUI 가 뜨지 않습니다"
+    fi
+  fi
+fi
+
 echo "🚀 tmux 세션을 생성하고 $(echo $RUN_DIRS | wc -w)개 서비스를 동시 실행합니다..."
 
 # 첫 대상으로 세션을 만들고, 이후 대상은 패널을 분할하며 실행
@@ -68,6 +88,16 @@ for d in $RUN_DIRS; do
   tmux send-keys -t "$PANE" "sh ./run_http2.sh" C-m
   tmux select-layout -t "$SESSION_NAME" tiled >/dev/null
 done
+
+# UI 를 고치면서 핫리로드가 필요할 때만 Vite dev 서버 패널을 추가한다.
+#   NCOF_UI_DEV=1 sh run_all.sh
+# --host 0.0.0.0 은 원격 서버에 SSH 로 붙어 브라우저로 볼 때 필요하다.
+if [ -n "${NCOF_UI_DEV:-}" ] && [ -f "$UI_DIR/package.json" ] && command -v npm >/dev/null 2>&1; then
+  echo "🖥️  NCOF_UI_DEV=1 — Vite dev 서버 패널 추가(기본 :5173)"
+  PANE=$(tmux split-window -t "$SESSION_NAME" -c "$UI_DIR" -P -F '#{pane_id}')
+  tmux send-keys -t "$PANE" "[ -d node_modules ] || npm install; npm run dev -- --host 0.0.0.0" C-m
+  tmux select-layout -t "$SESSION_NAME" tiled >/dev/null
+fi
 
 # 최종적으로 패널을 격자(tiled) 형태로 균등 배치하고 대화형 클라이언트 패널로 포커스
 tmux select-layout -t "$SESSION_NAME" tiled >/dev/null
