@@ -7,6 +7,8 @@ export PORT=${PORT:-$SMF_PORT}
 # 기본 h2c(평문 HTTP/2). NCOF_TLS=1 이면 HTTP/2 over TLS.
 TLS_ARGS=""
 case "${NCOF_TLS:-}" in 1|true|TRUE|yes|on) TLS_ARGS="--certfile ../cert.pem --keyfile ../key.pem" ;; esac
+# log_config.ini 의 file 핸들러가 쓰는 ./logs 디렉터리 확보(없으면 매 로그마다 Logging error)
+mkdir -p logs
 # Hypercorn으로 HTTP/2 가동
 uv run --no-sync hypercorn nsmf.main:app \
     --bind "0.0.0.0:$PORT" \
