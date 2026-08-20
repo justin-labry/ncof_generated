@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, provide } from 'vue';
+import { computed, ref, onMounted, watch, provide } from 'vue';
 import NetworkCanvas from './components/NetworkCanvas.vue';
 import SimulationPanel from './components/SimulationPanel.vue';
 import NodeDetails from './components/NodeDetails.vue';
@@ -21,10 +21,27 @@ const store = useNetworkStore();
 const refreshKey = ref(0);
 provide('refreshKey', refreshKey);
 
-import { Activity, Zap, Wifi, Radio, BarChart3 } from 'lucide-vue-next';
+import { Activity, ArrowRight, BarChart3, Clock3, Radio, Server, Wifi, Zap } from 'lucide-vue-next';
 
 const canvasRef = ref<InstanceType<typeof NetworkCanvas> | null>(null);
 const wsReady = ref(false);
+
+const recentMessages = computed(() => [...store.messageQueue].slice(-8).reverse());
+const activeNodeCount = computed(() => store.nodes.filter((node) => node.status === 'ACTIVE').length);
+const eventTimeFormatter = new Intl.DateTimeFormat('ko-KR', {
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false,
+});
+
+const formatEventTime = (timestamp: number) => eventTimeFormatter.format(timestamp);
+const messageTypeClass = (type: Message['type']) => {
+  if (type === 'NOTIFICATION') return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+  if (type === 'UNSUBSCRIBE' || type === 'UNSUBSCRIBED') return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+  if (type === 'ANALYZING' || type === 'ANALYZED') return 'bg-violet-500/10 text-violet-400 border-violet-500/20';
+  return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+};
 
 const handleRunMessage = async (msg: Message) => {
   if (canvasRef.value) {
@@ -200,7 +217,7 @@ watch(
       </div>
     </div>
 
-    <main class="flex-1- relative flex flex-col gap-2 h-screen">
+    <main class="flex-1 min-w-0 relative flex flex-col gap-2 h-screen">
       <AppHeader class="ml-2"/>
       <div class="flex-1 flex min-w-0 gap-2">
         <div class="flex flex-col gap-2 shrink-0">
@@ -222,7 +239,7 @@ watch(
     </main>
 
     <!-- 우측 사이드바: 1800px 이상에서 표시 (여유 공간 활용) -->
-    <div class="hidden min-[1640px]:flex flex-col gap-3 p-2 overflow-y-auto w-full flex-1 h-full overflow-hidden max-w-80">
+    <div class="hidden min-[1640px]:flex flex-col gap-3 p-2 overflow-y-auto w-80 shrink-0 h-full overflow-hidden">
       <div class="glass-panel rounded-lg p-4 flex flex-col gap-4 border border-theme-contrast/5 bg-amber-500 h-full relative">
         <!-- 헤더 -->
         <div class="flex items-center gap-2 pb-3 border-b border-theme-contrast/10">
@@ -286,6 +303,116 @@ watch(
       </div>
     </div>
 
+
+    <!-- 초광폭 화면용 추가 사이드바: 최근 이벤트와 토폴로지 상태 -->
+    <aside
+      aria-label="Live network activity"
+      class="hidden min-[2200px]:flex flex-col p-2 pl-0 w-80 shrink-0 h-full overflow-hidden"
+    >
+      <div class="glass-panel rounded-lg p-4 flex flex-col gap-4 border border-theme-contrast/5 h-full min-h-0">
+        <div class="flex items-center justify-between gap-2 pb-3 border-b border-theme-contrast/10">
+          <div class="flex items-center gap-2">
+            <div class="w-1 h-5 bg-linear-to-b from-violet-500 to-blue-400 rounded-full"></div>
+            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Live Activity</span>
+          </div>
+          <span
+            class="flex items-center gap-1.5 text-[9px] font-bold uppercase"
+            :class="store.wsStatus === 'CONNECTED' ? 'text-emerald-400' : 'text-rose-400'"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full"
+              :class="store.wsStatus === 'CONNECTED' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'"
+            ></span>
+            {{ store.wsStatus === 'CONNECTED' ? 'Live' : 'Offline' }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="rounded-xl p-3 bg-theme-contrast/5 border border-theme-contrast/5">
+            <div class="flex items-center gap-1.5 text-slate-500">
+              <Server class="w-3 h-3" />
+              <span class="text-[9px] font-bold uppercase tracking-wider">Active NFs</span>
+            </div>
+            <div class="mt-2 flex items-baseline gap-1">
+              <span class="text-lg font-black text-slate-200">{{ activeNodeCount }}</span>
+              <span class="text-[10px] text-slate-500">/ {{ store.nodes.length }}</span>
+            </div>
+          </div>
+
+          <div class="rounded-xl p-3 bg-theme-contrast/5 border border-theme-contrast/5">
+            <div class="flex items-center gap-1.5 text-slate-500">
+              <Activity class="w-3 h-3" />
+              <span class="text-[9px] font-bold uppercase tracking-wider">WebSocket</span>
+            </div>
+            <div class="mt-2 flex items-center gap-1.5">
+              <span
+                class="w-2 h-2 rounded-full"
+                :class="store.wsStatus === 'CONNECTED' ? 'bg-emerald-500' : store.wsStatus === 'CONNECTING' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'"
+              ></span>
+              <span class="text-[10px] font-black text-slate-300 truncate">{{ store.wsStatus }}</span>
+            </div>
+          </div>
+        </div>
+
+        <section class="flex flex-col gap-2 min-h-0 flex-1">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-1.5 text-slate-400">
+              <Clock3 class="w-3.5 h-3.5" />
+              <h2 class="text-[10px] font-black uppercase tracking-widest">Recent Events</h2>
+            </div>
+            <span class="text-[9px] font-bold text-slate-500">{{ recentMessages.length }}</span>
+          </div>
+
+          <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 space-y-2">
+            <div
+              v-if="recentMessages.length === 0"
+              class="h-full min-h-32 flex items-center justify-center rounded-xl border border-dashed border-theme-contrast/10 text-[10px] font-bold uppercase text-slate-500"
+            >
+              Waiting for events
+            </div>
+
+            <article
+              v-for="message in recentMessages"
+              :key="message.id"
+              class="rounded-xl p-3 bg-theme-contrast/3 border border-theme-contrast/5 hover:bg-theme-contrast/5 transition-colors"
+            >
+              <div class="flex items-center justify-between gap-2">
+                <span
+                  class="px-2 py-0.5 rounded border text-[8px] font-black tracking-wider truncate"
+                  :class="messageTypeClass(message.type)"
+                >
+                  {{ message.type }}
+                </span>
+                <time class="text-[9px] font-mono text-slate-500 shrink-0">
+                  {{ formatEventTime(message.timestamp) }}
+                </time>
+              </div>
+
+              <div class="mt-2 flex items-center gap-2 min-w-0">
+                <span class="text-[10px] font-black uppercase text-slate-300 truncate">{{ message.from }}</span>
+                <ArrowRight class="w-3 h-3 text-blue-400 shrink-0" />
+                <span class="text-[10px] font-black uppercase text-slate-300 truncate">{{ message.to }}</span>
+              </div>
+
+              <div class="mt-2 flex items-center justify-between gap-2 text-[9px]">
+                <span class="font-mono text-slate-500 truncate">{{ message.subId || message.id }}</span>
+                <span
+                  class="font-bold uppercase shrink-0"
+                  :class="message.status === 'COMPLETED' ? 'text-emerald-400' : message.status === 'RUNNING' ? 'text-blue-400' : 'text-slate-500'"
+                >
+                  {{ message.status }}
+                </span>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <div class="pt-3 border-t border-theme-contrast/5 flex items-center justify-between text-[9px] text-slate-500">
+          <span>Latest {{ recentMessages.length }} of {{ store.messageQueue.length }}</span>
+          <span>{{ store.activeSubscriptions.length }} active routes</span>
+        </div>
+      </div>
+    </aside>
 
     <NodeDetails />
 
