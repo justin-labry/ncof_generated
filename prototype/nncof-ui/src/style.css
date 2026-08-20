@@ -1,9 +1,72 @@
 @import "tailwindcss";
 
-@theme {
+@theme inline {
   --color-primary: #3b82f6;
   --color-secondary: #10b981;
   --color-accent: #f59e0b;
+  --color-theme-contrast: var(--theme-contrast);
+  --color-theme-inverse: var(--theme-inverse);
+  --color-theme-overlay: var(--theme-overlay);
+}
+
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --theme-contrast: #ffffff;
+  --theme-inverse: #000000;
+  --theme-overlay: rgba(2, 6, 23, 0.72);
+  --theme-glass: rgba(15, 23, 42, 0.4);
+  --theme-scrollbar: rgba(255, 255, 255, 0.15);
+  --theme-scrollbar-hover: rgba(255, 255, 255, 0.3);
+  --theme-scrollbar-active: rgba(255, 255, 255, 0.4);
+  --theme-network-node: #1e293b;
+  --theme-network-bubble: #0f172a;
+  --theme-topology-edge: rgba(148, 163, 184, 0.25);
+  --theme-topology-label: rgba(148, 163, 184, 0.5);
+  --theme-pulse-border: rgba(255, 255, 255, 0.05);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-slate-950: #f8fafc;
+  --color-slate-900: #ffffff;
+  --color-slate-800: #f1f5f9;
+  --color-slate-700: #cbd5e1;
+  --color-slate-600: #64748b;
+  --color-slate-500: #475569;
+  --color-slate-400: #334155;
+  --color-slate-300: #1e293b;
+  --color-slate-200: #0f172a;
+  --color-slate-100: #020617;
+  --color-gray-600: #64748b;
+  --color-gray-400: #334155;
+  --color-gray-200: #0f172a;
+  --color-blue-300: #1d4ed8;
+  --color-blue-400: #2563eb;
+  --color-sky-300: #0369a1;
+  --color-cyan-400: #0e7490;
+  --color-emerald-300: #047857;
+  --color-emerald-400: #059669;
+  --color-green-400: #15803d;
+  --color-amber-300: #b45309;
+  --color-amber-400: #d97706;
+  --color-rose-400: #e11d48;
+  --color-red-400: #dc2626;
+  --color-purple-400: #7e22ce;
+  --color-violet-300: #6d28d9;
+  --color-violet-400: #7c3aed;
+  --theme-contrast: #0f172a;
+  --theme-inverse: #ffffff;
+  --theme-overlay: rgba(15, 23, 42, 0.45);
+  --theme-glass: rgba(255, 255, 255, 0.78);
+  --theme-scrollbar: rgba(15, 23, 42, 0.18);
+  --theme-scrollbar-hover: rgba(15, 23, 42, 0.3);
+  --theme-scrollbar-active: rgba(15, 23, 42, 0.42);
+  --theme-network-node: #f1f5f9;
+  --theme-network-bubble: #ffffff;
+  --theme-topology-edge: rgba(71, 85, 105, 0.35);
+  --theme-topology-label: rgba(51, 65, 85, 0.72);
+  --theme-pulse-border: rgba(15, 23, 42, 0.08);
 }
 
 body {
@@ -18,13 +81,14 @@ body {
 }
 
 .glass-panel {
-  @apply bg-slate-900/40 backdrop-blur-xl border border-white/10;
+  background-color: var(--theme-glass);
+  @apply backdrop-blur-xl border border-theme-contrast/10;
 }
 
 /* Firefox를 위한 표준 속성 */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  scrollbar-color: var(--theme-scrollbar) transparent;
 }
 
 /* Chrome, Edge, Safari를 위한 Webkit 속성 */
@@ -38,7 +102,7 @@ body {
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
   /* 배경색과 투명도 조절 */
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: var(--theme-scrollbar);
 
   /* 테두리를 활용해 '플로팅' 느낌의 여백 생성 (핵심!) */
   border: 3px solid transparent;
@@ -49,10 +113,10 @@ body {
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   /* 호버 시 더 밝게 하이라이트 */
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: var(--theme-scrollbar-hover);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:active {
   /* 클릭 시 확실한 피드백 */
-  background-color: rgba(255, 255, 255, 0.4);
+  background-color: var(--theme-scrollbar-active);
 }

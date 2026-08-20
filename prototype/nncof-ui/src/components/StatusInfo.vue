@@ -56,7 +56,7 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-center pointer-events-none">
-    <div class="glass-panel p-4 flex flex-col gap-2 shadow-2xl pointer-events-auto border-white/5 bg-slate-900/60 transition-all hover:bg-slate-900/80 rounded-xl w-full">
+    <div class="glass-panel p-4 flex flex-col gap-2 shadow-2xl pointer-events-auto border-theme-contrast/5 bg-slate-900/60 transition-all hover:bg-slate-900/80 rounded-xl w-full">
 
       <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
         <Cog class="w-4 h-4 text-yellow-400/90"/> System Info
@@ -123,7 +123,7 @@ onMounted(() => {
       <!-- WS 로그 드롭다운 (fixed로 다른 패널보다 위에 표시) -->
       <!-- <Teleport to="body">
         <div v-if="showLog"
-          class="fixed z-999 bottom-2 left-2- w-[calc(100vw-30px)] m-4 max-h-52 overflow-y-auto bg-slate-900 border border-white/10 rounded-xl p-2 shadow-2xl custom-scrollbar pointer-events-auto"
+          class="fixed z-999 bottom-2 left-2- w-[calc(100vw-30px)] m-4 max-h-52 overflow-y-auto bg-slate-900 border border-theme-contrast/10 rounded-xl p-2 shadow-2xl custom-scrollbar pointer-events-auto"
           @click.self="showLog = false">
           <div v-for="(entry, i) in reversedLog" :key="i"
             class="text-[10px] font-mono text-slate-400 truncate hover:text-slate-200 transition-colors py-0.5">

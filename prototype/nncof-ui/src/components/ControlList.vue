@@ -10,6 +10,9 @@ import { Bell, RefreshCw, ChevronDown, ChevronRight } from 'lucide-vue-next';
 import VueJsonPretty from 'vue-json-pretty';
 
 import { nodeColorClass, extractMiddle } from '../utils/nodeColors';
+import { useTheme } from '../composables/useTheme';
+
+const { theme } = useTheme();
 
 const rawData = ref<Record<string, any>[]>([]);
 const loading = ref(false);
@@ -83,7 +86,7 @@ onMounted(fetchAll);
 
 <template>
   <div class="flex flex-col gap-4 z-10 pointer-events-none" v-bind="$attrs">
-    <div class="p-2 pointer-events-auto border-white/5 flex flex-col gap-3 h-full">
+    <div class="p-2 pointer-events-auto border-theme-contrast/5 flex flex-col gap-3 h-full">
       <div class="flex items-center justify-between mb-1">
         <div class="flex items-center gap-2">
           <div class="w-1 h-4 bg-rose-500 rounded-full"></div>
@@ -91,14 +94,14 @@ onMounted(fetchAll);
         </div>
         <button
           @click="fetchAll" :disabled="loading"
-          class="p-1.5 hover:bg-white/5 rounded-lg transition-all duration-300 text-slate-500 hover:text-rose-400 disabled:opacity-30"
+          class="p-1.5 hover:bg-theme-contrast/5 rounded-lg transition-all duration-300 text-slate-500 hover:text-rose-400 disabled:opacity-30"
           >
           <RefreshCw class="w-3.5 h-3.5" :class="{ 'animate-spin': refreshed}" />
         </button>
       </div>
 
       <div v-if="subIds.length === 0 && !loading"
-        class="flex-1 flex flex-col justify-center p-8 text-center text-sm text-slate-600 font-bold uppercase border border-dashed border-white/5 rounded-2xl">
+        class="flex-1 flex flex-col justify-center p-8 text-center text-sm text-slate-600 font-bold uppercase border border-dashed border-theme-contrast/5 rounded-2xl">
         No Active Controls
       </div>
 
@@ -116,9 +119,9 @@ onMounted(fetchAll);
 
           <div class="flex flex-col gap-1">
             <div v-for="entry in entriesBySub[subId]" :key="entry.id"
-              class="bg-black/30- border-b- border-gray-600/30 text-xs text-white/30 overflow-hidden">
+              class="bg-theme-inverse/30 border-b- border-theme-contrast/10 text-xs text-theme-contrast/30 overflow-hidden">
 
-              <div class="flex items-center gap-2 p-2 cursor-pointer rounded-full hover:bg-gray-600/80 transition-colors select-none"
+              <div class="flex items-center gap-2 p-2 cursor-pointer rounded-full hover:bg-theme-contrast/10 transition-colors select-none"
                 @click="toggle(`${subId}:${entry.id}`)">
                 <ChevronRight v-if="expanded[`${subId}:${entry.id}`]" class="w-3 h-3 text-slate-500 shrink-0" />
                 <ChevronDown v-else class="w-3 h-3 text-slate-500 shrink-0" />
@@ -134,7 +137,7 @@ onMounted(fetchAll);
               </div>
 
               <!-- Expanded Contents -->
-              <div v-if="!expanded[`${subId}:${entry.id}`]" class="border-white/3 bg-slate-700/20 rounded-lg m-2">
+              <div v-if="!expanded[`${subId}:${entry.id}`]" class="border-theme-contrast/3 bg-slate-700/20 rounded-lg m-2">
                 <div v-for="value, idx of entry.content?.eventNotifications" :key="idx" class="p-2 flex flex-col gap-2">
                   <div class="flex gap-2 items-center">
                     <span class="px-2 py-1 w-max text-xs rounded bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 hover:border-blue-500/40 text-blue-300 hover:text-blue-300 font-black uppercase ">
@@ -154,30 +157,30 @@ onMounted(fetchAll);
                               <table class="flex-1 text-[11px] border-collapse">
                                 <thead>
                                   <tr class="text-left text-slate-500 font-bold uppercase tracking-wider">
-                                    <th class="px-2 py-1 border-b border-white/10 w-1/2">Parameter</th>
-                                    <th class="px-2 py-1 border-b border-white/10">Value</th>
+                                    <th class="px-2 py-1 border-b border-theme-contrast/10 w-1/2">Parameter</th>
+                                    <th class="px-2 py-1 border-b border-theme-contrast/10">Value</th>
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  <tr class="even:bg-white/3 hover:bg-white/6 transition-colors">
-                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-white/5">cellPowerState</td>
-                                    <td class="px-2 py-1 font-mono text-emerald-300 border-b border-white/5">{{ x._cellPowerParamSet?._cellPowerState }}</td>
+                                  <tr class="even:bg-theme-contrast/3 hover:bg-theme-contrast/6 transition-colors">
+                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-theme-contrast/5">cellPowerState</td>
+                                    <td class="px-2 py-1 font-mono text-emerald-300 border-b border-theme-contrast/5">{{ x._cellPowerParamSet?._cellPowerState }}</td>
                                   </tr>
-                                  <tr class="even:bg-white/3 hover:bg-white/6 transition-colors">
-                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-white/5">cellTxPower</td>
-                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-white/5">{{ x._cellPowerParamSet?._cellTxPower }}</td>
+                                  <tr class="even:bg-theme-contrast/3 hover:bg-theme-contrast/6 transition-colors">
+                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-theme-contrast/5">cellTxPower</td>
+                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-theme-contrast/5">{{ x._cellPowerParamSet?._cellTxPower }}</td>
                                   </tr>
-                                  <tr class="even:bg-white/3 hover:bg-white/6 transition-colors">
-                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-white/5">ssPbchBlockPower</td>
-                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-white/5">{{ x._cellPowerParamSet?._ssPbchBlockPower }}</td>
+                                  <tr class="even:bg-theme-contrast/3 hover:bg-theme-contrast/6 transition-colors">
+                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-theme-contrast/5">ssPbchBlockPower</td>
+                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-theme-contrast/5">{{ x._cellPowerParamSet?._ssPbchBlockPower }}</td>
                                   </tr>
-                                  <tr class="even:bg-white/3 hover:bg-white/6 transition-colors">
-                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-white/5">siBlockPower</td>
-                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-white/5">{{ x._cellPowerParamSet?._siBlockPower }}</td>
+                                  <tr class="even:bg-theme-contrast/3 hover:bg-theme-contrast/6 transition-colors">
+                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-theme-contrast/5">siBlockPower</td>
+                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-theme-contrast/5">{{ x._cellPowerParamSet?._siBlockPower }}</td>
                                   </tr>
-                                  <tr class="even:bg-white/3 hover:bg-white/6 transition-colors">
-                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-white/5">pdschBlockPower</td>
-                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-white/5">{{ x._cellPowerParamSet?._pdschBlockPower }}</td>
+                                  <tr class="even:bg-theme-contrast/3 hover:bg-theme-contrast/6 transition-colors">
+                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-theme-contrast/5">pdschBlockPower</td>
+                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-theme-contrast/5">{{ x._cellPowerParamSet?._pdschBlockPower }}</td>
                                   </tr>
                                 </tbody>
                               </table>
@@ -185,26 +188,26 @@ onMounted(fetchAll);
                               <table class="flex-1 text-[11px] border-collapse">
                                 <thead>
                                   <tr class="text-left text-slate-500 font-bold uppercase tracking-wider">
-                                    <th class="px-2 py-1 border-b border-white/10 w-1/2">Parameter</th>
-                                    <th class="px-2 py-1 border-b border-white/10">Value</th>
+                                    <th class="px-2 py-1 border-b border-theme-contrast/10 w-1/2">Parameter</th>
+                                    <th class="px-2 py-1 border-b border-theme-contrast/10">Value</th>
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  <tr class="even:bg-white/3 hover:bg-white/6 transition-colors">
-                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-white/5">pdcchBlockPower</td>
-                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-white/5">{{ x._cellPowerParamSet?._pdcchBlockPower }}</td>
+                                  <tr class="even:bg-theme-contrast/3 hover:bg-theme-contrast/6 transition-colors">
+                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-theme-contrast/5">pdcchBlockPower</td>
+                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-theme-contrast/5">{{ x._cellPowerParamSet?._pdcchBlockPower }}</td>
                                   </tr>
-                                  <tr class="even:bg-white/3 hover:bg-white/6 transition-colors">
-                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-white/5">csiRsPowerOffset</td>
-                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-white/5">{{ x._cellPowerParamSet?._csiRsPowerOffset }}</td>
+                                  <tr class="even:bg-theme-contrast/3 hover:bg-theme-contrast/6 transition-colors">
+                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-theme-contrast/5">csiRsPowerOffset</td>
+                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-theme-contrast/5">{{ x._cellPowerParamSet?._csiRsPowerOffset }}</td>
                                   </tr>
-                                  <tr class="even:bg-white/3 hover:bg-white/6 transition-colors">
-                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-white/5">qRxLevMin</td>
-                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-white/5">{{ x._cellPowerParamSet?._qRxLevMin }}</td>
+                                  <tr class="even:bg-theme-contrast/3 hover:bg-theme-contrast/6 transition-colors">
+                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-theme-contrast/5">qRxLevMin</td>
+                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-theme-contrast/5">{{ x._cellPowerParamSet?._qRxLevMin }}</td>
                                   </tr>
-                                  <tr class="even:bg-white/3 hover:bg-white/6 transition-colors">
-                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-white/5">cellIndividualOffset</td>
-                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-white/5">{{ x._cellPowerParamSet?._cellIndividualOffset }}</td>
+                                  <tr class="even:bg-theme-contrast/3 hover:bg-theme-contrast/6 transition-colors">
+                                    <td class="px-2 py-1 font-mono text-sky-300 border-b border-theme-contrast/5">cellIndividualOffset</td>
+                                    <td class="px-2 py-1 font-mono text-amber-300 border-b border-theme-contrast/5">{{ x._cellPowerParamSet?._cellIndividualOffset }}</td>
                                   </tr>
                                 </tbody>
                               </table>
@@ -223,23 +226,23 @@ onMounted(fetchAll);
                         <table class="w-full text-[11px] border-collapse">
                           <thead>
                             <tr class="text-left text-slate-500 font-bold tracking-wider">
-                              <th class="px-1 py-1 border-b border-white/10">#</th>
-                              <th class="px-1 py-1 border-b border-white/10">gnbValue</th>
-                              <th class="px-1 py-1 border-b border-white/10">n3LwfId</th>
-                              <th class="px-1 py-1 border-b border-white/10">gbrDl</th>
-                              <th class="px-1 py-1 border-b border-white/10">mbrDl</th>
-                              <th class="px-1 py-1 border-b border-white/10 truncate">ratType</th>
+                              <th class="px-1 py-1 border-b border-theme-contrast/10">#</th>
+                              <th class="px-1 py-1 border-b border-theme-contrast/10">gnbValue</th>
+                              <th class="px-1 py-1 border-b border-theme-contrast/10">n3LwfId</th>
+                              <th class="px-1 py-1 border-b border-theme-contrast/10">gbrDl</th>
+                              <th class="px-1 py-1 border-b border-theme-contrast/10">mbrDl</th>
+                              <th class="px-1 py-1 border-b border-theme-contrast/10 truncate">ratType</th>
                             </tr>
                           </thead>
                           <tbody>
                             <tr v-for="(q3, q3Idx) of q2.qosPolAssistSets" :key="q3Idx"
-                              class="even:bg-white/3 hover:bg-white/6 transition-colors">
-                              <td class="px-1 py-1 text-slate-600 border-b border-white/5 truncate">{{ q3Idx }}</td>
-                              <td class="px-1 py-1 font-mono text-sky-300 border-b border-white/5 max-w-12 truncate-">{{ q3.spatialValidity.gRanNodeIds[0]?.gNbId?.gNBValue }}</td>
-                              <td class="px-1 py-1 font-mono text-sky-300 border-b border-white/5 max-w-12 truncate-">{{ q3.spatialValidity.gRanNodeIds[0]?.n3IwfId }}</td>
-                              <td class="px-1 py-1 font-mono text-emerald-300 border-b border-white/5">{{ q3.qosParamSet?.gbrDl ?? '-' }}</td>
-                              <td class="px-1 py-1 font-mono text-amber-300 border-b border-white/5">{{ q3.qosParamSet?.mbrDl ?? '-' }}</td>
-                              <td class="px-1 py-1 font-mono text-amber-300 border-b border-white/5">{{ q3.ratTypes?.join(',') ?? '-' }}</td>
+                              class="even:bg-theme-contrast/3 hover:bg-theme-contrast/6 transition-colors">
+                              <td class="px-1 py-1 text-slate-600 border-b border-theme-contrast/5 truncate">{{ q3Idx }}</td>
+                              <td class="px-1 py-1 font-mono text-sky-300 border-b border-theme-contrast/5 max-w-12 truncate-">{{ q3.spatialValidity.gRanNodeIds[0]?.gNbId?.gNBValue }}</td>
+                              <td class="px-1 py-1 font-mono text-sky-300 border-b border-theme-contrast/5 max-w-12 truncate-">{{ q3.spatialValidity.gRanNodeIds[0]?.n3IwfId }}</td>
+                              <td class="px-1 py-1 font-mono text-emerald-300 border-b border-theme-contrast/5">{{ q3.qosParamSet?.gbrDl ?? '-' }}</td>
+                              <td class="px-1 py-1 font-mono text-amber-300 border-b border-theme-contrast/5">{{ q3.qosParamSet?.mbrDl ?? '-' }}</td>
+                              <td class="px-1 py-1 font-mono text-amber-300 border-b border-theme-contrast/5">{{ q3.ratTypes?.join(',') ?? '-' }}</td>
                             </tr>
                           </tbody>
                         </table>
@@ -263,19 +266,19 @@ onMounted(fetchAll);
   <!-- 상세보기 모달 -->
   <Teleport to="body">
     <div v-if="detailModalEntry"
-      class="fixed inset-0 z-9999 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      class="fixed inset-0 z-9999 flex items-center justify-center bg-theme-overlay backdrop-blur-sm"
       @click.self="closeDetailModal">
-      <div class="relative w-[90vw] max-w-3xl max-h-[85vh] bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-        <div class="flex items-center justify-between px-5 py-3 border-b border-white/10 shrink-0">
+      <div class="relative w-[90vw] max-w-3xl max-h-[85vh] bg-slate-900 border border-theme-contrast/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-theme-contrast/10 shrink-0">
           <h3 class="text-sm font-bold text-slate-300 truncate">Detail — {{ detailModalEntry.id }}</h3>
           <button @click="closeDetailModal"
-            class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/10 text-slate-500 hover:text-slate-200 transition-colors text-lg leading-none">&times;</button>
+            class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-theme-contrast/10 text-slate-500 hover:text-slate-200 transition-colors text-lg leading-none">&times;</button>
         </div>
         <div class="flex-1 overflow-auto p-4 custom-scrollbar">
           <vue-json-pretty
             :data="detailModalEntry"
             :deep="8"
-            theme="dark"
+            :theme="theme"
             show-length
             show-icon
             :show-line="true"

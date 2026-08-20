@@ -1,10 +1,14 @@
 <!-- NCOF 대시보드 상단 헤더 컴포넌트 (브랜딩, 상태, 저장) -->
 <script setup lang="ts">
-import { ref, inject } from 'vue';
+import { computed, ref, inject } from 'vue';
 import type { Ref } from 'vue';
-import { Globe,RefreshCw } from 'lucide-vue-next';
+import { Globe, Moon, RefreshCw, Sun } from 'lucide-vue-next';
+import { useTheme } from '../composables/useTheme';
 
 const refreshKey = inject<Ref<number>>('refreshKey', ref(0));
+const { theme, toggleTheme } = useTheme();
+const isLightTheme = computed(() => theme.value === 'light');
+const themeToggleLabel = computed(() => isLightTheme.value ? '다크 모드로 전환' : '라이트 모드로 전환');
 
 const isRefreshing = ref(false);
 const handleRefreshAll = async () => {
@@ -39,15 +43,25 @@ const handleRefreshAll = async () => {
         </div>
       </div>
       <div class="px-2 py-1.5 flex items-center gap-3 shadow-xl">
+        <button
+          @click="toggleTheme"
+          :title="themeToggleLabel"
+          :aria-label="themeToggleLabel"
+          :aria-pressed="isLightTheme"
+          class="p-2.5 rounded-xl border border-theme-contrast/10 text-slate-400 hover:bg-theme-contrast/5 hover:text-blue-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400 transition-all flex items-center gap-2"
+        >
+          <Moon v-if="isLightTheme" class="w-5 h-5" />
+          <Sun v-else class="w-5 h-5" />
+        </button>
         <button @click="handleRefreshAll" title="Refresh All Data" :class="[
           'p-2.5 rounded-xl border transition-all flex items-center gap-2',
-          isRefreshing ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400' : 'border-white/10 text-slate-400 hover:bg-white/5'
+          isRefreshing ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400' : 'border-theme-contrast/10 text-slate-400 hover:bg-theme-contrast/5'
         ]">
           <RefreshCw class="w-5 h-5" :class="{ 'animate-spin': isRefreshing }" />
         </button>
         <!-- <button @click="handleSave" title="Save Node Layout" :class="[
           'p-2.5 rounded-xl border transition-all flex items-center gap-2',
-          isSaving ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'border-white/10 text-slate-400 hover:bg-white/5'
+          isSaving ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'border-theme-contrast/10 text-slate-400 hover:bg-theme-contrast/5'
         ]">
           <Save v-if="!isSaving" class="w-5 h-5" />
           <CheckCircle v-else class="w-5 h-5 animate-bounce" />

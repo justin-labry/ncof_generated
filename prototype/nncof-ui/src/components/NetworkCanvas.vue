@@ -177,7 +177,7 @@ const renderNodes = () => {
     .attr('y', (d: NetworkNode) => -getNodeDimensions(d.size).h / 2)
     .attr('rx', (d: NetworkNode) => getNodeDimensions(d.size).rx)
     .attr('class', 'stroke-2')
-    .attr('fill', (d) => d.image ? 'none' : '#1e293b')
+    .attr('fill', (d) => d.image ? 'none' : 'var(--theme-network-node)')
     .attr('stroke', (d) => d.image ? 'none' : getNodeColor(d.type));
 
   nodeEnter.append('text')
@@ -187,7 +187,7 @@ const renderNodes = () => {
     .text((d) => d.name);
 
   nodeEnter.append('circle').attr('r', (d: NetworkNode) => getNodeDimensions(d.size).glowR).attr('fill', (d) => getNodeColor(d.type)).attr('class', 'opacity-30').attr('filter', 'blur(4px)');
-  nodeEnter.append('circle').attr('r', (d: NetworkNode) => getNodeDimensions(d.size).dotR).attr('fill', 'white').attr('class', 'opacity-20');
+  nodeEnter.append('circle').attr('r', (d: NetworkNode) => getNodeDimensions(d.size).dotR).attr('fill', 'var(--theme-contrast)').attr('class', 'opacity-20');
 
   // image 속성이 있는 노드는 rounded rect 클리핑된 이미지 표시
   nodeEnter.filter((d: NetworkNode) => !!d.image)
@@ -239,14 +239,14 @@ const renderNodes = () => {
     .attr('width', 170)
     .attr('height', 50)
     .attr('rx', 10)
-    .attr('fill', '#0f172a')
+    .attr('fill', 'var(--theme-network-bubble)')
     .attr('stroke', '#3b82f6')
     .attr('stroke-width', 1)
     .attr('opacity', 0.95);
 
   bubble.append('polygon')
     .attr('points', '-6,25 0,34 6,25')
-    .attr('fill', '#0f172a')
+    .attr('fill', 'var(--theme-network-bubble)')
     .attr('stroke', '#3b82f6')
     .attr('stroke-width', 1);
 
@@ -660,7 +660,7 @@ const handleSave = async () => {
   isSaving.value = false;
 };
 
-const btnStyle = computed(() => isSaving.value ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'border-white/10 text-slate-400 hover:bg-white/5')
+const btnStyle = computed(() => isSaving.value ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400' : 'border-theme-contrast/10 text-slate-400 hover:bg-theme-contrast/5')
 
 const isResetting = ref(false);
 const handleReset = async () => {
@@ -681,7 +681,7 @@ const handleReset = async () => {
   <div class="w-full h-full overflow-hidden relative">
     <svg ref="svgRef" class="w-full h-full select-none"></svg>
     <!-- <div class="absolute bottom-6 left-6 glass-panel rounded-xl p-4 text-[10px] space-y-2 pointer-events-none">
-      <div class="font-bold text-slate-500 uppercase tracking-widest mb-2 border-b border-white/5 pb-1">Legend</div>
+      <div class="font-bold text-slate-500 uppercase tracking-widest mb-2 border-b border-theme-contrast/5 pb-1">Legend</div>
       <div class="flex items-center gap-3"><span class="w-2 h-2 bg-emerald-500 rounded-full"></span> RAN</div>
       <div class="flex items-center gap-3"><span class="w-2 h-2 bg-amber-500 rounded-full"></span> CN</div>
     </div> -->
@@ -692,7 +692,7 @@ const handleReset = async () => {
         <Clock6 v-else class="w-5 h-5 animate-spin" />
       </button>
 
-      <button @click="handleReset" title="Reset Node Layout" class="hover:cursor-pointer p-2.5 rounded-xl border transition-all flex items-center gap-2" :class="isResetting ? 'bg-rose-500/20 border-rose-500/50 text-rose-400' : 'border-white/10 text-slate-400 hover:bg-white/5'">
+      <button @click="handleReset" title="Reset Node Layout" class="hover:cursor-pointer p-2.5 rounded-xl border transition-all flex items-center gap-2" :class="isResetting ? 'bg-rose-500/20 border-rose-500/50 text-rose-400' : 'border-theme-contrast/10 text-slate-400 hover:bg-theme-contrast/5'">
         <Clock6 v-if="isResetting" class="w-5 h-5 animate-spin" />
         <Scan v-else class="text-xs font-bold"/>
       </button>
@@ -736,7 +736,7 @@ const handleReset = async () => {
 }
 
 .topology-edge {
-  stroke: rgba(148, 163, 184, 0.25);
+  stroke: var(--theme-topology-edge);
   stroke-width: 1.5;
   stroke-dasharray: 5, 4;
 }
@@ -753,7 +753,7 @@ const handleReset = async () => {
 }
 
 .topology-edge-label {
-  fill: rgba(148, 163, 184, 0.5);
+  fill: var(--theme-topology-label);
   font-size: 8px;
   font-weight: 700;
   font-family: inherit;

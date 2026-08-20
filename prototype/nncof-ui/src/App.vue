@@ -177,7 +177,7 @@ watch(
       v-if="wsReady && store.wsStatus !== 'CONNECTED'"
       class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/50 backdrop-blur-xs"
     >
-      <div class="glass-panel rounded-2xl p-8 flex flex-col items-center gap-5 min-w-80 border border-white/10">
+      <div class="glass-panel rounded-2xl p-8 flex flex-col items-center gap-5 min-w-80 border border-theme-contrast/10">
         <!-- Spinner -->
         <svg class="w-10 h-10 animate-spin text-blue-400" viewBox="0 0 24 24" fill="none">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -209,7 +209,7 @@ watch(
         </div>
         <div class="flex flex-col gap-2 min-w-0 flex-1">
           <div class="flex gap-2">
-            <NetworkCanvas ref="canvasRef" class="min-w-200 max-w-200 min-h-120 glass-panel border rounded-xl border-white/5" :class="{ 'animate-tray-pulse': pulsing }"/>
+            <NetworkCanvas ref="canvasRef" class="min-w-200 max-w-200 min-h-120 glass-panel border rounded-xl border-theme-contrast/5" :class="{ 'animate-tray-pulse': pulsing }"/>
             <ControlList class="w-full min-w-96 max-w-200 shrink-0- h-full- max-h-120 rounded-2xl glass-panel"/>
           </div>
           <div class="flex-1 flex gap-2 ">
@@ -223,37 +223,37 @@ watch(
 
     <!-- 우측 사이드바: 1800px 이상에서 표시 (여유 공간 활용) -->
     <div class="hidden min-[1640px]:flex flex-col gap-3 p-2 overflow-y-auto w-full flex-1 h-full overflow-hidden max-w-80">
-      <div class="glass-panel rounded-lg p-4 flex flex-col gap-4 border border-white/5 bg-amber-500 h-full relative">
+      <div class="glass-panel rounded-lg p-4 flex flex-col gap-4 border border-theme-contrast/5 bg-amber-500 h-full relative">
         <!-- 헤더 -->
-        <div class="flex items-center gap-2 pb-3 border-b border-white/10">
+        <div class="flex items-center gap-2 pb-3 border-b border-theme-contrast/10">
           <div class="w-1 h-5 bg-linear-to-b from-blue-500 to-cyan-400 rounded-full"></div>
           <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Dashboard Overview</span>
         </div>
 
         <!-- 상태 요약 카드 그리드 -->
         <div class="grid grid-cols-1 gap-2">
-          <div class="bg-white/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-white/10 transition-colors">
+          <div class="bg-theme-contrast/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-theme-contrast/10 transition-colors">
             <div class="flex items-center gap-1.5">
               <Radio class="w-3 h-3 text-blue-400" />
               <span class="text-[9px] text-slate-500 uppercase tracking-wider font-bold truncate">Nodes</span>
             </div>
             <span class="text-lg font-bold text-slate-200">{{ store.nodes.length }}</span>
           </div>
-          <div class="bg-white/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-white/10 transition-colors">
+          <div class="bg-theme-contrast/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-theme-contrast/10 transition-colors">
             <div class="flex items-center gap-1.5">
               <Zap class="w-3 h-3 text-amber-400" />
               <span class="text-[9px] text-slate-500 uppercase tracking-wider font-bold truncate">Subscriptions</span>
             </div>
             <span class="text-lg font-bold text-amber-300">{{ store.activeSubscriptions.length }}</span>
           </div>
-          <div class="bg-white/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-white/10 transition-colors">
+          <div class="bg-theme-contrast/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-theme-contrast/10 transition-colors">
             <div class="flex items-center gap-1.5">
               <Activity class="w-3 h-3 text-emerald-400" />
               <span class="text-[9px] text-slate-500 uppercase tracking-wider font-bold truncate">Messages</span>
             </div>
             <span class="text-lg font-bold text-emerald-300">{{ store.messageQueue.length }}</span>
           </div>
-          <div class="bg-white/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-white/10 transition-colors">
+          <div class="bg-theme-contrast/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-theme-contrast/10 transition-colors">
             <div class="flex items-center gap-1.5">
               <BarChart3 class="w-3 h-3 text-violet-400" />
               <span class="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Logs</span>
@@ -269,7 +269,7 @@ watch(
         </div>
 
         <!-- 하단: 보조 정보 및 디자인 -->
-        <div class="mt-auto pt-3 border-t border-white/5 flex flex-col gap-2">
+        <div class="mt-auto pt-3 border-t border-theme-contrast/5 flex flex-col gap-2">
           <div class="flex items-center justify-center gap-2 text-[10px] text-slate-600">
             <Wifi class="w-3 h-3 text-slate-600" />
             <span>NCOF v0.4.0 — 5G Core Event Exposure</span>
@@ -304,7 +304,7 @@ watch(
 
 @keyframes tray-pulse {
   0%, 100% {
-    border-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--theme-pulse-border);
     box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
   }
   50% {

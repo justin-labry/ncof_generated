@@ -47,7 +47,7 @@ const getMessageTypeStyle = (type: Message['type']) => {
     case 'ANALYZED':
       return 'bg-emerald-500/30 text-emerald-400 border-emerald-500/20';
     default:
-      return 'bg-slate-800 text-slate-400 border-white/5';
+      return 'bg-slate-800 text-slate-400 border-theme-contrast/5';
   }
 };
 
@@ -56,18 +56,18 @@ const getMessageTypeStyle = (type: Message['type']) => {
 <template>
   <div class="glass-panel flex flex-col rounded-xl p-2">
     <div class="flex-1 overflow-y-auto custom-scrollbar">
-      <div class="p-2 border-b border-white/5">
+      <div class="p-2 border-b border-theme-contrast/5">
         <div class="flex items-center justify-between">
           <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
             <Zap class="w-4 h-4 text-green-400/90"/>
             Event Log
-            <span class="text-[9px] bg-white/5 px-1.5 py-0.5 rounded text-slate-500 font-bold">
+            <span class="text-[9px] bg-theme-contrast/5 px-1.5 py-0.5 rounded text-slate-500 font-bold">
               LAST {{ filteredMessages.length }}
             </span>
           </h3>
         </div>
       </div>
-      <div v-for="msg in filteredMessages" :key="msg.id" :class="['flex flex-col- gap-1.5 p-1.5 border-b border-white/5 transition-all group relative', msg.status === 'RUNNING' ? 'bg-blue-500/5' : 'hover:bg-white/5' ]">
+      <div v-for="msg in filteredMessages" :key="msg.id" :class="['flex flex-col- gap-1.5 p-1.5 border-b border-theme-contrast/5 transition-all group relative', msg.status === 'RUNNING' ? 'bg-blue-500/5' : 'hover:bg-theme-contrast/5' ]">
         <div class="flex items-center gap-1 overflow-hidden">
           <div class="w-2 h-2 bg-yellow-400- rounded-full" :class="getMessageTypeStyle(msg.type)"></div>
           <span :class="['text-[9px] w-20 text-center px-1 py-0.5 rounded font-black uppercase tracking-tighter border shrink-0', getMessageTypeStyle(msg.type)]" > {{ msg.type }} </span>
@@ -105,6 +105,7 @@ const getMessageTypeStyle = (type: Message['type']) => {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-white/10 rounded-full;
+  background-color: color-mix(in srgb, var(--theme-contrast) 10%, transparent);
+  @apply rounded-full;
 }
 </style>

@@ -59,25 +59,25 @@ const getBadgeColor = (type: string | undefined) => {
           </div>
         </div>
       </div>
-      <button @click="store.selectedNodeId = null" class="p-2 hover:bg-white/5 rounded-xl transition-all">
+      <button @click="store.selectedNodeId = null" class="p-2 hover:bg-theme-contrast/5 rounded-xl transition-all">
         <X class="w-5 h-5 text-slate-500" />
       </button>
     </div>
 
     <!-- Metadata Grid -->
     <div class="grid grid-cols-2 gap-3">
-        <div class="bg-slate-900/50 p-3 rounded-2xl border border-white/5">
+        <div class="bg-slate-900/50 p-3 rounded-2xl border border-theme-contrast/5">
             <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Server class="w-3 h-3" /> Host Rack</p>
             <p class="font-mono text-xs">{{ store.selectedNode.server }}</p>
         </div>
-        <div class="bg-slate-900/50 p-3 rounded-2xl border border-white/5">
+        <div class="bg-slate-900/50 p-3 rounded-2xl border border-theme-contrast/5">
             <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Hash class="w-3 h-3" /> System ID</p>
             <p class="font-mono text-xs">{{ store.selectedNode.id.toUpperCase() }}</p>
         </div>
     </div>
 
     <!-- Interface Controller -->
-    <div class="space-y-4 pt-4 border-t border-white/5">
+    <div class="space-y-4 pt-4 border-t border-theme-contrast/5">
       <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
         <Activity class="w-4 h-4" /> Signal Interface
       </h3>
@@ -87,7 +87,7 @@ const getBadgeColor = (type: string | undefined) => {
           <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Message Type</label>
           <select 
             v-model="messageType"
-            class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
+            class="w-full bg-slate-900 border border-theme-contrast/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
           >
             <option value="SUBSCRIBE">SUBSCRIBE</option>
             <option value="UNSUBSCRIBE">UNSUBSCRIBE</option>
@@ -102,7 +102,7 @@ const getBadgeColor = (type: string | undefined) => {
           <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Target Cluster</label>
           <select 
             v-model="targetNodeId"
-            class="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
+            class="w-full bg-slate-900 border border-theme-contrast/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
           >
             <option value="" disabled selected>Select destination node...</option>
             <option v-for="node in store.nodes.filter(n => n.id !== store.selectedNodeId)" :key="node.id" :value="node.id">
@@ -152,6 +152,7 @@ const getBadgeColor = (type: string | undefined) => {
   @apply bg-transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-white/10 rounded-full;
+  background-color: color-mix(in srgb, var(--theme-contrast) 10%, transparent);
+  @apply rounded-full;
 }
 </style>

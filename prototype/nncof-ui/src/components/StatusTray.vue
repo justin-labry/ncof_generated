@@ -71,7 +71,7 @@ onMounted(() => {
 <template>
   <div class="flex justify-center pointer-events-none">
     <div
-      class="w-full p-1 flex items-center justify-end gap-8 pointer-events-auto border-white/5 bg-slate-900/60 transition-all hover:bg-slate-900/80"
+      class="w-full p-1 flex items-center justify-end gap-8 pointer-events-auto border-theme-contrast/5 bg-slate-900/60 transition-all hover:bg-slate-900/80"
       :class="{ 'animate-tray-pulse': pulsing }">
 
       <!-- 실시간 시계 -->
@@ -83,7 +83,7 @@ onMounted(() => {
         </span>
       </div>
 
-      <div class="h-4 bg-white/10"></div>
+      <div class="h-4 bg-theme-contrast/10"></div>
 
       <!-- API 상태 -->
       <button @click="checkApiStatus" :disabled="apiLoading"
@@ -109,7 +109,7 @@ onMounted(() => {
         </div>
       </button>
 
-      <div class="h-4 bg-white/10"></div>
+      <div class="h-4 bg-theme-contrast/10"></div>
 
       <!-- WebSocket 상태 -->
       <div class="flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity">
@@ -134,7 +134,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="h-4 w-0.5 bg-white/10"></div>
+      <div class="h-4 w-0.5 bg-theme-contrast/10"></div>
 
       <!-- WS 로그 -->
       <div class="relative">
@@ -149,7 +149,7 @@ onMounted(() => {
       <!-- WS 로그 드롭다운 (fixed로 다른 패널보다 위에 표시) -->
       <Teleport to="body">
         <div v-if="showLog"
-          class="fixed z-999 bottom-22 left-1/2 -translate-x-1/2 w-6xl m-4 max-h-52 overflow-y-auto bg-slate-900 border border-white/10 rounded-xl p-2 shadow-2xl custom-scrollbar pointer-events-auto"
+          class="fixed z-999 bottom-22 left-1/2 -translate-x-1/2 w-6xl m-4 max-h-52 overflow-y-auto bg-slate-900 border border-theme-contrast/10 rounded-xl p-2 shadow-2xl custom-scrollbar pointer-events-auto"
           @click.self="showLog = false">
           <div v-for="(entry, i) in reversedLog" :key="i"
             class="text-[10px] font-mono text-slate-400 truncate hover:text-slate-200 transition-colors py-0.5">
@@ -177,7 +177,7 @@ onMounted(() => {
 
 @keyframes tray-pulse {
   0%, 100% {
-    border-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--theme-pulse-border);
     box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
   }
   50% {
