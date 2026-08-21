@@ -219,19 +219,19 @@ watch(
 
     <main class="flex-1 min-w-0 relative flex flex-col gap-2 h-screen">
       <AppHeader class="ml-2"/>
-      <div class="flex-1 flex min-w-0 gap-2">
+      <div class="flex-1 flex min-w-0 min-h-0 gap-2">
         <div class="flex flex-col gap-2 shrink-0">
           <SimulationPanel :on-run-message="handleRunMessage" class="w-72 ml-2 min-h-120 h-full- max-h-200 overflow-auto"/>
           <StatusInfo class="ml-2 w-72 h-max"  />
         </div>
-        <div class="flex flex-col gap-2 min-w-0 flex-1">
+        <div class="flex flex-col gap-2 min-w-0 min-h-0 flex-1">
           <div class="flex gap-2">
             <NetworkCanvas ref="canvasRef" class="min-w-200 max-w-200 min-h-120 glass-panel border rounded-xl border-theme-contrast/5" :class="{ 'animate-tray-pulse': pulsing }"/>
             <ControlList class="w-full min-w-96 max-w-200 shrink-0- h-full- max-h-120 rounded-2xl glass-panel"/>
           </div>
-          <div class="flex-1 flex gap-2 ">
+          <div class="flex-1 flex min-h-0 gap-2 ">
             <SubscriptionList class="w-full max-w-200 h-full rounded-2xl glass-panel" />
-            <NotificationList class="w-full max-w-200 h-full rounded-2xl glass-panel" />
+            <NotificationList class="w-full max-w-200 h-full min-h-0 rounded-2xl glass-panel" />
           </div>
         </div>
       </div>

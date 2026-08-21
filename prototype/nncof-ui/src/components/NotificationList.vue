@@ -76,9 +76,9 @@ onMounted(fetchAll);
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 z-10 pointer-events-none" v-bind="$attrs">
-    <div class="p-2 pointer-events-auto border-theme-contrast/5 flex flex-col gap-3 h-full">
-      <div class="flex items-center justify-between mb-1">
+  <div class="flex flex-col gap-4 min-h-0 overflow-hidden z-10 pointer-events-none" v-bind="$attrs">
+    <div class="p-2 pointer-events-auto border-theme-contrast/5 flex flex-col gap-3 h-full min-h-0">
+      <div class="flex items-center justify-between mb-1 shrink-0">
         <div class="flex items-center gap-2">
           <div class="w-1 h-4 bg-amber-500 rounded-full"></div>
           <h2 class="text-xs font-black uppercase tracking-widest text-slate-400">Notifications</h2>
@@ -96,7 +96,7 @@ onMounted(fetchAll);
         No Active Notifications
       </div>
 
-      <div class="flex flex-col gap-2 custom-scrollbar">
+      <div class="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2 custom-scrollbar">
 
         <div v-for="subId in subIds" :key="subId"
           class="bg-theme-contrast/2 border border-theme-contrast/5 rounded-2xl p-4 transition-all duration-300">
