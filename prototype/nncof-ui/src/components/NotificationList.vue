@@ -116,7 +116,7 @@ onMounted(fetchAll);
                 <div class="w-2 h-2 bg-yellow-500/70 rounded-full"></div>
                 <div class="text-center bg-yellow-500/10 border border-yellow-500/20 rounded font-black text-yellow-400 uppercase px-2 w-max">Notification</div>
                 <!-- <FileText class="w-3.5 h-3.5 text-slate-500 shrink-0" /> -->
-                <span class="text-[11px] font-mono font-bold text-slate-400 truncate w-48" :title="entry.notifUri">{{ entry.notifUri  }}</span>
+                <span class="text-[11px] font-mono font-bold text-slate-400 truncate w-48-" :title="entry.notifUri">{{ entry.notifUri  }}</span>
                 <div class="flex justify-between items-center gap-1 w-28">
                   <span class="font-black uppercase w-max rounded-2xl px-2" :class="nodeColorClass(extractMiddle(entry.notifUri))">{{ extractMiddle(entry.notifUri) }}</span>
                   <span class="text-blue-500 font-bold text-center">→</span>

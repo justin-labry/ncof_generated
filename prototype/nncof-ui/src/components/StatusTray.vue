@@ -71,13 +71,12 @@ onMounted(() => {
 <template>
   <div class="flex justify-center pointer-events-none">
     <div
-      class="w-full p-1 flex items-center justify-end gap-8 pointer-events-auto border-theme-contrast/5 bg-slate-900/60 transition-all hover:bg-slate-900/80"
-      :class="{ 'animate-tray-pulse': pulsing }">
+      class="w-full p-1 flex items-center justify-end gap-8 pointer-events-auto border-theme-contrast/5 bg-slate-900/60- transition-all">
 
       <!-- 실시간 시계 -->
       <div class="flex items-center gap-2 mr-auto opacity-60">
         <Clock class="w-3.5 h-3.5 text-slate-400" />
-        <span class="text-xs font-mono font-bold text-slate-400 tracking-wider">
+        <span class="text-xs font-bold text-slate-400 tracking-wider">
           {{ now.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }) }}
           {{ now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) }}
         </span>
@@ -89,7 +88,7 @@ onMounted(() => {
       <button @click="checkApiStatus" :disabled="apiLoading"
         class="flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity disabled:opacity-30 cursor-pointer">
         <div class="relative">
-          <div class="w-3 h-3 rounded-full" :class="{
+          <div class="w-2 h-2 rounded-full" :class="{
             'bg-slate-500': apiStatus === null && !apiError,
             'bg-emerald-500': apiStatus !== null,
             'bg-red-500': apiError !== null,
@@ -98,8 +97,8 @@ onMounted(() => {
           <div v-if="apiLoading" class="absolute inset-0 bg-blue-400 rounded-full animate-ping opacity-75"></div>
         </div>
         <div class="flex gap-2 text-left">
-          <span class="text-xs font-black text-slate-500 uppercase tracking-widest">API Status:</span>
-          <span class="text-xs font-bold" :class="{
+          <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">API:</span>
+          <span class="text-[10px] font-bold" :class="{
             'text-slate-500': apiStatus === null && !apiError,
             'text-emerald-400': apiStatus !== null,
             'text-red-400': apiError !== null
@@ -109,12 +108,10 @@ onMounted(() => {
         </div>
       </button>
 
-      <div class="h-4 bg-theme-contrast/10"></div>
-
       <!-- WebSocket 상태 -->
       <div class="flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity">
         <div class="relative">
-          <div class="w-3 h-3 rounded-full" :class="{
+          <div class="w-2 h-2 rounded-full" :class="{
             'bg-slate-500': store.wsStatus === 'DISCONNECTED',
             'bg-yellow-400': store.wsStatus === 'CONNECTING',
             'bg-emerald-500': store.wsStatus === 'CONNECTED',
@@ -124,8 +121,8 @@ onMounted(() => {
             class="absolute inset-0 bg-yellow-400 rounded-full animate-ping opacity-75"></div>
         </div>
         <div class="flex gap-2 ">
-          <span class="text-xs font-black text-slate-500 uppercase tracking-widest">WebSocket Status:</span>
-          <span class="text-xs font-bold" :class="{
+          <span class="text-[10px] font-black- text-slate-500 uppercase tracking-widest">WebSocket:</span>
+          <span class="text-[10px] font-bold-" :class="{
             'text-red-500': store.wsStatus === 'DISCONNECTED',
             'text-yellow-400': store.wsStatus === 'CONNECTING',
             'text-emerald-400': store.wsStatus === 'CONNECTED',

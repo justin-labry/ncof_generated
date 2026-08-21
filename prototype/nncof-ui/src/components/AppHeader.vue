@@ -35,14 +35,14 @@ const handleRefreshAll = async () => {
     </div>
 
     <div class="flex gap-4 pointer-events-auto">
-      <div class="px-5 py-1.5 flex items-center gap-2 shadow-xl">
+      <div class="px-5 py-1.5 flex items-center gap-2">
         <!-- <Globe class="w-5 h-5 text-blue-400" /> -->
         <div class="w-2 h-2 bg-blue-400/80 rounded-full"></div>
         <div class="flex flex-col">
           <span class="text-xs font-bold tracking-wider font-sans text-blue-40-0">PoC: 6G-I2P ETRI-DoDo1</span>
         </div>
       </div>
-      <div class="px-2 py-1.5 flex items-center gap-3 shadow-xl">
+      <div class="px-2 py-1.5 flex items-center gap-3">
         <button
           @click="toggleTheme"
           :title="themeToggleLabel"

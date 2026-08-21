@@ -59,7 +59,8 @@ onMounted(() => {
     <div class="glass-panel p-4 flex flex-col gap-2 shadow-2xl pointer-events-auto border-theme-contrast/5 bg-slate-900/60 transition-all hover:bg-slate-900/80 rounded-xl w-full">
 
       <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-        <Cog class="w-4 h-4 text-yellow-400/90"/> System Info
+        <!-- <Cog class="w-4 h-4 text-yellow-400/90"/> System Info -->
+        <div class="w-1 h-4 bg-amber-400"></div> System Info
       </h3>
       <div class="flex gap-2 my-2">
         <div class="w-1 h-full bg-blue-500"></div>
@@ -135,6 +136,12 @@ onMounted(() => {
           </div>
         </div>
       </Teleport> -->
+
+        <div class="absolute w-full bottom-4 flex items-center justify-center">
+          <div class="text-4xl font-black text-slate-700/90">
+            NCOF
+          </div>
+        </div>
     </div>
   </div>
 </template>

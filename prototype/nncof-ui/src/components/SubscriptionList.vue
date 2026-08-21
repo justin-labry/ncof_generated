@@ -150,7 +150,7 @@ onMounted(fetchAll);
                   <div class="w-2 h-2 bg-blue-500/80 rounded-full"></div>
                   <span class="bg-blue-500/10 border border-blue-500/20 rounded font-black text-blue-400 uppercase px-2">SUBSCRIPTION</span>
                 </div>
-                <div class="flex gap-1 truncate w-40 font-mono text-gray-400"> {{ sub.subscriptionId }} </div>
+                <div class="flex gap-1 truncate- w-40- font-mono text-gray-400"> {{ sub.subscriptionId }} </div>
                 <div class="flex gap-2 w-32">
                   <span class="font-black uppercase w-max rounded-2xl px-2" :class="nodeColorClass(sub.fromNode)">{{ sub.fromNode }}</span>
                   <span class="text-blue-500 font-bold">→</span>
@@ -204,7 +204,7 @@ onMounted(fetchAll);
                     <div class="bg-blue-500/10 border border-blue-500/20 rounded font-black text-blue-400 uppercase px-2 w-max">
                         SUBSCRIPTION
                     </div>
-                    <div class="flex gap-1 truncate w-40 font-mono text-gray-400">
+                    <div class="flex gap-1 truncate- w-40- font-mono text-gray-400">
                       {{ ext.externalSubId || sub.subscriptionId }}
                     </div>
                     <div class="flex gap-2 w-32">

@@ -128,7 +128,7 @@ onMounted(fetchAll);
                 <div class="w-2 h-2 bg-red-500/70 rounded-full"></div>
                 <div class="text-xs text-center bg-red-500/10 border border-red-500/20 rounded font-black text-red-400 uppercase px-2 w-max">Control</div>
 
-                <span class="text-[11px] font-mono font-bold text-slate-400 truncate w-40">{{ entry.id }}</span>
+                <span class="text-[11px] font-mono font-bold text-slate-400 truncate">{{ entry.id }}</span>
 
                 <span class="px-1 py-0.5 text-center rounded font-black text-[11px] uppercase" :class="nodeColorClass('ncof')">NCOF</span>
                 <span class="w-4 text-blue-500 font-bold text-center">→</span>

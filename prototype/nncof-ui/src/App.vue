@@ -187,7 +187,7 @@ watch(
 
 <template>
   <div
-    class="flex w-full h-screen bg-slate-950 text-slate-100 font-sans selection:bg-blue-500/30">
+    class="flex w-full h-screen bg-slate-950 text-slate-100 font-sans selection:bg-blue-500/30 overflow-hidden">
 
     <!-- WebSocket 연결 상태 오버레이 -->
     <div
@@ -217,12 +217,12 @@ watch(
       </div>
     </div>
 
-    <main class="flex-1 min-w-0 relative flex flex-col gap-2 h-screen">
-      <AppHeader class="ml-2"/>
+    <main class="flex-1 relative flex flex-col gap-2 h-screen">
+      <AppHeader class="ml-2 "/>
       <div class="flex-1 flex min-w-0 min-h-0 gap-2">
         <div class="flex flex-col gap-2 shrink-0">
-          <SimulationPanel :on-run-message="handleRunMessage" class="w-72 ml-2 min-h-120 h-full- max-h-200 overflow-auto"/>
-          <StatusInfo class="ml-2 w-72 h-max"  />
+          <SimulationPanel :on-run-message="handleRunMessage" class="flex-1 w-72 ml-2 min-h-120 h-full- max-h-200 overflow-auto"/>
+          <StatusInfo class="ml-2 w-72 h-full"  />
         </div>
         <div class="flex flex-col gap-2 min-w-0 min-h-0 flex-1">
           <div class="flex gap-2">
@@ -230,8 +230,8 @@ watch(
             <ControlList class="w-full min-w-96 max-w-200 shrink-0- h-full- max-h-120 rounded-2xl glass-panel"/>
           </div>
           <div class="flex-1 flex min-h-0 gap-2 ">
-            <SubscriptionList class="w-full max-w-200 h-full rounded-2xl glass-panel" />
-            <NotificationList class="w-full max-w-200 h-full min-h-0 rounded-2xl glass-panel" />
+            <SubscriptionList class="w-full min-w-180 max-w-180 h-full rounded-2xl glass-panel" />
+            <NotificationList class="w-full min-w-180 max-w-180 h-full min-h-0 rounded-2xl glass-panel" />
           </div>
         </div>
       </div>
@@ -239,16 +239,25 @@ watch(
     </main>
 
     <!-- 우측 사이드바: 1800px 이상에서 표시 (여유 공간 활용) -->
-    <div class="hidden min-[1640px]:flex flex-col gap-3 p-2 overflow-y-auto w-80 shrink-0 h-full overflow-hidden">
-      <div class="glass-panel rounded-lg p-4 flex flex-col gap-4 border border-theme-contrast/5 bg-amber-500 h-full relative">
+    <div class="hidden min-[1000px]:flex flex-col gap-2 p-2 overflow-y-auto w-full min-w-80 flex-auto h-full" v-if="true">
+      <div class="flex justify-between items-center pointer-events-none glass-panel rounded-xl p-5 ">
         <!-- 헤더 -->
-        <div class="flex items-center gap-2 pb-3 border-b border-theme-contrast/10">
-          <div class="w-1 h-5 bg-linear-to-b from-blue-500 to-cyan-400 rounded-full"></div>
+        <div class="flex items-center gap-2 border-theme-contrast/10">
+          <div class="w-4 h-4 bg-linear-to-b from-blue-500 to-cyan-400 rounded"></div>
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Extended Info</span>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-lg p-2 flex flex-col gap-4 border border-theme-contrast/5 ">
+
+                <!-- 헤더 -->
+        <div class="flex items-center gap-2 border-theme-contrast/10">
+          <div class="w-1 h-4 bg-linear-to-b from-blue-500 to-cyan-400 rounded-full"></div>
           <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Dashboard Overview</span>
         </div>
 
         <!-- 상태 요약 카드 그리드 -->
-        <div class="grid grid-cols-1 gap-2">
+        <div class="grid grid-cols-2 gap-2">
           <div class="bg-theme-contrast/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-theme-contrast/10 transition-colors">
             <div class="flex items-center gap-1.5">
               <Radio class="w-3 h-3 text-blue-400" />
@@ -279,40 +288,19 @@ watch(
           </div>
         </div>
 
-        <div class="flex items-center justify-center h-64 mt-12">
-          <div class="text-8xl rotate-270 font-black text-slate-700/90">
+        <!-- <div class="flex items-center justify-center">
+          <div class="text-2xl font-black text-slate-700/90">
             NCOF
           </div>
-        </div>
+        </div> -->
 
-        <!-- 하단: 보조 정보 및 디자인 -->
-        <div class="mt-auto pt-3 border-t border-theme-contrast/5 flex flex-col gap-2">
-          <div class="flex items-center justify-center gap-2 text-[10px] text-slate-600">
-            <Wifi class="w-3 h-3 text-slate-600" />
-            <span>NCOF v0.4.0 — 5G Core Event Exposure</span>
-          </div>
-          <!-- 장식: 도트 패턴 -->
-          <div class="flex justify-center gap-1.5 opacity-30">
-            <div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
-            <div class="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
-            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-            <div class="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
-            <div class="w-1.5 h-1.5 rounded-full bg-violet-500"></div>
-          </div>
-        </div>
+
       </div>
-    </div>
 
-
-    <!-- 초광폭 화면용 추가 사이드바: 최근 이벤트와 토폴로지 상태 -->
-    <aside
-      aria-label="Live network activity"
-      class="hidden min-[2200px]:flex flex-col p-2 pl-0 w-80 shrink-0 h-full overflow-hidden"
-    >
-      <div class="glass-panel rounded-lg p-4 flex flex-col gap-4 border border-theme-contrast/5 h-full min-h-0">
+      <div class="glass-panel rounded-lg p-4 flex flex-col gap-4 border border-theme-contrast/5 min-h-0">
         <div class="flex items-center justify-between gap-2 pb-3 border-b border-theme-contrast/10">
           <div class="flex items-center gap-2">
-            <div class="w-1 h-5 bg-linear-to-b from-violet-500 to-blue-400 rounded-full"></div>
+            <div class="w-1 h-4 bg-linear-to-b from-violet-500 to-blue-400 rounded-full"></div>
             <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Live Activity</span>
           </div>
           <span
@@ -411,9 +399,22 @@ watch(
           <span>Latest {{ recentMessages.length }} of {{ store.messageQueue.length }}</span>
           <span>{{ store.activeSubscriptions.length }} active routes</span>
         </div>
-      </div>
-    </aside>
 
+      </div>
+      <div class="p-1">
+         <div class="flex items-center justify-center gap-2 text-[10px] text-slate-600">
+            <Wifi class="w-3 h-3 text-slate-600" />
+            <span>NCOF — 5G Core Event Exposure</span>
+             <div class="flex justify-center gap-1.5 opacity-30">
+            <div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+            <div class="w-1.5 h-1.5 rounded-full bg-violet-500"></div>
+          </div>
+          </div>
+      </div>
+    </div>
     <NodeDetails />
 
   </div>

@@ -8,10 +8,10 @@ const store = useNetworkStore();
 const targetNodeId = ref('');
 const messageType = ref<MessageType>('SUBSCRIBE');
 
-const canAddMessage = computed(() => 
-  store.selectedNodeId && 
-  targetNodeId.value && 
-  targetNodeId.value !== store.selectedNodeId && 
+const canAddMessage = computed(() =>
+  store.selectedNodeId &&
+  targetNodeId.value &&
+  targetNodeId.value !== store.selectedNodeId &&
   !store.isSimulationRunning
 );
 
@@ -65,7 +65,7 @@ const getBadgeColor = (type: string | undefined) => {
     </div>
 
     <!-- Metadata Grid -->
-    <div class="grid grid-cols-2 gap-3">
+    <!-- <div class="grid grid-cols-2 gap-3">
         <div class="bg-slate-900/50 p-3 rounded-2xl border border-theme-contrast/5">
             <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Server class="w-3 h-3" /> Host Rack</p>
             <p class="font-mono text-xs">{{ store.selectedNode.server }}</p>
@@ -74,18 +74,18 @@ const getBadgeColor = (type: string | undefined) => {
             <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Hash class="w-3 h-3" /> System ID</p>
             <p class="font-mono text-xs">{{ store.selectedNode.id.toUpperCase() }}</p>
         </div>
-    </div>
+    </div> -->
 
     <!-- Interface Controller -->
     <div class="space-y-4 pt-4 border-t border-theme-contrast/5">
-      <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+      <!-- <h3 class="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
         <Activity class="w-4 h-4" /> Signal Interface
-      </h3>
-      
+      </h3> -->
+
       <!-- Type Select -->
-      <div class="space-y-1.5">
+      <!-- <div class="space-y-1.5">
           <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Message Type</label>
-          <select 
+          <select
             v-model="messageType"
             class="w-full bg-slate-900 border border-theme-contrast/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
           >
@@ -95,12 +95,12 @@ const getBadgeColor = (type: string | undefined) => {
             <option value="SUBSCRIBED">SUBSCRIBED (Arrow)</option>
             <option value="UNSUBSCRIBED">UNSUBSCRIBED (Rem)</option>
           </select>
-      </div>
+      </div> -->
 
       <!-- Target Select -->
-      <div class="space-y-1.5">
+      <!-- <div class="space-y-1.5">
           <label class="text-[10px] font-bold text-slate-400 uppercase ml-1">Target Cluster</label>
-          <select 
+          <select
             v-model="targetNodeId"
             class="w-full bg-slate-900 border border-theme-contrast/10 rounded-xl px-4 py-3 text-sm focus:border-blue-500 outline-none transition-all appearance-none cursor-pointer"
           >
@@ -109,15 +109,15 @@ const getBadgeColor = (type: string | undefined) => {
               {{ node.name }}
             </option>
           </select>
-      </div>
+      </div> -->
 
-      <button 
+      <!-- <button
         @click="addMessageToQueue"
         :disabled="!canAddMessage"
         class="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:grayscale py-3.5 rounded-2xl flex items-center justify-center gap-2 font-bold transition-all shadow-xl shadow-blue-900/10"
       >
         <Plus class="w-5 h-5" /> Enqueue Protocol Message
-      </button>
+      </button> -->
     </div>
 
     <!-- Subscription View (Optional) -->
@@ -128,9 +128,9 @@ const getBadgeColor = (type: string | undefined) => {
                 {{ store.activeSubscriptions.filter(s => s.from === store.selectedNodeId).length }}
              </span>
         </div>
-        <div class="space-y-2 opacity-80 overflow-y-auto max-h-40 pr-1 custom-scrollbar">
-            <div 
-                v-for="sub in store.activeSubscriptions.filter(s => s.from === store.selectedNodeId)" 
+        <div class="space-y-2 opacity-80 overflow-y-auto pr-1 custom-scrollbar">
+            <div
+                v-for="sub in store.activeSubscriptions.filter(s => s.from === store.selectedNodeId)"
                 :key="sub.id"
                 class="flex items-center justify-between p-2.5 rounded-xl bg-blue-950/20 border border-blue-500/10 text-xs"
             >
