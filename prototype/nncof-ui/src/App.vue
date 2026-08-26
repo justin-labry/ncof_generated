@@ -1,46 +1,63 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, watch, provide } from 'vue';
-import NetworkCanvas from './components/NetworkCanvas.vue';
-import SimulationPanel from './components/SimulationPanel.vue';
-import NodeDetails from './components/NodeDetails.vue';
+import { computed, ref, onMounted, watch, provide } from "vue";
+import NetworkCanvas from "./components/NetworkCanvas.vue";
+import SimulationPanel from "./components/SimulationPanel.vue";
+import NodeDetails from "./components/NodeDetails.vue";
 // import StatusTray from './components/StatusTray.vue';
-import StatusInfo from './components/StatusInfo.vue';
-import SubscriptionList from './components/SubscriptionList.vue';
-import NotificationList from './components/NotificationList.vue';
-import ControlList from './components/ControlList.vue';
-import StatusTray from './components/StatusTray.vue';
-import AppHeader from './components/AppHeader.vue';
+import StatusInfo from "./components/StatusInfo.vue";
+import SubscriptionList from "./components/SubscriptionList.vue";
+import NotificationList from "./components/NotificationList.vue";
+import ControlList from "./components/ControlList.vue";
+import StatusTray from "./components/StatusTray.vue";
+import AppHeader from "./components/AppHeader.vue";
 
-import { useNetworkStore } from './store/network';
-import { useWebSocket } from './composables/useWebSocket';
-import type { Message } from './types';
+import { useNetworkStore } from "./store/network";
+import { useWebSocket } from "./composables/useWebSocket";
+import type { Message } from "./types";
 
 const store = useNetworkStore();
 
 // 새로고침 트리거 — provide/inject 로 모든 자식 컴포넌트의 fetchAll 호출
 const refreshKey = ref(0);
-provide('refreshKey', refreshKey);
+provide("refreshKey", refreshKey);
 
-import { Activity, ArrowRight, BarChart3, Clock3, Radio, Server, Wifi, Zap } from 'lucide-vue-next';
+import {
+  Activity,
+  ArrowRight,
+  BarChart3,
+  Clock3,
+  Radio,
+  Server,
+  Wifi,
+  Zap,
+} from "lucide-vue-next";
 
 const canvasRef = ref<InstanceType<typeof NetworkCanvas> | null>(null);
 const wsReady = ref(false);
 
-const recentMessages = computed(() => [...store.messageQueue].slice(-8).reverse());
-const activeNodeCount = computed(() => store.nodes.filter((node) => node.status === 'ACTIVE').length);
-const eventTimeFormatter = new Intl.DateTimeFormat('ko-KR', {
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
+const recentMessages = computed(() =>
+  [...store.messageQueue].slice(-10).reverse(),
+);
+const activeNodeCount = computed(
+  () => store.nodes.filter((node) => node.status === "ACTIVE").length,
+);
+const eventTimeFormatter = new Intl.DateTimeFormat("ko-KR", {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
   hour12: false,
 });
 
-const formatEventTime = (timestamp: number) => eventTimeFormatter.format(timestamp);
-const messageTypeClass = (type: Message['type']) => {
-  if (type === 'NOTIFICATION') return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-  if (type === 'UNSUBSCRIBE' || type === 'UNSUBSCRIBED') return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
-  if (type === 'ANALYZING' || type === 'ANALYZED') return 'bg-violet-500/10 text-violet-400 border-violet-500/20';
-  return 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+const formatEventTime = (timestamp: number) =>
+  eventTimeFormatter.format(timestamp);
+const messageTypeClass = (type: Message["type"]) => {
+  if (type === "NOTIFICATION")
+    return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+  if (type === "UNSUBSCRIBE" || type === "UNSUBSCRIBED")
+    return "bg-rose-500/10 text-rose-400 border-rose-500/20";
+  if (type === "ANALYZING" || type === "ANALYZED")
+    return "bg-violet-500/10 text-violet-400 border-violet-500/20";
+  return "bg-blue-500/10 text-blue-400 border-blue-500/20";
 };
 
 const handleRunMessage = async (msg: Message) => {
@@ -49,14 +66,13 @@ const handleRunMessage = async (msg: Message) => {
   }
 };
 
-
 // Initial Data Fetch
 const fetchInitialRelations = async () => {
   try {
-    const response = await fetch('/api/subscriptions/relations');
+    const response = await fetch("/api/subscriptions/relations");
     if (response.ok) {
       const relations = await response.json();
-      console.log(relations.length)
+      console.log(relations.length);
       const addRelRecursive = (rel: any) => {
         const from = rel.from;
         const to = rel.to || rel.target;
@@ -70,36 +86,43 @@ const fetchInitialRelations = async () => {
             store.addMessage(
               from,
               to,
-              (rel.type || 'SUBSCRIBED') as any,
+              (rel.type || "SUBSCRIBED") as any,
               { subscriptionId: subId },
               undefined,
-              'COMPLETED',
-              `init-${subId.slice(0, 8)}-${Math.random().toString(36).substr(2, 4)}`
+              "COMPLETED",
+              `init-${subId.slice(0, 8)}-${Math.random().toString(36).substr(2, 4)}`,
             );
           }
         }
 
         // 중첩된 외부 구독 처리
-        if (rel.externalSubscriptions && Array.isArray(rel.externalSubscriptions)) {
+        if (
+          rel.externalSubscriptions &&
+          Array.isArray(rel.externalSubscriptions)
+        ) {
           rel.externalSubscriptions.forEach((ext: any) => {
             // 외부 구독의 경우 보통 NCOF가 출발지임
-            const extFrom = ext.from || from || 'ncof';
+            const extFrom = ext.from || from || "ncof";
             const extTo = ext.to || ext.target;
-            const extSubId = ext.externalSubId || (ext.subscription && (ext.subscription.sub_id || ext.subscription.subscriptionId));
+            const extSubId =
+              ext.externalSubId ||
+              (ext.subscription &&
+                (ext.subscription.sub_id || ext.subscription.subscriptionId));
 
             addRelRecursive({
               from: extFrom,
               to: extTo,
               sub_id: extSubId,
-              type: 'SUBSCRIBED',
-              externalSubscriptions: ext.subscription ? ext.subscription.externalSubscriptions : null
+              type: "SUBSCRIBED",
+              externalSubscriptions: ext.subscription
+                ? ext.subscription.externalSubscriptions
+                : null,
             });
           });
         }
       };
 
       relations.forEach((rel: any) => addRelRecursive(rel));
-
     }
   } catch (err) {
     console.error("Failed to fetch initial relations:", err);
@@ -108,14 +131,13 @@ const fetchInitialRelations = async () => {
 
 const protocol = window.location.protocol === "https:" ? "wss" : "ws";
 
-
 // WebSocket — useWebSocket composable 으로 위임
 const ws = useWebSocket({
   url: `${protocol}://${window.location.host}/api/ws`,
   onOpen: () => {
-    ws.send('Hello NCOF Server!');
-    store.pushLog('[Sent] Hello NCOF Server!');
-    console.log("%c WebSocket connected", 'color: red;');
+    ws.send("Hello NCOF Server!");
+    store.pushLog("[Sent] Hello NCOF Server!");
+    console.log("%c WebSocket connected", "color: red;");
   },
   onMessage: (event: MessageEvent) => {
     try {
@@ -128,7 +150,7 @@ const ws = useWebSocket({
           from: data.from,
           to: data.to,
           type: data.type,
-          status: 'RUNNING',
+          status: "RUNNING",
           timestamp: data.timestamp || Date.now(),
           data: data.data,
         };
@@ -136,7 +158,7 @@ const ws = useWebSocket({
         handleRunMessage(newMessage);
 
         // if (newMessage.to === 'pcf' || newMessage.to === 'ricf') {
-          refreshKey.value++;
+        refreshKey.value++;
         // }
 
         store.addMessage(
@@ -145,7 +167,7 @@ const ws = useWebSocket({
           data.type,
           data.data,
           data.sub_id,
-          'COMPLETED',
+          "COMPLETED",
           data.id || `ws-${Date.now()}`,
           data.timestamp,
         );
@@ -161,15 +183,22 @@ const ws = useWebSocket({
   },
 });
 
-watch(ws.status, (v) => { store.wsStatus = v; }, { immediate: true });
-watch(ws.pulse, (v) => { store.wsPulse = v; });
+watch(
+  ws.status,
+  (v) => {
+    store.wsStatus = v;
+  },
+  { immediate: true },
+);
+watch(ws.pulse, (v) => {
+  store.wsPulse = v;
+});
 
 onMounted(() => {
   ws.connect();
   wsReady.value = true;
   fetchInitialRelations();
 });
-
 
 // const store = useNetworkStore();
 
@@ -179,26 +208,44 @@ watch(
   () => store.wsPulse,
   () => {
     pulsing.value = true;
-    setTimeout(() => { pulsing.value = false; }, 600);
+    setTimeout(() => {
+      pulsing.value = false;
+    }, 600);
   },
 );
-
 </script>
 
 <template>
   <div
-    class="flex w-full h-screen bg-slate-950 text-slate-100 font-sans selection:bg-blue-500/30 overflow-hidden">
-
+    class="flex w-full h-screen bg-slate-950 text-slate-100 font-sans selection:bg-blue-500/30 overflow-hidden"
+  >
     <!-- WebSocket 연결 상태 오버레이 -->
     <div
       v-if="wsReady && store.wsStatus !== 'CONNECTED'"
       class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/50 backdrop-blur-xs"
     >
-      <div class="glass-panel rounded-2xl p-8 flex flex-col items-center gap-5 min-w-80 border border-theme-contrast/10">
+      <div
+        class="glass-panel rounded-2xl p-8 flex flex-col items-center gap-5 min-w-80 border border-theme-contrast/10"
+      >
         <!-- Spinner -->
-        <svg class="w-10 h-10 animate-spin text-blue-400" viewBox="0 0 24 24" fill="none">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        <svg
+          class="w-10 h-10 animate-spin text-blue-400"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          />
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+          />
         </svg>
 
         <!-- 상태 메시지 -->
@@ -218,126 +265,213 @@ watch(
     </div>
 
     <main class="flex-1 relative flex flex-col gap-2 h-screen">
-      <AppHeader class="ml-2 "/>
+      <AppHeader class="ml-2" />
       <div class="flex-1 flex min-w-0 min-h-0 gap-2">
         <div class="flex flex-col gap-2 shrink-0">
-          <SimulationPanel :on-run-message="handleRunMessage" class="flex-1 w-72 ml-2 min-h-120 h-full- max-h-200 overflow-auto"/>
-          <StatusInfo class="ml-2 w-72 h-full"  />
+          <SimulationPanel
+            :on-run-message="handleRunMessage"
+            class="flex-1 w-72 ml-2 min-h-120 h-full- max-h-200 overflow-auto"
+          />
+          <StatusInfo class="ml-2 w-72 h-full" />
         </div>
         <div class="flex flex-col gap-2 min-w-0 min-h-0 flex-1">
           <div class="flex gap-2">
-            <NetworkCanvas ref="canvasRef" class="min-w-200 max-w-200 min-h-120 glass-panel border rounded-xl border-theme-contrast/5" :class="{ 'animate-tray-pulse': pulsing }"/>
-            <ControlList class="w-full min-w-96 max-w-200 shrink-0- h-full- max-h-120 rounded-2xl glass-panel"/>
+            <NetworkCanvas
+              ref="canvasRef"
+              class="min-w-200 max-w-200 min-h-120 glass-panel border rounded-xl border-theme-contrast/5"
+              :class="{ 'animate-tray-pulse': pulsing }"
+            />
+            <ControlList
+              class="w-full min-w-96 max-w-200 shrink-0- h-full- max-h-120 rounded-2xl glass-panel"
+            />
           </div>
-          <div class="flex-1 flex min-h-0 gap-2 ">
-            <SubscriptionList class="w-full min-w-180 max-w-180 h-full rounded-2xl glass-panel" />
-            <NotificationList class="w-full min-w-180 max-w-180 h-full min-h-0 rounded-2xl glass-panel" />
+          <div class="flex-1 flex min-h-0 gap-2">
+            <SubscriptionList
+              class="w-full min-w-180 max-w-180 h-full rounded-2xl glass-panel"
+            />
+            <NotificationList
+              class="w-full min-w-180 max-w-180 h-full min-h-0 rounded-2xl glass-panel"
+            />
           </div>
         </div>
       </div>
-      <StatusTray class="ml-2 mb-2 rounded-lg glass-pane-l"/>
+      <StatusTray class="ml-2 mb-2 rounded-lg glass-pane-l" />
     </main>
 
     <!-- 우측 사이드바: 1800px 이상에서 표시 (여유 공간 활용) -->
-    <div class="hidden min-[1000px]:flex flex-col gap-2 p-2 overflow-y-auto w-full min-w-80 flex-auto h-full" v-if="true">
-      <div class="flex justify-between items-center pointer-events-none glass-panel rounded-xl p-5 ">
+    <div
+      class="hidden min-[1000px]:flex flex-col gap-2 p-2 overflow-y-auto w-full min-w-80 flex-auto h-full"
+      v-if="true"
+    >
+      <div
+        class="flex justify-between items-center pointer-events-none glass-panel rounded-xl p-5"
+      >
         <!-- 헤더 -->
         <div class="flex items-center gap-2 border-theme-contrast/10">
-          <div class="w-4 h-4 bg-linear-to-b from-blue-500 to-cyan-400 rounded"></div>
-          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Extended Info</span>
+          <div
+            class="w-4 h-4 bg-linear-to-b from-blue-500 to-cyan-400 rounded"
+          ></div>
+          <span
+            class="text-[10px] font-black uppercase tracking-widest text-slate-400"
+          >
+            Extended Info
+          </span>
         </div>
       </div>
 
-      <div class="glass-panel rounded-lg p-2 flex flex-col gap-4 border border-theme-contrast/5 ">
-
-                <!-- 헤더 -->
+      <div
+        class="glass-panel rounded-lg p-2 flex flex-col gap-4 border border-theme-contrast/5"
+      >
+        <!-- 헤더 -->
         <div class="flex items-center gap-2 border-theme-contrast/10">
-          <div class="w-1 h-4 bg-linear-to-b from-blue-500 to-cyan-400 rounded-full"></div>
-          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Dashboard Overview</span>
+          <div
+            class="w-1 h-4 bg-linear-to-b from-blue-500 to-cyan-400 rounded-full"
+          ></div>
+          <span
+            class="text-[10px] font-black uppercase tracking-widest text-slate-400"
+            >Dashboard Overview</span
+          >
         </div>
 
         <!-- 상태 요약 카드 그리드 -->
         <div class="grid grid-cols-2 gap-2">
-          <div class="bg-theme-contrast/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-theme-contrast/10 transition-colors">
+          <div
+            class="bg-theme-contrast/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-theme-contrast/10 transition-colors"
+          >
             <div class="flex items-center gap-1.5">
               <Radio class="w-3 h-3 text-blue-400" />
-              <span class="text-[9px] text-slate-500 uppercase tracking-wider font-bold truncate">Nodes</span>
+              <span
+                class="text-[9px] text-slate-500 uppercase tracking-wider font-bold truncate"
+                >Nodes</span
+              >
             </div>
-            <span class="text-lg font-bold text-slate-200">{{ store.nodes.length }}</span>
+            <span class="text-lg font-bold text-slate-200">{{
+              store.nodes.length
+            }}</span>
           </div>
-          <div class="bg-theme-contrast/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-theme-contrast/10 transition-colors">
+          <div
+            class="bg-theme-contrast/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-theme-contrast/10 transition-colors"
+          >
             <div class="flex items-center gap-1.5">
               <Zap class="w-3 h-3 text-amber-400" />
-              <span class="text-[9px] text-slate-500 uppercase tracking-wider font-bold truncate">Subscriptions</span>
+              <span
+                class="text-[9px] text-slate-500 uppercase tracking-wider font-bold truncate"
+                >Subscriptions</span
+              >
             </div>
-            <span class="text-lg font-bold text-amber-300">{{ store.activeSubscriptions.length }}</span>
+            <span class="text-lg font-bold text-amber-300">{{
+              store.activeSubscriptions.length
+            }}</span>
           </div>
-          <div class="bg-theme-contrast/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-theme-contrast/10 transition-colors">
+          <div
+            class="bg-theme-contrast/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-theme-contrast/10 transition-colors"
+          >
             <div class="flex items-center gap-1.5">
               <Activity class="w-3 h-3 text-emerald-400" />
-              <span class="text-[9px] text-slate-500 uppercase tracking-wider font-bold truncate">Messages</span>
+              <span
+                class="text-[9px] text-slate-500 uppercase tracking-wider font-bold truncate"
+                >Messages</span
+              >
             </div>
-            <span class="text-lg font-bold text-emerald-300">{{ store.messageQueue.length }}</span>
+            <span class="text-lg font-bold text-emerald-300">{{
+              store.messageQueue.length
+            }}</span>
           </div>
-          <div class="bg-theme-contrast/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-theme-contrast/10 transition-colors">
+          <div
+            class="bg-theme-contrast/5 rounded-xl p-3 flex flex-col gap-1.5 hover:bg-theme-contrast/10 transition-colors"
+          >
             <div class="flex items-center gap-1.5">
               <BarChart3 class="w-3 h-3 text-violet-400" />
-              <span class="text-[9px] text-slate-500 uppercase tracking-wider font-bold">Logs</span>
+              <span
+                class="text-[9px] text-slate-500 uppercase tracking-wider font-bold"
+                >Logs</span
+              >
             </div>
-            <span class="text-lg font-bold text-violet-300">{{ store.wsLog.length }}</span>
+            <span class="text-lg font-bold text-violet-300">{{
+              store.wsLog.length
+            }}</span>
           </div>
         </div>
-
-        <!-- <div class="flex items-center justify-center">
-          <div class="text-2xl font-black text-slate-700/90">
-            NCOF
-          </div>
-        </div> -->
-
-
       </div>
 
-      <div class="glass-panel rounded-lg p-4 flex flex-col gap-4 border border-theme-contrast/5 min-h-0">
-        <div class="flex items-center justify-between gap-2 pb-3 border-b border-theme-contrast/10">
+      <div
+        class="glass-panel rounded-lg p-4 flex flex-col gap-4 border border-theme-contrast/5 min-h-0 h-full"
+      >
+        <div
+          class="flex items-center justify-between gap-2 pb-3 border-b border-theme-contrast/10"
+        >
           <div class="flex items-center gap-2">
-            <div class="w-1 h-4 bg-linear-to-b from-violet-500 to-blue-400 rounded-full"></div>
-            <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Live Activity</span>
+            <div
+              class="w-1 h-4 bg-linear-to-b from-violet-500 to-blue-400 rounded-full"
+            ></div>
+            <span
+              class="text-[10px] font-black uppercase tracking-widest text-slate-400"
+              >Live Activity</span
+            >
           </div>
           <span
             class="flex items-center gap-1.5 text-[9px] font-bold uppercase"
-            :class="store.wsStatus === 'CONNECTED' ? 'text-emerald-400' : 'text-rose-400'"
+            :class="
+              store.wsStatus === 'CONNECTED'
+                ? 'text-emerald-400'
+                : 'text-rose-400'
+            "
           >
             <span
               class="w-1.5 h-1.5 rounded-full"
-              :class="store.wsStatus === 'CONNECTED' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'"
+              :class="
+                store.wsStatus === 'CONNECTED'
+                  ? 'bg-emerald-500 animate-pulse'
+                  : 'bg-rose-500'
+              "
             ></span>
-            {{ store.wsStatus === 'CONNECTED' ? 'Live' : 'Offline' }}
+            {{ store.wsStatus === "CONNECTED" ? "Live" : "Offline" }}
           </span>
         </div>
 
         <div class="grid grid-cols-2 gap-2">
-          <div class="rounded-xl p-3 bg-theme-contrast/5 border border-theme-contrast/5">
+          <div
+            class="rounded-xl p-3 bg-theme-contrast/5 border border-theme-contrast/5"
+          >
             <div class="flex items-center gap-1.5 text-slate-500">
               <Server class="w-3 h-3" />
-              <span class="text-[9px] font-bold uppercase tracking-wider">Active NFs</span>
+              <span class="text-[9px] font-bold uppercase tracking-wider"
+                >Active NFs</span
+              >
             </div>
             <div class="mt-2 flex items-baseline gap-1">
-              <span class="text-lg font-black text-slate-200">{{ activeNodeCount }}</span>
-              <span class="text-[10px] text-slate-500">/ {{ store.nodes.length }}</span>
+              <span class="text-lg font-black text-slate-200">{{
+                activeNodeCount
+              }}</span>
+              <span class="text-[10px] text-slate-500"
+                >/ {{ store.nodes.length }}</span
+              >
             </div>
           </div>
 
-          <div class="rounded-xl p-3 bg-theme-contrast/5 border border-theme-contrast/5">
+          <div
+            class="rounded-xl p-3 bg-theme-contrast/5 border border-theme-contrast/5"
+          >
             <div class="flex items-center gap-1.5 text-slate-500">
               <Activity class="w-3 h-3" />
-              <span class="text-[9px] font-bold uppercase tracking-wider">WebSocket</span>
+              <span class="text-[9px] font-bold uppercase tracking-wider"
+                >WebSocket</span
+              >
             </div>
             <div class="mt-2 flex items-center gap-1.5">
               <span
                 class="w-2 h-2 rounded-full"
-                :class="store.wsStatus === 'CONNECTED' ? 'bg-emerald-500' : store.wsStatus === 'CONNECTING' ? 'bg-amber-500 animate-pulse' : 'bg-rose-500'"
+                :class="
+                  store.wsStatus === 'CONNECTED'
+                    ? 'bg-emerald-500'
+                    : store.wsStatus === 'CONNECTING'
+                      ? 'bg-amber-500 animate-pulse'
+                      : 'bg-rose-500'
+                "
               ></span>
-              <span class="text-[10px] font-black text-slate-300 truncate">{{ store.wsStatus }}</span>
+              <span class="text-[10px] font-black text-slate-300 truncate">{{
+                store.wsStatus
+              }}</span>
             </div>
           </div>
         </div>
@@ -346,12 +480,18 @@ watch(
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-1.5 text-slate-400">
               <Clock3 class="w-3.5 h-3.5" />
-              <h2 class="text-[10px] font-black uppercase tracking-widest">Recent Events</h2>
+              <h2 class="text-[10px] font-black uppercase tracking-widest">
+                Recent Events
+              </h2>
             </div>
-            <span class="text-[9px] font-bold text-slate-500">{{ recentMessages.length }}</span>
+            <span class="text-[9px] font-bold text-slate-500">
+              {{ recentMessages.length }}
+            </span>
           </div>
 
-          <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 space-y-2">
+          <div
+            class="flex-1 min-h-0 overflow-y-auto custom-scrollbar pr-1 space-y-2"
+          >
             <div
               v-if="recentMessages.length === 0"
               class="h-full min-h-32 flex items-center justify-center rounded-xl border border-dashed border-theme-contrast/10 text-[10px] font-bold uppercase text-slate-500"
@@ -377,16 +517,32 @@ watch(
               </div>
 
               <div class="mt-2 flex items-center gap-2 min-w-0">
-                <span class="text-[10px] font-black uppercase text-slate-300 truncate">{{ message.from }}</span>
+                <span
+                  class="text-[10px] font-black uppercase text-slate-300 truncate"
+                  >{{ message.from }}</span
+                >
                 <ArrowRight class="w-3 h-3 text-blue-400 shrink-0" />
-                <span class="text-[10px] font-black uppercase text-slate-300 truncate">{{ message.to }}</span>
+                <span
+                  class="text-[10px] font-black uppercase text-slate-300 truncate"
+                  >{{ message.to }}</span
+                >
               </div>
 
-              <div class="mt-2 flex items-center justify-between gap-2 text-[9px]">
-                <span class="font-mono text-slate-500 truncate">{{ message.subId || message.id }}</span>
+              <div
+                class="mt-2 flex items-center justify-between gap-2 text-[9px]"
+              >
+                <span class="font-mono text-slate-500 truncate">{{
+                  message.subId || message.id
+                }}</span>
                 <span
                   class="font-bold uppercase shrink-0"
-                  :class="message.status === 'COMPLETED' ? 'text-emerald-400' : message.status === 'RUNNING' ? 'text-blue-400' : 'text-slate-500'"
+                  :class="
+                    message.status === 'COMPLETED'
+                      ? 'text-emerald-400'
+                      : message.status === 'RUNNING'
+                        ? 'text-blue-400'
+                        : 'text-slate-500'
+                  "
                 >
                   {{ message.status }}
                 </span>
@@ -395,35 +551,44 @@ watch(
           </div>
         </section>
 
-        <div class="pt-3 border-t border-theme-contrast/5 flex items-center justify-between text-[9px] text-slate-500">
-          <span>Latest {{ recentMessages.length }} of {{ store.messageQueue.length }}</span>
+        <div
+          class="pt-3 border-t border-theme-contrast/5 flex items-center justify-between text-[9px] text-slate-500"
+        >
+          <span>
+            Latest {{ recentMessages.length }} of
+            {{ store.messageQueue.length }}
+          </span>
           <span>{{ store.activeSubscriptions.length }} active routes</span>
         </div>
-
       </div>
       <div class="p-1">
-         <div class="flex items-center justify-center gap-2 text-[10px] text-slate-600">
-            <Wifi class="w-3 h-3 text-slate-600" />
-            <span>NCOF — 5G Core Event Exposure</span>
-             <div class="flex justify-center gap-1.5 opacity-30">
+        <div
+          class="flex items-center justify-center gap-2 text-[10px] text-slate-600"
+        >
+          <Wifi class="w-3 h-3 text-slate-600" />
+          <span>NCOF — 5G Core Event Exposure</span>
+          <div class="flex justify-center gap-1.5 opacity-30">
             <div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
             <div class="w-1.5 h-1.5 rounded-full bg-cyan-500"></div>
             <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
             <div class="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
             <div class="w-1.5 h-1.5 rounded-full bg-violet-500"></div>
           </div>
-          </div>
+        </div>
       </div>
     </div>
     <NodeDetails />
-
   </div>
 </template>
 
 <style scoped>
 @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .animate-spin-slow {
@@ -431,7 +596,8 @@ watch(
 }
 
 @keyframes tray-pulse {
-  0%, 100% {
+  0%,
+  100% {
     border-color: var(--theme-pulse-border);
     box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
   }

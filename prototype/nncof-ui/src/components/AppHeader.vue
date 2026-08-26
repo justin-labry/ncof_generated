@@ -1,29 +1,33 @@
 <!-- NCOF 대시보드 상단 헤더 컴포넌트 (브랜딩, 상태, 저장) -->
 <script setup lang="ts">
-import { computed, ref, inject } from 'vue';
-import type { Ref } from 'vue';
-import { Globe, Moon, RefreshCw, Sun } from 'lucide-vue-next';
-import { useTheme } from '../composables/useTheme';
+import { computed, ref, inject } from "vue";
+import type { Ref } from "vue";
+import { Globe, Moon, RefreshCw, Sun } from "lucide-vue-next";
+import { useTheme } from "../composables/useTheme";
 
-const refreshKey = inject<Ref<number>>('refreshKey', ref(0));
+const refreshKey = inject<Ref<number>>("refreshKey", ref(0));
 const { theme, toggleTheme } = useTheme();
-const isLightTheme = computed(() => theme.value === 'light');
-const themeToggleLabel = computed(() => isLightTheme.value ? '다크 모드로 전환' : '라이트 모드로 전환');
+const isLightTheme = computed(() => theme.value === "light");
+const themeToggleLabel = computed(() =>
+  isLightTheme.value ? "다크 모드로 전환" : "라이트 모드로 전환",
+);
 
 const isRefreshing = ref(false);
 const handleRefreshAll = async () => {
   isRefreshing.value = true;
   refreshKey.value++;
-  await new Promise(resolve => setTimeout(resolve, 800));
+  await new Promise((resolve) => setTimeout(resolve, 800));
   isRefreshing.value = false;
 };
 </script>
 
 <template>
-  <header class="flex justify-between items-center pointer-events-none glass-panel mt-2 rounded-xl">
+  <header
+    class="flex justify-between items-center pointer-events-none glass-panel mt-2 rounded-xl"
+  >
     <div class="flex items-center gap-6 pointer-events-auto group p-2">
       <div class="flex items-center gap-2">
-        <Globe class="text-gray-200/910 w-4"/>
+        <Globe class="text-gray-200/910 w-4" />
         <div>
           <span class="font-black tracking-wider text-blue-300">N</span>
           <span class="font-black tracking-wider">COF</span>
@@ -39,7 +43,10 @@ const handleRefreshAll = async () => {
         <!-- <Globe class="w-5 h-5 text-blue-400" /> -->
         <div class="w-2 h-2 bg-blue-400/80 rounded-full"></div>
         <div class="flex flex-col">
-          <span class="text-xs font-bold tracking-wider font-sans text-blue-40-0">PoC: 6G-I2P ETRI-DoDo1</span>
+          <span
+            class="text-xs font-bold tracking-wider font-sans text-blue-40-0"
+            >PoC: 6G-I2P ETRI-DoDo1</span
+          >
         </div>
       </div>
       <div class="px-2 py-1.5 flex items-center gap-3">
@@ -48,16 +55,26 @@ const handleRefreshAll = async () => {
           :title="themeToggleLabel"
           :aria-label="themeToggleLabel"
           :aria-pressed="isLightTheme"
-          class="p-2.5 rounded-xl border border-theme-contrast/10 text-slate-400 hover:bg-theme-contrast/5 hover:text-blue-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400 transition-all flex items-center gap-2"
+          class="p-2.5 rounded-xl border border-theme-contrast/10 text-slate-400 hover:bg-theme-contrast/5 hover:text-blue-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400 transition-all flex items-center gap-2 hover:cursor-pointer"
         >
           <Moon v-if="isLightTheme" class="w-5 h-5" />
           <Sun v-else class="w-5 h-5" />
         </button>
-        <button @click="handleRefreshAll" title="Refresh All Data" :class="[
-          'p-2.5 rounded-xl border transition-all flex items-center gap-2',
-          isRefreshing ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400' : 'border-theme-contrast/10 text-slate-400 hover:bg-theme-contrast/5'
-        ]">
-          <RefreshCw class="w-5 h-5" :class="{ 'animate-spin': isRefreshing }" />
+        <button
+          @click="handleRefreshAll"
+          title="Refresh All Data"
+          class="hover:cursor-pointer"
+          :class="[
+            'p-2.5 rounded-xl border transition-all flex items-center gap-2',
+            isRefreshing
+              ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+              : 'border-theme-contrast/10 text-slate-400 hover:bg-theme-contrast/5',
+          ]"
+        >
+          <RefreshCw
+            class="w-5 h-5"
+            :class="{ 'animate-spin': isRefreshing }"
+          />
         </button>
         <!-- <button @click="handleSave" title="Save Node Layout" :class="[
           'p-2.5 rounded-xl border transition-all flex items-center gap-2',
