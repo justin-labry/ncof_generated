@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+// import { ref} from 'vue';
 import { useNetworkStore } from '../store/network';
-import { Cpu, User, Database, Plus, X, Activity, Server, Hash } from 'lucide-vue-next';
-import type { MessageType } from '../types';
+import { Cpu, User, Database, X} from 'lucide-vue-next';
+// import type { MessageType } from '../types';
 
 const store = useNetworkStore();
-const targetNodeId = ref('');
-const messageType = ref<MessageType>('SUBSCRIBE');
+// const targetNodeId = ref('');
+// const messageType = ref<MessageType>('SUBSCRIBE');
 
-const canAddMessage = computed(() =>
-  store.selectedNodeId &&
-  targetNodeId.value &&
-  targetNodeId.value !== store.selectedNodeId &&
-  !store.isSimulationRunning
-);
+// const canAddMessage = computed(() =>
+//   store.selectedNodeId &&
+//   targetNodeId.value &&
+//   targetNodeId.value !== store.selectedNodeId &&
+//   !store.isSimulationRunning
+// );
 
-const addMessageToQueue = () => {
-  if (!canAddMessage.value) return;
-  store.addMessage(store.selectedNodeId!, targetNodeId.value, messageType.value);
-};
+// const addMessageToQueue = () => {
+//   if (!canAddMessage.value) return;
+//   store.addMessage(store.selectedNodeId!, targetNodeId.value, messageType.value);
+// };
 
 const getNodeIcon = (type: string | undefined) => {
   switch (type) {

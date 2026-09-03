@@ -2,7 +2,7 @@
 <script setup lang="ts">
 
 import { ref, watch, onMounted } from 'vue';
-import {  Cog } from 'lucide-vue-next';
+// import {  Cog } from 'lucide-vue-next';
 // import { Terminal } from 'lucide-vue-next';
 
 import { useNetworkStore } from '../store/network';
