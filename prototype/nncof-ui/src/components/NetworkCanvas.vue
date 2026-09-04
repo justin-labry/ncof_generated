@@ -30,6 +30,7 @@ let zoomBehavior: d3.ZoomBehavior<SVGSVGElement, unknown>;
 let containerWidth = 0;
 let containerHeight = 0;
 let isNetworkMounted = false;
+let previousZoomTransform: d3.ZoomTransform | null = null;
 
 const stopSignalAnimations = () => {
   signalsGroup.selectAll('*').interrupt().remove();
@@ -43,8 +44,19 @@ const handleVisibilityChange = () => {
 };
 
 const handleFullscreenChange = () => {
-  isFullscreen.value = document.fullscreenElement === canvasContainerRef.value;
-  requestAnimationFrame(handleResize);
+  const fullscreenEnabled = document.fullscreenElement === canvasContainerRef.value;
+  isFullscreen.value = fullscreenEnabled;
+
+  requestAnimationFrame(() => {
+    if (fullscreenEnabled) {
+      fitTopologyToViewport();
+    } else if (previousZoomTransform) {
+      applyZoomTransform(previousZoomTransform);
+      previousZoomTransform = null;
+    } else {
+      handleResize();
+    }
+  });
 };
 
 onMounted(() => {
@@ -85,16 +97,52 @@ const handleResize = () => {
   svg.call(zoomBehavior.transform, newTransform);
 };
 
+const applyZoomTransform = (transform: d3.ZoomTransform) => {
+  if (!svgRef.value) return;
+
+  const { width, height } = svgRef.value.getBoundingClientRect();
+  containerWidth = width;
+  containerHeight = height;
+  svg.call(zoomBehavior.transform, transform);
+};
+
+const fitTopologyToViewport = () => {
+  if (!svgRef.value) return;
+
+  const bounds = mainGroup.node()?.getBBox();
+  if (!bounds || bounds.width === 0 || bounds.height === 0) return;
+
+  const { width, height } = svgRef.value.getBoundingClientRect();
+  const padding = 64;
+  const availableWidth = Math.max(width - padding * 2, 1);
+  const availableHeight = Math.max(height - padding * 2, 1);
+  const [minScale, maxScale] = zoomBehavior.scaleExtent();
+  const scale = Math.max(
+    minScale,
+    Math.min(maxScale, availableWidth / bounds.width, availableHeight / bounds.height),
+  );
+  const transform = d3.zoomIdentity
+    .translate(width / 2, height / 2)
+    .scale(scale)
+    .translate(-(bounds.x + bounds.width / 2), -(bounds.y + bounds.height / 2));
+
+  applyZoomTransform(transform);
+};
+
 const toggleFullscreen = async () => {
-  if (!canvasContainerRef.value) return;
+  if (!canvasContainerRef.value || !svgRef.value) return;
+
+  const enteringFullscreen = document.fullscreenElement !== canvasContainerRef.value;
 
   try {
-    if (document.fullscreenElement === canvasContainerRef.value) {
-      await document.exitFullscreen();
-    } else {
+    if (enteringFullscreen) {
+      previousZoomTransform = d3.zoomTransform(svgRef.value);
       await canvasContainerRef.value.requestFullscreen();
+    } else {
+      await document.exitFullscreen();
     }
   } catch (error) {
+    if (enteringFullscreen) previousZoomTransform = null;
     console.error('전체화면 전환에 실패했습니다.', error);
   }
 };
