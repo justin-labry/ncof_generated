@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 from typing import Any
@@ -72,8 +73,26 @@ def _build_dummy_nfs() -> dict[str, Any]:
     }
 
 
+def _build_device_nfs() -> dict[str, Any]:
+    """상위 디렉터리의 device_info.json에서 NF 조회 테이블을 읽는다."""
+    device_info_file = _find_upwards("device_info.json")
+    if not device_info_file:
+        raise FileNotFoundError("MODE=DEVICE이지만 device_info.json을 찾을 수 없습니다.")
+
+    with open(device_info_file, encoding="utf-8") as file:
+        device_nfs = json.load(file)
+
+    if not isinstance(device_nfs, dict):
+        raise ValueError("device_info.json의 최상위 값은 객체여야 합니다.")
+
+    logger.info(f"Device NF information loaded from {device_info_file}")
+    return device_nfs
+
+
 # 모듈 로드 시 NF 조회 테이블을 조립한다.
-_dummy_nfs: dict[str, Any] = _build_dummy_nfs()
+_dummy_nfs: dict[str, Any] = (
+    _build_device_nfs() if os.getenv("MODE") == "DEVICE" else _build_dummy_nfs()
+)
 
 
 class NFDiscovery:
