@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref, watch, onUnmounted, computed } from 'vue';
-import { Save, Clock6, Scan } from 'lucide-vue-next';
+import { Save, Clock6, Scan, Maximize2, Minimize2 } from 'lucide-vue-next';
 import * as d3 from 'd3';
 
 import { useNetworkStore } from '../store/network';
 import type { Message, NetworkNode, Subscription, NodeEdge, NodeSize } from '../types';
 
 const store = useNetworkStore();
+const canvasContainerRef = ref<HTMLElement | null>(null);
 const svgRef = ref<SVGSVGElement | null>(null);
+const isFullscreen = ref(false);
 
 // src/assets/ 내 이미지를 Vite가 해시 처리한 URL로 매핑
 const assetImages = import.meta.glob('../assets/*.{png,jpg,jpeg,svg,gif,webp}', {
@@ -40,6 +42,11 @@ const handleVisibilityChange = () => {
   }
 };
 
+const handleFullscreenChange = () => {
+  isFullscreen.value = document.fullscreenElement === canvasContainerRef.value;
+  requestAnimationFrame(handleResize);
+};
+
 onMounted(() => {
   if (!svgRef.value) return;
   initNetwork();
@@ -47,6 +54,7 @@ onMounted(() => {
   isNetworkMounted = true;
   window.addEventListener('resize', handleResize);
   document.addEventListener('visibilitychange', handleVisibilityChange);
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
 });
 
 onUnmounted(() => {
@@ -54,6 +62,7 @@ onUnmounted(() => {
   stopSignalAnimations();
   window.removeEventListener('resize', handleResize);
   document.removeEventListener('visibilitychange', handleVisibilityChange);
+  document.removeEventListener('fullscreenchange', handleFullscreenChange);
 });
 
 const handleResize = () => {
@@ -74,6 +83,20 @@ const handleResize = () => {
     .scale(transform.k);
 
   svg.call(zoomBehavior.transform, newTransform);
+};
+
+const toggleFullscreen = async () => {
+  if (!canvasContainerRef.value) return;
+
+  try {
+    if (document.fullscreenElement === canvasContainerRef.value) {
+      await document.exitFullscreen();
+    } else {
+      await canvasContainerRef.value.requestFullscreen();
+    }
+  } catch (error) {
+    console.error('전체화면 전환에 실패했습니다.', error);
+  }
 };
 
 const initNetwork = () => {
@@ -678,7 +701,7 @@ const handleReset = async () => {
 </script>
 
 <template>
-  <div class="w-full h-full overflow-hidden relative">
+  <div ref="canvasContainerRef" class="network-canvas w-full h-full overflow-hidden relative">
     <svg ref="svgRef" class="w-full h-full select-none"></svg>
     <!-- <div class="absolute bottom-6 left-6 glass-panel rounded-xl p-4 text-[10px] space-y-2 pointer-events-none">
       <div class="font-bold text-slate-500 uppercase tracking-widest mb-2 border-b border-theme-contrast/5 pb-1">Legend</div>
@@ -687,6 +710,17 @@ const handleReset = async () => {
     </div> -->
 
     <div class="absolute top-2 right-2 z-999 flex items-center gap-2">
+      <button
+        @click="toggleFullscreen"
+        :title="isFullscreen ? 'Exit Fullscreen' : 'View Fullscreen'"
+        :aria-label="isFullscreen ? '전체화면 종료' : '전체화면 보기'"
+        :aria-pressed="isFullscreen"
+        class="hover:cursor-pointer p-2.5 rounded-xl border border-theme-contrast/10 text-slate-400 transition-all hover:bg-theme-contrast/5"
+      >
+        <Minimize2 v-if="isFullscreen" class="w-5 h-5" />
+        <Maximize2 v-else class="w-5 h-5" />
+      </button>
+
       <button @click="handleSave" title="Save Node Layout" class="hover:cursor-pointer p-2.5 rounded-xl border transition-all flex items-center gap-2" :class="btnStyle">
         <Save v-if="!isSaving" class="w-5 h-5" />
         <Clock6 v-else class="w-5 h-5 animate-spin" />
@@ -701,6 +735,14 @@ const handleReset = async () => {
 </template>
 
 <style>
+.network-canvas:fullscreen {
+  width: 100%;
+  height: 100%;
+  max-width: none !important;
+  max-height: none !important;
+  border-radius: 0;
+}
+
 @keyframes flow {
   from {
     stroke-dashoffset: 20;
