@@ -1,9 +1,12 @@
+import logging
+from rich.pretty import pprint
+from rich.pretty import pretty_repr
+
 from typing import Dict
 import uuid
 import asyncio
 
 from datetime import datetime, timezone
-from rich.pretty import pprint
 
 from nupf.models.notification_data import NotificationData
 
@@ -14,7 +17,7 @@ from . import utils
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
-import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +68,8 @@ class NCOFEventsSubscriptionsCollectionApiImpl(BaseSubscriptionsCollectionApi):
 
         # return nsmf_event_exposure
 
+        logger.info(f"[NCOF] --- [SUBSCRIPTION] ---> [SMF]")
+
         return JSONResponse(
             content=jsonable_encoder(nsmf_event_exposure),
             headers={"Subscription-ID": sub_id},
@@ -99,7 +104,10 @@ async def _periodic_notification_sender(sub_id: str, interval_seconds: int):
         #  마지막 데이터를 계속 읽어 분석 결과가 고정됐다.)
         try:
             notification_data = simulate_notification_data(sub_id, event_notification)
-            pprint(notification_data.notification_items[0])
+
+            logger.info(f"[UPF] --- [NOTIFICATION] ---> [NCOF]")
+            logger.info("\n%s", pretty_repr(notification_data, expand_all=True))
+            # pprint(notification_data.notification_items[0])
 
             # print(f"[{sub_id}] 💡---[Notification]---> [NCOF] [Begin]")
             # for item in notification_data.notification_items:
@@ -113,6 +121,7 @@ async def _periodic_notification_sender(sub_id: str, interval_seconds: int):
             #         pprint(item2)
             # print(f"[{sub_id}] 💡---[Notification]---> [NCOF] [End]")
             # pprint(notification_data.model_dump(mode="json"))
+
             await utils.notify(
                 sub_id, notif_uri, notification_data.model_dump(mode="json")
             )

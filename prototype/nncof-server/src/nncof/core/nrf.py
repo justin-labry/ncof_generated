@@ -36,8 +36,7 @@ def _cfg(key: str, default: str) -> str:
     """조회 우선순위: OS 환경변수 > ncof_setting.conf > 기본값."""
     return os.getenv(key) or _conf.get(key) or default
 
-
-def _build_dummy_nfs() -> dict[str, Any]:
+def _build_mockup_nfs() -> dict[str, Any]:
     """ncof_setting.conf 의 host/port 로 NF 조회 테이블을 조립한다.
 
     서비스 경로(/nnef-eventexposure/af/v1 등)는 구조적이고 거의 바뀌지 않으므로
@@ -53,7 +52,7 @@ def _build_dummy_nfs() -> dict[str, Any]:
         if _cfg("NCOF_TLS", "").strip().lower() in ("1", "true", "yes", "on")
         else "http"
     )
-    return {
+    map = {
         "SMF": {
             "base_uri": f"{scheme}://{host}:{smf_port}",
             "services": {"nsmf-eventexposure": ""},
@@ -71,6 +70,8 @@ def _build_dummy_nfs() -> dict[str, Any]:
             "services": {"npcf-eventexposure": ""},
         },
     }
+    print(map)
+    return map
 
 
 def _build_device_nfs() -> dict[str, Any]:
@@ -86,12 +87,13 @@ def _build_device_nfs() -> dict[str, Any]:
         raise ValueError("device_info.json의 최상위 값은 객체여야 합니다.")
 
     logger.info(f"Device NF information loaded from {device_info_file}")
+    print(device_nfs)
     return device_nfs
 
 
 # 모듈 로드 시 NF 조회 테이블을 조립한다.
-_dummy_nfs: dict[str, Any] = (
-    _build_device_nfs() if os.getenv("MODE") == "DEVICE" else _build_dummy_nfs()
+_nfs: dict[str, Any] = (
+    _build_device_nfs() if os.getenv("MODE") == "DEVICE" else _build_mockup_nfs()
 )
 
 
@@ -102,7 +104,7 @@ class NFDiscovery:
 
     def __init__(self, use_nrf=False):
         self.use_nrf = use_nrf
-        self._dummy_nfs = _dummy_nfs
+        self._dummy_nfs = _nfs
 
     def get_nf_uri(self, nf_type: str, service_name: str = "") -> str:
         """
@@ -134,6 +136,7 @@ class NFDiscovery:
 
         return base
 
+logger.info(f"MODE: {os.getenv("MODE")}", )
 
 nrf = NFDiscovery(use_nrf=False)  # 현재는 Dummy 모드
 

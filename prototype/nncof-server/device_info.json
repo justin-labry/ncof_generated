@@ -1,0 +1,18 @@
+{
+  "SMF": {
+    "base_uri": "http://localhost:9001",
+     "services": {"nsmf-eventexposure": ""}
+  },
+  "AF": {
+    "base_uri": "http://localhost:9002/nnef-eventexposure/af/v1",
+    "services": {"naf-eventexposure": ""}
+  },
+  "RICF": {
+    "base_uri": "http://localhost:9002/nnef-eventexposure/ricf/v1",
+    "services": {"nsmf-eventexposure": ""}
+  },
+  "PCF": {
+    "base_uri": "http://localhost:9004",
+    "services": {"npcf-eventexposure": ""}
+  }
+}

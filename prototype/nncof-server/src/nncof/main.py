@@ -84,7 +84,7 @@ async def lifespan(_: FastAPI):
         root_logger.setLevel(logging.INFO)
 
     subscription_manager = SubscriptionManager()
-    await subscription_manager.restore_persisted_subscriptions()
+    # await subscription_manager.restore_persisted_subscriptions()
     try:
         yield
     finally:

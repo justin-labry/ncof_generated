@@ -41,6 +41,8 @@ class RICFImpl(BaseSubscriptionsCollectionApi):
                 status_code=400, detail=f"Unknown event: {event_sub.event}"
             )
 
+        logger.info(f"[NCOF] --- [SUBSCRIPTION] ---> [RICF]")
+
         return await simulation.handle_subcription_request(
             template_file, nef_event_exposure_subsc
         )

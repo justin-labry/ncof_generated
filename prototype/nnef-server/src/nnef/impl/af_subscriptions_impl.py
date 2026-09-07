@@ -47,7 +47,7 @@ class AFImpl(BaseSubscriptionsCollectionApi):
             )
 
         print(f"AF - {sample_file}")
-
+        logger.info(f"[NCOF] --- [SUBSCRIPTION] ---> [AF]")
         return await simulation.handle_subcription_request(
             sample_file, nef_event_exposure_subsc
         )

@@ -1,8 +1,8 @@
 
 import logging
+from rich.pretty import pretty_repr
 
 from typing import List
-from rich.pretty import pretty_repr
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ class NCOFEventNotificationImpl(
         type: str,
         notification: List[NncofEventsSubscriptionNotification],
     ) -> None:
+        logger.info(f"[NCOF] --- [NOTIFICATION] ---> [{type.upper()}]")
         for item in notification:
             logger.info("\n%s", pretty_repr(item, expand_all=True))
         return None

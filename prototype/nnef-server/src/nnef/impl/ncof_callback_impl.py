@@ -1,6 +1,8 @@
-from rich.pretty import pprint
-from rich import print
-from typing import Any, List
+import logging
+from rich.pretty import pretty_repr
+
+from typing import List
+
 from nncof.models.nncof_events_subscription_notification import (
     NncofEventsSubscriptionNotification,
 )
@@ -9,6 +11,7 @@ from nncof_cb.apis.ncof_events_subscription_notification_callback_receiver_api_b
     BaseNCOFEventsSubscriptionNotificationCallbackReceiverApi,
 )
 
+logger = logging.getLogger(__name__)
 
 class NCOFEventNotificationImpl(
     BaseNCOFEventsSubscriptionNotificationCallbackReceiverApi
@@ -23,9 +26,8 @@ class NCOFEventNotificationImpl(
         notifications: List[NncofEventsSubscriptionNotification],
     ) -> None:
         # Add color code below print statement
-        print("\n[bold blue]===== BEGIN =====[/bold blue]")
-        print(f"**** NF: {type.upper()} ****")
-        pprint(notifications)
+        logger.info(f"[NCOF] --- [NOTIFICATION] ---> [{type.upper()}]")
+        logger.info("\n%s", pretty_repr(notifications, expand_all=True))
         if len(notifications) == 0:
             return None
 
@@ -56,11 +58,9 @@ class NCOFEventNotificationImpl(
             IndexError,
             TypeError,
         ) as e:  # 💡 TypeError를 반드시 추가해야 합니다!
-            print("데이터를 참조하는 중에 문제가 발생했거나, 데이터가 None입니다.")
-            print(f"에러 메시지: {e}")  # ex) 'NoneType' object has no attribute ...
+            logger.warning("데이터를 참조하는 중에 문제가 발생했거나, 데이터가 None입니다.")
+            logger.warning(f"에러 메시지: {e}")  # ex) 'NoneType' object has no attribute ...
             NCOFEventNotificationImpl.cell_power_state = None
 
-        print(f"cell_power_state: ***{NCOFEventNotificationImpl.cell_power_state}***")
-
-        print("[bold blue]===== END =====[/bold blue]\n")
+        logger.info(f"CELL_POWER_STATE: {NCOFEventNotificationImpl.cell_power_state}")
         return None
