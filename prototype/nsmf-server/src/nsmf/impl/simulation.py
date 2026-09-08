@@ -21,9 +21,9 @@ async def start_dl_throughput_toggle(interval_seconds: int = 10):
     global _dl_throughput_high
     while True:
         await asyncio.sleep(interval_seconds)
-        logger.info(
-            f"💢 Toggle dl_throughput: { 'High' if _dl_throughput_high else 'Low'}"
-        )
+        # logger.info(
+        #     f"💢 Toggle dl_throughput: { 'High' if _dl_throughput_high else 'Low'}"
+        # )
         _dl_throughput_high = not _dl_throughput_high
 
 

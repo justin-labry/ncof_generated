@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import logging
+from rich.pretty import pretty_repr
 import json
 
 from fastapi import HTTPException
@@ -38,6 +39,10 @@ class UpfEventExposureNotificationCallbackReceiverApiImpl(
             )
 
         try:
+
+            logger.info(f"[UPF] --- [NOTIFICATION] ---> [NCOF]")
+            logger.info("\n%s", pretty_repr(notif_data, expand_all=True))
+
             # 핸들러를 통해 수신된 데이터 저장
             await handler.handle_notification("UPF", notif_data)
 
@@ -55,3 +60,12 @@ class UpfEventExposureNotificationCallbackReceiverApiImpl(
             raise HTTPException(
                 status_code=500, detail=f"Error processing notification: {str(e)}"
             )
+
+def printKPI(notif_data: NotificationData):
+    for item in notif_data.notification_items:
+        if item is None:
+            continue
+        if item.event_type == "QOS_MONITORING":
+            pass
+        if item.event_type == "USER_DATA_USAGE_MEASURES":
+            pass

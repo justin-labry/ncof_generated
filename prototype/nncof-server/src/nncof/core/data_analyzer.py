@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+from rich.pretty import pretty_repr
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 from pathlib import Path
@@ -65,7 +66,7 @@ class DataAnalyzer:
         # 룰 베이스 또는 RL 정책 엔진을 생성한다 (RL 로드 실패 시 룰로 폴백).
         self.decision_engine = create_decision_engine()
         logger.info(
-            f"[{subscription_id}] 결정 엔진: {type(self.decision_engine).__name__}"
+            f"[{subscription_id}]결정 엔진: {type(self.decision_engine).__name__}"
         )
         self._qos_template: list[dict] | None = None
         self._qos_template_path = Path(
@@ -90,7 +91,6 @@ class DataAnalyzer:
     async def start(self):
         self.is_running = True
         self._task = asyncio.create_task(self._periodic_process())
-        logger.info(f"[{self.subscription_id}] 데이터분석 태스크 시작")
 
     async def stop(self):
         self.is_running = False
@@ -157,6 +157,7 @@ class DataAnalyzer:
                     continue
 
                 await self._analyze_and_generate(nf_type)
+
 
         except asyncio.CancelledError:
             logger.debug(f"[{self.subscription_id}] 분석 태스크 취소됨")
@@ -232,14 +233,27 @@ class DataAnalyzer:
             logger.warning("cannot retrieve qos template...")
             return
 
-        notif = self._get_wlan_performance_data()
-        if notif is None:
+        wlan_perf_data = self._get_wlan_performance_data()
+        if wlan_perf_data is None:
             logger.warning("fail to retrieve wlan performance data...")
             return
 
+        if isinstance(wlan_perf_data, NefEventExposureNotif):
+            logger.info(f"RLlib 입력 데이터 추출:")
+            pass
+
+        if isinstance(wlan_perf_data, NotificationData):
+            logger.info(f"RLlib 입력 데이터 추출:")
+            pass
+
         try:
+
+            # if isinstance(wlan_perf_data, NotificationData):
+                # logger.info("\n%s", pretty_repr(wlan_perf_data.notification_items[0], expand_all=True))
+
+
             result = self.decision_engine.generate_notification(
-                notif.to_dict(),
+                wlan_perf_data.to_dict(),
                 qos_template,
                 _now_iso_kst(),
                 self.subscription_id,
@@ -247,20 +261,56 @@ class DataAnalyzer:
             )
             if result is None:
                 return
-
+            logger.info("AI 분석 완료")
             cell_notif = result.get("cell_power_15f")
             qos_notif = result.get("qos_policy_14e")
 
+            logger.info("AI 분석 결과:")
             if cell_notif is not None and nf_type == "RICF":
                 self.control_data_store.add_data(
                     "ricf", self.subscription.notif_corr_id, cell_notif[0]
                 )
+
+                ncof_event_sub_notif = NncofEventsSubscriptionNotification.from_dict(cell_notif[0])
+                cell_power_state = (ncof_event_sub_notif.event_notifications[0]  # type: ignore
+                                    .cell_power_ctrl_opt_infos[0]
+                                    .cell_power_ctrl_infos[0]
+                                    .cell_power_param_sets[0]
+                                    .cell_power_param_set.cell_power_state # type: ignore
+                                    )
+                logger.info(f"RICF 제어 데이터:")
+                logger.info(f"CELL_POWER_STATE: {cell_power_state}")
+
                 await self._notify_callback("ricf", cell_notif)
 
             if qos_notif is not None and nf_type == "PCF":
                 self.control_data_store.add_data(
                     "pcf", self.subscription.notif_corr_id, qos_notif[0]
                 )
+
+                ncof_event_sub_notif = NncofEventsSubscriptionNotification.from_dict(qos_notif[0])
+                qos_param_sets = (ncof_event_sub_notif
+                                 .event_notifications[0] # type: ignore
+                                 .qos_pol_assist_infos[0]
+                                 .qos_pol_assist_info[0]
+                                 .qos_pol_assist_sets
+                                #  .qos_param_set # type: ignore
+                                )
+
+                flow_desc = (ncof_event_sub_notif
+                                 .event_notifications[0] # type: ignore
+                                 .qos_pol_assist_infos[0].qos_pol_assist_info[0].qos_pol_assist_sets[0].f_descs # type: ignore
+                )
+
+                logger.info("PCF 제어 데이터:")
+                if flow_desc is not None:
+                    for flow in flow_desc:
+                        logger.info(f"FLOW.IP_TRAFFIC_FILTER: {flow.ip_traffic_filter}")
+
+                for set in qos_param_sets:
+                    logger.info(f"GBR_DL: {set.qos_param_set.gbr_dl}")  #type: ignore
+                # logger.info(f"qos_param_set: {qos_param_set.}") #type: ignore
+
                 await self._notify_callback("pcf", qos_notif)
 
         except Exception as e:  # noqa: BLE001

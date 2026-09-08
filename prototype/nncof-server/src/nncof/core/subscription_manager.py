@@ -1,5 +1,6 @@
 import uuid
 import logging
+from rich.pretty import pretty_repr
 import json
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, TypedDict
@@ -90,12 +91,18 @@ class SubscriptionManager:
 
         from_node = self._get_src_nf(nf_id)
 
+        from_node_str = from_node.upper() if from_node is not None else ""
+
         # 1. 구독 ID 생성
         subscription_id = str(uuid.uuid4())
 
         # 2. 핸들러 인스턴스 생성 (관계 관리를 위해 self 전달)
         handler = self._build_handler(subscription_id, subscription_request)
         self.subscriptions[subscription_id] = handler
+
+        logger.info(f"[{from_node_str.upper()}] --- [SUBSCRIPTION] ---> [NCOF]")
+        logger.info("\n%s", pretty_repr(subscription_request, expand_all=True))
+
 
         # 상태 변경 통보 (SUBSCRIBED)
         await self.add_relation(
@@ -112,7 +119,7 @@ class SubscriptionManager:
         # 4. 활성 상태 영속화
         await self.persist_state()
 
-        logger.info(f"[{subscription_id}]새로운 구독 생성 완료")
+        # logger.info(f"[{subscription_id}]새로운 구독 생성 완료")
 
         return subscription_id
 

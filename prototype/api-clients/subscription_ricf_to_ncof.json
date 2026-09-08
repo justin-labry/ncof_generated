@@ -3,7 +3,7 @@
   "notifCorrId": "NOTIF_RICF_2026-03-01T12:00:00+09:00_1",
   "evtReq": {
     "notificationMethod": "PERIODIC",
-    "repPeriod": 6,
+    "repPeriod": 20,
     "maxReportNbr": 0,
     "monDur": "2030-12-31T23:59:59+09:00",
     "immRep": false,

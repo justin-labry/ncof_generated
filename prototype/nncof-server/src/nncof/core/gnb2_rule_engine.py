@@ -1,3 +1,6 @@
+import logging
+from rich.pretty import pretty_repr
+
 from datetime import datetime
 from typing import Dict, List
 
@@ -13,7 +16,7 @@ from .decide_wlan_gnb2_rule import (
     apply_qos_policy,
 )
 
-
+logger = logging.getLogger(__name__)
 class Gnb2RuleEngine:
     def __init__(self, th_mbps=500.0, min_dwell_sec=0):
         self.th_mbps = th_mbps
@@ -37,6 +40,9 @@ class Gnb2RuleEngine:
         corr_id: str | None,
     ) -> Dict[str, List[dict]] | None:
         metric = extract_wlan_dl_mbps(notif_12p_c)
+        logger.info(f"분석 메트릭 WLAN_DL_MBPS:{metric}")
+
+        logger.info("AI 분석 시작")
         new_state = self._decide(metric)
 
         if new_state == self.last_emitted_state:

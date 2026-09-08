@@ -71,7 +71,7 @@ async def periodic_notification_sender(sub_id: str, interval_seconds: int):
         event_subscription: NefEventExposureSubsc = sub["event_subscription"]
         event_notification: NefEventExposureNotif = sub["event_notification"]
 
-        logger.info(f"[{sub_id}] {event_notification.notif_id}")
+        # logger.info(f"[{sub_id}] {event_notification.notif_id}")
         # expiry = nsmf_event_exposure.mon
         events_rep_info = getattr(event_subscription, "events_rep_info", None)
         mon_dur = getattr(events_rep_info, "mon_dur", None)
@@ -231,7 +231,7 @@ async def handle_subcription_request(
     sub_id = str(uuid.uuid4())
     # nef_event_exposure_subsc.sub_id = sub_id
     nef_event_notification.notif_id = nef_event_exposure_subsc.notif_id
-    print("notifId:", nef_event_exposure_subsc.notif_id)
+
     subscriptions[sub_id] = {
         "event_subscription": nef_event_exposure_subsc,
         "event_notification": nef_event_notification,

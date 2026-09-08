@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import logging
+from rich.pretty import pretty_repr
 import json
 
 from fastapi import HTTPException
@@ -40,6 +41,10 @@ class NefEventsNotificationsApiImpl(
             )
 
         try:
+
+            logger.info(f"[{nf_type.upper()}] --- [NOTIFICATION] ---> [NCOF]")
+            logger.info("\n%s", pretty_repr(notif_data, expand_all=True))
+
             # 핸들러를 통해 수신된 데이터 저장
             await handler.handle_notification(nf_type, notif_data)
 
@@ -60,3 +65,14 @@ class NefEventsNotificationsApiImpl(
             raise HTTPException(
                 status_code=500, detail=f"Error processing notification: {str(e)}"
             )
+
+def printKPI(notif_data: NefEventExposureNotif):
+    for item in notif_data.event_notifs:
+        if item.event == "PERF_DATA":
+            pass
+        if item.event == "_RF_SIGNAL":
+            pass
+        if item.event == "_POWER_ENERGY_CONSUMPTION":
+            pass
+        if item.event == "DISPERSION":
+            pass

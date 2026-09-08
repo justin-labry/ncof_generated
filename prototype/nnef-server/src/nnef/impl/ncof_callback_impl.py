@@ -62,5 +62,5 @@ class NCOFEventNotificationImpl(
             logger.warning(f"에러 메시지: {e}")  # ex) 'NoneType' object has no attribute ...
             NCOFEventNotificationImpl.cell_power_state = None
 
-        logger.info(f"CELL_POWER_STATE: {NCOFEventNotificationImpl.cell_power_state}")
+        logger.info(f"CELL_POWER_STATE: {NCOFEventNotificationImpl.cell_power_state} 로 설정 하겠음")
         return None

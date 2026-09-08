@@ -87,7 +87,6 @@ def _build_device_nfs() -> dict[str, Any]:
         raise ValueError("device_info.json의 최상위 값은 객체여야 합니다.")
 
     logger.info(f"Device NF information loaded from {device_info_file}")
-    print(device_nfs)
     return device_nfs
 
 

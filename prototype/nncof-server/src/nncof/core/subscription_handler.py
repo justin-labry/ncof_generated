@@ -1,8 +1,10 @@
 # NF 구독 생애주기 관리 및 데이터 수신을 담당하는 SubscriptionHandler 클래스
 
 import asyncio
-import json
 import logging
+from rich.pretty import pretty_repr
+import json
+
 import os
 from collections.abc import Awaitable, Callable
 from typing import Any, Literal
@@ -207,6 +209,7 @@ class SubscriptionHandler:
 
         if response.status_code in (204, 200):
             logger.info(f"[NCOF] --- [제어명령] ---> [{nf_type.upper()}]")
+            logger.info("\n%s", pretty_repr(ncof_control_event, expand_all=True))
 
             # if self._relation_manager is not None:
             #     await self._relation_manager.add_relation(

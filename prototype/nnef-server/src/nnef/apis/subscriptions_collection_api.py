@@ -71,7 +71,7 @@ async def create_individual_subcription(
     # app_mode = os.getenv("APP_MODE", "AF").upper()
     app_mode = type.upper()
 
-    print(f"***** app mode: {app_mode}")
+
     # 2. 모드에 맞는 구현체 찾기
     # 클래스 이름이나 별도 속성을 통해 매핑할 수 있습니다.
     target_cls = None
