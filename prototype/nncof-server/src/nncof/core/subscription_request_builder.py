@@ -245,7 +245,7 @@ def _fill_nsmf_event_subscription(
         nsmf_subscription.expiry = evt_req.mon_dur
     nsmf_subscription.imme_rep = False
     nsmf_subscription.samp_ratio = 100
-    nsmf_subscription.servive_name = "nsmf-event_exposure"
+    nsmf_subscription.servive_name = "nsmf-event-exposure"
     nsmf_subscription.supported_features = "FF"
     nsmf_subscription.def_qos_supp = False
     nsmf_subscription.qos_mon_pending = False
@@ -343,7 +343,7 @@ def _handle_service_experience(
 
     udum.traffic_filters = traffic_filters
 
-    udum.granularity_of_measurement = "PEF_FLOW"
+    udum.granularity_of_measurement = "PER_FLOW"
     udum.reporting_suggestion_info = ReportingSuggestionInformation(
         reportingUrgency="DELAY_TOLERANT", reportingTimeInfo=10
     )
@@ -395,7 +395,7 @@ def _handle_service_experience(
     #     nsmf_subscription.expiry = evt_req.mon_dur
     # nsmf_subscription.imme_rep = False
     # nsmf_subscription.samp_ratio = 100
-    # nsmf_subscription.servive_name = "nsmf-event_exposure"
+    # nsmf_subscription.servive_name = "nsmf-event-exposure"
     # nsmf_subscription.supported_features = "FF"
     # nsmf_subscription.def_qos_supp = False
     # nsmf_subscription.qos_mon_pending = False
@@ -459,7 +459,12 @@ def _handle_service_experience(
 
     af_event_exposure.events_rep_info = reporting_info
     ricf_event_exposure.events_rep_info = reporting_info
+    # 두두원 장비는 PERF_DATA 구독을 dataAccProfId 값으로 라우팅한다(AF=dap-001, RICF=dap-002).
+    # 값이 없으면 NCOF_RECV_UNKNOWN 으로 분류되어 400 이 돌아온다.
+    af_event_exposure.data_acc_prof_id = "dap-001"
+    ricf_event_exposure.data_acc_prof_id = "dap-002"
     af_event_exposure.supp_feat = "FF"
+    ricf_event_exposure.supp_feat = "FF"
 
     return [
         {"target": "smf", "subscription": nsmf_subscription},
@@ -520,7 +525,7 @@ def _handle_ricf_wlan_performance(
     for index, supi in enumerate(supis):
         udum.traffic_filters = _build_traffic_filter(supi, True)
 
-    udum.granularity_of_measurement = "PEF_FLOW"
+    udum.granularity_of_measurement = "PER_FLOW"
 
     udum.reporting_suggestion_info = ReportingSuggestionInformation(
         reportingUrgency="DELAY_TOLERANT", reportingTimeInfo=10
