@@ -40,6 +40,7 @@ from nncof.apis.web_api import (
     router as WebApiRouter,
 )
 from nncof.core import utils
+from nncof.core.lenient_ingest import install_lenient_ingest
 from nncof.core.subscription_manager import SubscriptionManager
 from nncof.core.utils import system_info
 
@@ -112,6 +113,9 @@ app.include_router(NCOFEventsSubscriptionsCollectionApiRouter)
 app.include_router(UPFEventsNotificationApiRouter)
 app.include_router(NEFEventsNotificationApiRouter)
 app.include_router(WebApiRouter)
+
+# TEMP(두두원 연동 진단) — NCOF_LENIENT_INGEST=1 일 때만 통지 본문을 수리해 통과시킨다.
+install_lenient_ingest(app)
 
 # 정적 파일 서비스 설정
 # src/nncof/static 디렉토리를 루트(/)로 마운트한다. Vite 빌드 결과물(/assets/*)이 정상 서빙되도록 함.
