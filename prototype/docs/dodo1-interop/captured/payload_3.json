@@ -1,0 +1,96 @@
+{
+  "dataAccProfId": null,
+  "eventsSubs": [
+    {
+      "event": "PERF_DATA",
+      "eventFilter": {
+        "tgtUe": {
+          "supis": [
+            "imsi-001010000000001",
+            "imsi-001010000000003"
+          ],
+          "interGroupIds": [
+            "group-id-001"
+          ],
+          "anyUeId": true,
+          "ueIpAddr": null
+        },
+        "appIds": [
+          "https://6g-i2p.etri.re.kr/poc2/app-server/client-1",
+          "https://6g-i2p.etri.re.kr/poc2/app-server/client-2"
+        ],
+        "locArea": {
+          "ecgis": null,
+          "ncgis": null,
+          "gRanNodeIds": [
+            {
+              "plmnId": {
+                "mcc": "001",
+                "mnc": "999"
+              },
+              "n3IwfId": null,
+              "gNbId": {
+                "bitLength": 24,
+                "gNBValue": "000001"
+              },
+              "ngeNbId": null,
+              "wagfId": null,
+              "tngfId": null,
+              "nid": "00000000001",
+              "eNbId": null
+            },
+            {
+              "plmnId": {
+                "mcc": "001",
+                "mnc": "999"
+              },
+              "n3IwfId": null,
+              "gNbId": {
+                "bitLength": 24,
+                "gNBValue": "000002"
+              },
+              "ngeNbId": null,
+              "wagfId": null,
+              "tngfId": null,
+              "nid": "00000000001",
+              "eNbId": null
+            }
+          ],
+          "tais": null
+        },
+        "collAttrs": null,
+        "tws": null
+      },
+      "eventRepInfo": {
+        "immRep": false,
+        "notifMethod": null,
+        "maxReportNbr": 0,
+        "monDur": "2030-12-31T23:59:59+09:00",
+        "repPeriod": 20,
+        "sampRatio": 100,
+        "partitionCriteria": null,
+        "grpRepTime": null,
+        "notifFlag": null,
+        "notifFlagInstruct": null,
+        "mutingSetting": null
+      }
+    }
+  ],
+  "eventsRepInfo": {
+    "immRep": false,
+    "notifMethod": null,
+    "maxReportNbr": 0,
+    "monDur": "2030-12-31T23:59:59+09:00",
+    "repPeriod": 20,
+    "sampRatio": 100,
+    "partitionCriteria": null,
+    "grpRepTime": null,
+    "notifFlag": null,
+    "notifFlagInstruct": null,
+    "mutingSetting": null
+  },
+  "notifUri": "http://10.254.73.47:9000/notifications/af/d0a989e4-3028-4e14-a45d-73395293c8ec",
+  "notifId": "NOTIFICATION_af_2026-09-09T19:17:29.044846+09:00",
+  "eventNotifs": null,
+  "suppFeat": "FF"
+}

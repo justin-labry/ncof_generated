@@ -1,0 +1,156 @@
+{
+  "supi": null,
+  "gpsi": null,
+  "anyUeInd": false,
+  "groupId": "00000001-001-01-0001",
+  "pduSeId": null,
+  "dnn": "6g-i2p.etri.re.kr",
+  "snssai": null,
+  "dnai": null,
+  "ssId": null,
+  "bssId": null,
+  "upfId": "upf-001",
+  "nfId": "ncof-uuid-001",
+  "subId": null,
+  "notifId": "NOTIFICATION_upf_2026-09-09T19:17:29.045023+09:00",
+  "notifUri": "http://10.254.73.47:9000/notifications/upf/d0a989e4-3028-4e14-a45d-73395293c8ec",
+  "altNotifIpv4Addrs": null,
+  "altNotifIpv6Addrs": null,
+  "altNotifFqdns": null,
+  "eventSubs": [
+    {
+      "event": "UPF_EVENT",
+      "referenceId": null,
+      "dnaiChgType": null,
+      "dddTraDescriptors": null,
+      "dddStati": null,
+      "appIds": null,
+      "networkArea": {
+        "ecgis": null,
+        "ncgis": null,
+        "gRanNodeIds": [
+          {
+            "plmnId": {
+              "mcc": "001",
+              "mnc": "999"
+            },
+            "n3IwfId": "000001",
+            "gNbId": null,
+            "ngeNbId": null,
+            "wagfId": null,
+            "tngfId": null,
+            "nid": null,
+            "eNbId": null
+          },
+          {
+            "plmnId": {
+              "mcc": "001",
+              "mnc": "999"
+            },
+            "n3IwfId": "000001",
+            "gNbId": null,
+            "ngeNbId": null,
+            "wagfId": null,
+            "tngfId": null,
+            "nid": null,
+            "eNbId": null
+          }
+        ],
+        "tais": null
+      },
+      "targetPeriod": {
+        "startTime": "2026-09-09T19:17:29.044994+09:00",
+        "stopTime": "2030-12-31T23:59:59+09:00"
+      },
+      "tws": null,
+      "transacDispInd": true,
+      "transacMetrics": null,
+      "ueIpAddr": null,
+      "upfEvents": [
+        {
+          "type": "USER_DATA_USAGE_MEASURES",
+          "immediateFlag": false,
+          "measurementTypes": [
+            "THROUGHPUT_MEASUREMENT",
+            "VOLUME_MEASUREMENT"
+          ],
+          "appIds": null,
+          "trafficFilters": [
+            {
+              "flowDescription": "permit in ip from any to any",
+              "ethFlowDescription": null,
+              "packFiltId": "3902242897",
+              "packetFilterUsage": false,
+              "tosTrafficClass": null,
+              "spi": null,
+              "flowLabel": null,
+              "flowDirection": "UPLINK",
+              "mpxMediaUlInfos": null,
+              "mpxMediaDlInfos": null
+            },
+            {
+              "flowDescription": "permit in ip from any to any",
+              "ethFlowDescription": null,
+              "packFiltId": "3902242897",
+              "packetFilterUsage": false,
+              "tosTrafficClass": null,
+              "spi": null,
+              "flowLabel": null,
+              "flowDirection": "DOWNLINK",
+              "mpxMediaUlInfos": null,
+              "mpxMediaDlInfos": null
+            }
+          ],
+          "granularityOfMeasurement": "PEF_FLOW",
+          "reportingSuggestionInfo": {
+            "reportingUrgency": "DELAY_TOLERANT",
+            "reportingTimeInfo": 10
+          },
+          "remoteIpv4Addr": null,
+          "remoteIpv6Addr": null,
+          "remotePortNumber": null,
+          "ipDomain": null,
+          "remainingDataReports": "DISCARD",
+          "skipReportingInstruction": {
+            "skipReportCond": [
+              "SKIP_OUTSIDE_VALIDITY_TIME"
+            ],
+            "validityTimes": null,
+            "thresholdCond": null
+          },
+          "inclRatType": false,
+          "ratTypeList": null
+        }
+      ],
+      "bundlingAllowed": null,
+      "bundleId": null,
+      "bundledEventNotifyUri": null,
+      "flowDescs": null
+    }
+  ],
+  "eventNotifs": null,
+  "ImmeRep": false,
+  "notifMethod": "PERIODIC",
+  "maxReportNbr": 0,
+  "expiry": "2030-12-31T23:59:59+09:00",
+  "repPeriod": 20,
+  "guami": {
+    "plmnId": {
+      "mcc": "001",
+      "mnc": "999",
+      "nid": null
+    },
+    "amfId": "000001"
+  },
+  "serviveName": "nsmf-event_exposure",
+  "supportedFeatures": "FF",
+  "sampRatio": 100,
+  "partitionCriteria": null,
+  "grpRepTime": null,
+  "notifFlag": null,
+  "notifFlagInstruct": null,
+  "mutingSetting": null,
+  "defQosSupp": false,
+  "qosMonPending": false,
+  "udrRestartInd": false
+}

@@ -1,0 +1,189 @@
+{
+    "notifId": "NOTIFICATION_ricf_2026-09-09T19:58:21.913719+09:00",
+    "notifUri": "http://10.254.73.46:55556/",
+    "eventNotifs": [
+        {
+            "event": "_RF_SIGNAL",
+            "timestamp": "2026-09-09T20:02:21+09:00",
+            "_rfSignalInfos": [
+                {
+                    "_timestamp": "2026-09-09T20:02:21+09:00",
+                    "_supi": "imsi-001010000000001",
+                    "_gpsi": "msisdn-821070000101",
+                    "_ueIpAddr": {
+                        "ipv4Addr": "192.168.1.11"
+                    },
+                    "_nodeAddrs": [
+                        {
+                            "ipAddr": {
+                                "ipv4Addr": "192.168.1.1"
+                            },
+                            "fqdn": "gnb-1.local"
+                        }
+                    ],
+                    "_loc": {
+                        "nrLocation": {
+                            "globalGnbId": {
+                                "plmnId": {
+                                    "mnc": "999",
+                                    "mcc": "001"
+                                },
+                                "gNbId": {
+                                    "bitLength": 24,
+                                    "gNBValue": "000001"
+                                },
+                                "nid": "00000000001"
+                            }
+                        }
+                    },
+                    "_rfSignalData": {
+                        "_startTime": "2026-09-09T20:01:21+09:00",
+                        "_duration": 60,
+                        "_refSignalMeasurements": [
+                            {
+                                "_ratType": "NR",
+                                "_refSignalType": "SS",
+                                "_blockType": "TB",
+                                "_rsrp": "-63dBm",
+                                "_rsrq": "-11dB",
+                                "_sinr": "28dB",
+                                "_bler": 1.88,
+                                "_connectivity": "EXCELLENT"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "_timestamp": "2026-09-09T20:02:21+09:00",
+                    "_supi": "imsi-001010000000003",
+                    "_gpsi": "msisdn-821070000102",
+                    "_ueIpAddr": {
+                        "ipv4Addr": "192.168.1.13"
+                    },
+                    "_nodeAddrs": [
+                        {
+                            "ipAddr": {
+                                "ipv4Addr": "192.168.1.2"
+                            },
+                            "fqdn": "gnb-2.local"
+                        }
+                    ],
+                    "_loc": {
+                        "nrLocation": {
+                            "ncgi": {
+                                "plmnId": {
+                                    "mnc": "999",
+                                    "mcc": "001"
+                                },
+                                "nrCellId": "cell-002",
+                                "nid": "00000000001"
+                            },
+                            "ignoreNcgi": false,
+                            "globalGnbId": {
+                                "plmnId": {
+                                    "mnc": "999",
+                                    "mcc": "001"
+                                },
+                                "gNbId": {
+                                    "bitLength": 24,
+                                    "gNBValue": "000002"
+                                },
+                                "nid": "00000000001"
+                            }
+                        }
+                    },
+                    "_rfSignalData": {
+                        "_startTime": "2026-09-09T20:01:21+09:00",
+                        "_duration": 60,
+                        "_refSignalMeasurements": [
+                            {
+                                "_ratType": "NR",
+                                "_refSignalType": "SS",
+                                "_blockType": "TB",
+                                "_rsrp": "-68dBm",
+                                "_rsrq": "-11dB",
+                                "_sinr": "36dB",
+                                "_bler": 4.46,
+                                "_connectivity": "EXCELLENT"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "event": "_POWER_ENERGY_CONSUMPTION",
+            "timestamp": "2026-09-09T20:02:21+09:00",
+            "_powerEnergyConsInfos": [
+                {
+                    "_timestamp": "2026-09-09T20:02:21+09:00",
+                    "_nodeAddrs": [
+                        {
+                            "ipAddr": {
+                                "ipv4Addr": "192.168.1.1"
+                            },
+                            "fqdn": "gnb-1.local"
+                        }
+                    ],
+                    "_loc": {
+                        "nrLocation": {
+                            "globalGnbId": {
+                                "plmnId": {
+                                    "mnc": "999",
+                                    "mcc": "001"
+                                },
+                                "gNbId": {
+                                    "bitLength": 24,
+                                    "gNBValue": "000001"
+                                }
+                            }
+                        }
+                    },
+                    "_powerEnergyConsData": {
+                        "_startTime": "2026-09-09T20:01:21+09:00",
+                        "_duration": 60,
+                        "_power": "20mW",
+                        "_minPower": "0mW",
+                        "_peakPower": "50mW",
+                        "_energy": "1.2J",
+                        "_powerState": "ACTIVE"
+                    }
+                },
+                {
+                    "_timestamp": "2026-09-09T20:02:21+09:00",
+                    "_nodeAddrs": [
+                        {
+                            "ipAddr": {
+                                "ipv4Addr": "192.168.1.2"
+                            },
+                            "fqdn": "gnb-2.local"
+                        }
+                    ],
+                    "_loc": {
+                        "nrLocation": {
+                            "globalGnbId": {
+                                "plmnId": {
+                                    "mnc": "999",
+                                    "mcc": "001"
+                                },
+                                "gNbId": {
+                                    "bitLength": 24,
+                                    "gNBValue": "000002"
+                                }
+                            }
+                        }
+                    },
+                    "_powerEnergyConsData": {
+                        "_startTime": "2026-09-09T20:01:21+09:00",
+                        "_duration": 60,
+                        "_power": "20mW",
+                        "_minPower": "0mW",
+                        "_peakPower": "50mW",
+                        "_energy": "1.2J",
+                        "_powerState": "ACTIVE"
+                    }
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,66 @@
+{
+    "notifId": "NOTIFICATION_af_2026-09-09T19:58:21.914073+09:00",
+    "notifUri": "http://10.254.73.46:55558/",
+    "eventNotifs": [
+        {
+            "event": "DISPERSION",
+            "timeStamp": "2026-09-09T20:02:23+09:00",
+            "dispersionInfos": [
+                {
+                    "timeStamp": "2026-09-09T20:02:23+09:00",
+                    "gpsi": "msisdn-001010070000101",
+                    "supi": "imsi-001010070000101",
+                    "ueAddr": {
+                        "ipv4Addr": "192.168.101.201"
+                    },
+                    "ipTrafficFilter": {
+                        "flowId": 10001,
+                        "flowDescriptions": [
+                            "permit ip from 192.168.101.201 to any",
+                            "permit ip from any to 192.168.101.201"
+                        ],
+                        "tosTC": "0x00"
+                    },
+                    "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-1",
+                    "dnais": [
+                        "dnai-ue1-gnb1-001"
+                    ],
+                    "appDur": 60,
+                    "dataUsage": {
+                        "duration": 60,
+                        "totalVolume": -999,
+                        "downlinkVolume": -999,
+                        "uplinkVolume": -999
+                    }
+                },
+                {
+                    "timeStamp": "2026-09-09T20:02:23+09:00",
+                    "gpsi": "msisdn-001010070000102",
+                    "supi": "imsi-001010070000102",
+                    "ueAddr": {
+                        "ipv4Addr": "192.168.102.10"
+                    },
+                    "ipTrafficFilter": {
+                        "flowId": 10002,
+                        "flowDescriptions": [
+                            "permit ip from 192.168.102.10 to any",
+                            "permit ip from any to 192.168.102.10"
+                        ],
+                        "tosTC": "0x00"
+                    },
+                    "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-2",
+                    "dnais": [
+                        "dnai-ue2-gnb2-001"
+                    ],
+                    "appDur": 60,
+                    "dataUsage": {
+                        "duration": 60,
+                        "totalVolume": 18784,
+                        "downlinkVolume": 16460,
+                        "uplinkVolume": 2324
+                    }
+                }
+            ]
+        }
+    ]
+}
