@@ -63,6 +63,18 @@ def _generate_notif_id(type: str):
 # 감시 창(monitoring window) 기본 길이 — 요청에 monDur 가 없을 때만 사용
 DEFAULT_MON_DURATION = timedelta(hours=1)
 
+# TEMP(두두원 연동 우회) — 두두원 파서가 고쳐지면 False 로 되돌린다.
+# 두두원 sbi_poc_app 의 ISO8601 파서(ncof_flow_subscription_core.cpp:226)는
+#   sscanf(t, "%d-%d-%dT%d:%d:%d%c%d:%d")
+# 로 파싱하는데, 소수 초가 있으면 반환값이 9 가 아니라 8 이 되어 :245 의
+# `if (ret == 9)` 오프셋 보정이 통째로 건너뛰어진다. 결과적으로 KST 벽시계를
+# UTC 로 간주해 start_epoch 이 정확히 +9 시간 미래로 잡히고, 스케줄러가
+# next_send_epoch 을 그 시각으로 예약해 UPF 주기 리포트(8_ 계열)가 사실상
+# 오지 않는다. targetPeriod 를 싣는 구독은 SMF 향 2건뿐이라 증상이 UPF 에만 나타난다.
+_DODO1_NO_FRACTIONAL_SECONDS = True
+# 양측 시계 오차로 startTime 이 상대 기준 미래가 되어 창 밖으로 밀리는 것을 막는 마진.
+_DODO1_START_BACKDATE = timedelta(seconds=60)
+
 
 def _build_target_period(evt_req) -> TimeWindow:
     """구독 생성 시점(now)을 startTime 으로 하는 TimeWindow 를 생성한다.
@@ -80,7 +92,14 @@ def _build_target_period(evt_req) -> TimeWindow:
         m = mon_dur if mon_dur.tzinfo is not None else mon_dur.replace(tzinfo=tz)
         if m > now:
             stop = m
-    return TimeWindow(startTime=now, stopTime=stop)
+
+    start = now
+    if _DODO1_NO_FRACTIONAL_SECONDS:
+        # 마이크로초를 제거하고 startTime 을 약간 과거로 민다.
+        start = (now - _DODO1_START_BACKDATE).replace(microsecond=0)
+        stop = stop.replace(microsecond=0)
+
+    return TimeWindow(startTime=start, stopTime=stop)
 
 
 def _convert_flow_info_to_permit_rules(flow_info: dict) -> List[str]:
