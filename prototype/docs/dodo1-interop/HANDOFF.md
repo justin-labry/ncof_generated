@@ -1,7 +1,17 @@
 # NCOF ↔ 두두원(DoDoWon) SBI 연동 — 작업 인수인계
 
 **작성:** 2026-09-09 24:00 KST
-**작업 브랜치:** `fix/dodo1-timestamp-fractional-seconds` (main 에서 분기, main 대비 2 커밋 앞섬)
+**작업 브랜치:** `fix/dodo1-timestamp-fractional-seconds` (main 에서 분기, main 대비 4 커밋 앞섬)
+
+```
+31e7fe2  docs(dodo1): 인수인계 문서와 실측 페이로드 보존
+55c589f  feat(diag): 임시 관대 수신 계층 추가
+131cc03  fix(sbi): targetPeriod 마이크로초 제거
+53e8068  fix(sbi): 하위 NF 구독 400 해결
+e33cb89  (main 이 있던 지점)
+```
+
+미커밋으로 남긴 것은 `prototype/device_info.json` 뿐이다(두두원 IP/포트를 담은 로컬 환경 설정).
 **상태:** 제어 루프가 마지막 한 홉만 남기고 전부 연결됨. 남은 블로커는 **두두원 측 IP 오타 1건**.
 
 ---
@@ -119,7 +129,7 @@ _DODO1_START_BACKDATE = timedelta(seconds=60)
 **검증:** 적용 후 두두원이 `8_NotificationData_from_UPF_to_NCOF_v1.0.tmpl` 을 60초 주기로 발송 시작
 (23:35:15 최초 확인).
 
-### 미커밋 — 관대 수신 진단 계층 (패치 B)
+### 커밋 `55c589f` — 관대 수신 진단 계층 (패치 B)
 
 - **신규** `prototype/nncof-server/src/nncof/core/lenient_ingest.py` (402줄)
 - **수정** `prototype/nncof-server/src/nncof/main.py` — import 1줄 + `install_lenient_ingest(app)` 1줄
@@ -215,12 +225,31 @@ NCOF 의 `_notify_subscriber()`(`subscription_handler.py:195-212`)는 **구독�
 
 ## 8. 다음 할 일
 
-1. **두두원에 §6 목록 전달** — 특히 `notificationURI` IP 오타(한 글자)
-2. **선택: NCOF 임시 URI 재작성** — `_notify_subscriber()` 에서 `10.254.73.46` → `10.254.173.46`
-   치환. 패치 A 와 같은 TEMP 플래그 방식. 두두원 응답을 기다리지 않고 종단 루프를 완주해 볼 수 있음
-3. **패치 B 커밋** — 아직 미커밋
-4. 확인 사항: 두 구독의 metric 이 각각 `0.0` / `150.0` 로 갈린다. 한쪽 store 에 UDUM 이 없는지 확인 필요
-5. 두두원 수정 후 `_DODO1_NO_FRACTIONAL_SECONDS = False` 로 되돌리고 재검증
+### ⭐ 가장 먼저 할 일 — 두두원에 `notificationURI` IP 오타 수정 요청
+
+두두원이 구독에 실어 보내는 `notificationURI` 가 `http://10.254.73.46:55555/` 인데
+실제 주소는 `http://10.254.173.46:55555/` 다. **`173` 에서 `1` 이 빠진 한 글자 오타**이며,
+이것 하나가 지금 유일하게 남은 블로커다(§5 참조). 나머지 단계는 전부 통과 상태이므로,
+이 한 글자만 고쳐지면 제어 루프가 닫힐 가능성이 높다.
+
+`_notify_subscriber()` 는 nrf 조회를 하지 않고 **구독자가 준 URI 를 그대로** 쓰기 때문에
+NCOF 설정으로는 우회되지 않는다. PCF(55555)·RICF(55556) 두 구독 모두 해당된다.
+
+### 그 다음
+
+1. **NCOF 임시 URI 재작성 (회신 대기 중 병행)** — `_notify_subscriber()`
+   (`core/subscription_handler.py:195-212`) 에서 `10.254.73.46` → `10.254.173.46` 치환.
+   패치 A(`_DODO1_NO_FRACTIONAL_SECONDS`) 와 같은 TEMP 플래그 방식으로 넣을 것.
+   두두원 회신을 기다리지 않고 **오늘 안에 종단 루프를 완주**해 볼 수 있다.
+   확인 지점: 제어 명령이 두두원에 도달하는지 → RICF 가 다음 주기 `13p_d` 통지에서
+   `cell_power_state` 를 에코하는지(`ncof_flow_dynamic_report.cpp` 의 gNB2 전력 반영).
+2. **두두원에 §6 나머지 목록 전달** — `-999` 센티넬, bps 정수, 소수 정수필드, `13p_d` 구조 결함.
+   `logs/lenient_ingest/ledger.jsonl` 이 근거 데이터다.
+3. 확인 사항: 두 구독의 metric 이 각각 `0.0` / `150.0` 로 갈린다. 한쪽 store 에 UDUM 이
+   없는지 확인 필요(`12p_c` 만 들어간 구독일 가능성).
+4. 두두원이 소수 초 파싱을 고치면 `_DODO1_NO_FRACTIONAL_SECONDS = False` 로 되돌리고 재검증.
+5. 연동이 안정화되면 관대 수신 계층(`NCOF_LENIENT_INGEST`)을 끄고, 최종적으로
+   `core/lenient_ingest.py` 와 `main.py` 의 2줄을 제거.
 
 ---
 
