@@ -1,6 +1,6 @@
 # NCOF ↔ 두두원(DoDoWon) SBI 연동 — 작업 인수인계
 
-**작성:** 2026-09-09 24:00 KST · **갱신:** 2026-09-10 17:30 KST
+**작성:** 2026-09-09 24:00 KST · **갱신:** 2026-09-10 19:00 KST
 **작업 브랜치:** `fix/dodo1-timestamp-fractional-seconds` (main 에서 분기, main 대비 10 커밋 앞섬)
 
 ```
@@ -131,8 +131,13 @@ NcofRecvJsonType Detect_Ncof_Recv_Json_Type(const std::string& path, const std::
 | `:467` | `ricf_event_exposure.supp_feat = "FF"` 추가 | 대칭성(400 과 무관) |
 | `:346`, `:525` | `"PEF_FLOW"` → `"PER_FLOW"` | TS 29.508 enum 준수(**400 원인 아니었음**) |
 
-> 키 이름의 오타 `servive` 는 **그대로 두어야 한다** — 두두원도 `"serviveName"` 으로 찾는다.
-> 양측이 같은 오타를 공유하는 상태다.
+> 📌 **2026-09-10 정정.** `servive` 는 **오타가 아니라 규격 그대로다.**
+> `TS29508_Nsmf_EventExposure_PoC_ETRI_DoDo1.yaml:391` 이 프로퍼티를 실제로 `serviveName` 으로 선언하고,
+> description 에 *"The serviveName property corresponds to the serviceName in the main body of the
+> specification"* 이라고 명시한다. 값 `"nsmf-event-exposure"` 도 `SupplementaryData#ServiceName` enum 에 있다.
+> 이전 판의 "양측이 같은 오타를 공유하는 상태" 라는 서술은 틀렸다 — 건드리면 안 된다는 결론만 맞았다.
+> 두두원도 규격대로 `"serviveName"` 으로 찾는다(`ncof_flow_common.cpp:411`,
+> `ncof_flow_subscription_handlers.cpp:56`). **`serviceName` 으로 "고치면" 연동이 깨진다.**
 
 ### 커밋 `131cc03` — UPF 주기 리포트 미수신 해결 (핵심)
 
@@ -305,8 +310,9 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 |---|---|---|
 | ~~치명~~ **해결** (2026-09-10 17:16) | ~~구독 `notificationURI` IP 오타~~ — 두두원이 `poc_test.ncof_sub_profile.uri_pcf/uri_ricf` 를 `10.254.173.46` 으로 수정. 패치 C 회수 완료 | 치환 없이 양쪽 200 재확인 |
 | **치명** | ISO8601 소수 초 미지원 (`ncof_flow_subscription_core.cpp:226` sscanf) — TS 29.571 DateTime 은 소수 초 허용 | 현재 NCOF 가 우회 중 |
-| **높음** | throughput 을 bps **정수**로 전송 → `"150000000 bps"` 형식 **문자열** 필요 | 10⁶배 오차 |
-| **높음** | `-999` 센티넬 — 값 없으면 **필드 생략**이 규격 | `pdb`, `plr*`, `_delayUl`, `_maxRtt`, `totalVolume` 등 |
+| **치명** | **`_powerEnergyConsInfos` 키 이름 오류** — 규격·샘플 모두 `_powerEnergyConsumptionInfos`(`TS29591:498`). 두두원은 `_powerEnergyConsInfos`(`13p_d_….tmpl:117`, `_POWER.tmpl:8`). `additionalProperties:true` 라 **오류 없이 조용히 드롭**돼 `_POWER_ENERGY_CONSUMPTION` 본문이 통째로 사라진다 | **단일 최고가치 수정** (§6.3) |
+| **높음** | throughput 을 bps **정수**로 전송 → 단위 접미사 문자열 필요. **근원 특정됨(§6.3):** `ncof_flow_report_common.cpp:527-539` 의 토큰표가 `__VAL_50_MBPS__` → `50000000`(따옴표·단위 없음)로 치환한다. 같은 표 `:524` 는 `"0.0 Mbps"` 로 정상이고 `ncof_send_templates.cpp:280-284` 도 정상이라 **국소 회귀**다. 이미 있는 헬퍼 `Json_Bps_To_Mbps_Text`(`:907-934`)를 쓰면 된다 | 10⁶배 오차 |
+| **높음** | `-999` 센티넬 — 값 없으면 **필드 생략**이 규격. 근원은 `Json_Metric_Number_Or_999` / `Json_Metric_Text_Or_999`(`ncof_flow_report_common.cpp:225-247`)와 `Json_Stamp_Number_Default`(`ncof_flow_targeting.cpp:21-29`). 3GPP 타입에 "데이터 없음" 표현이 없다 — `PacketDelBudget` 은 min 1, `PacketLossRate` 는 0..1000, `Uint32` 는 min 0, `BitRate`/`Volume` 은 단위 접미사 필수 | `pdb`, `plr*`, `_delayUl`, `_maxRtt`, `totalVolume` 등 |
 | **높음** | 정수 필드에 소수 | `pdb: 0.45`, `_dlMaxPacketDelay: 20.74` |
 | **높음** | Volume 필드가 정수 → `"9000000000 B"` 형식 필요 | 바이트 단위 정규식 |
 | **높음** | `13p_d` 계열 구조적 결함 5종 → **§6.1 에 경로·건수·규격 근거 정리** | 자동 수리 불가, `13p_d` **100% 거절 중** |
@@ -370,6 +376,71 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 > 2p 핸들러(`:202`)는 요청의 `subscriptionId` 를 읽는데 **NCOF 는 그걸 보내지 않는다**(`subId` 는 `null` 로만 나감).
 > 양측 수정으로 제안할 것. NCOF 측 폴백은 §8 참조.
 
+### 6.3 규격 원본 감사 (2026-09-10) — 책임 소재 재배분
+
+`/home/labry/git/ncof_yaml`(branch `main`)이 **규격 원본 저장소**다: OpenAPI yaml 9종 + `ncof_json/` 참조 샘플 25종.
+그 25종 전부를 yaml 스키마에 대조(교차 파일 `$ref` 전부 해소, Draft7 + `additionalProperties:false` 2회 검사)한
+결과 **확정 위반 97건**. 아래는 그중 **책임 소재가 이전 판과 달라지는 것들**이다.
+
+#### ⚠️ 두두원이 맞고 우리 샘플이 틀린 것 — 두두원 목록에서 빼라
+
+| 항목 | 실상 |
+|---|---|
+| `serviveName` | **규격 그대로**다(§4 📌). 오타 아님 |
+| `notifMethod` | NEF 구독 5종(`4_`,`4p_`,`5_`,`5p_`,`6p_`)에서 **우리 샘플이 `notificationMethod` 로 잘못 씀**. 규격은 `notifMethod`(`SupplementaryData#ReportingInformation`). `notificationMethod` 는 Nncof API 이름이 NEF 에 섞여 든 것. 두두원 수신부는 규격대로 `notifMethod` 를 읽는다(`http2_server.cpp:286`) → **우리가 보내는 값이 빈 값으로 떨어진다** |
+| `dlPeakThroughput` | **규격이 틀렸다.** 규격은 `dlPeakThroughPut`(대문자 P)인데 형제 `ulPeakThroughput` 은 정상 표기. 3GPP verbatim import 잔재이고 우리 샘플·두두원이 독립적으로 둘 다 `dlPeakThroughput` 을 쓴다 → **회선이 이미 합의됐으니 규격을 고쳐라** |
+| `PEF_FLOW` | 이 그룹 어디에도 없다. 전부 `PER_FLOW` 이고 정상값이다(§7 의 기존 반증과 일치) |
+
+#### 🔴 규격 자체 버그 — 어떤 페이로드도 만족 불가
+
+`TS29591:891-893` `_PowerEnergyConsumptionInfo.required = [_timestamp, **_PowerEnergyConsData**]` — 대문자 `_P`.
+실제 프로퍼티는 `_powerEnergyConsData`(`:889`). 생성된 `callbacks/` yaml 에도 이미 박혀 있다.
+형제 `_RfSignalInfo.required` 는 정상이라 단순 오타다. **규격 수정 필수.**
+
+#### ⛔ 일방 수정 금지 — 두두원이 같이 깨진다
+
+**`validityTimes` 위치.** 우리 샘플은 `eventSubs[].upfEvents[]` 레벨에 두는데 규격은
+`skipReportingInstruction.validityTimes`(`TS29564:741`)다. 두두원 수신부가 **샘플의 잘못된 위치를 읽는다**
+(`ncof_flow_subscription_core.cpp:496`, `:641`, `:696`). 규격대로 옮기면 두두원의 UPF 구독 시간창 검증이
+조용히 깨져 `subscription time not found` → 0 을 반환한다. **동시 수정으로 조율할 것.**
+
+#### 우리 샘플의 하드 위반 (strict validator 가 오늘 거절)
+
+| 샘플 | 위반 |
+|---|---|
+| `14_e` | `qosPolAssistSets[0..3]` 이 `appId` 와 `fDescs` 를 **둘 다** 담아 `oneOf` 위반 ×4 — **가려지지 않은 실제 거절**. 앱 단위/플로우 단위 정책이 구조적으로 판별 불가 |
+| `11p_b` | `dispersionInfos[]` 가 `gpsi`+`supi`+`ueAddr` 셋 다 → `oneOf`(정확히 하나) 위반 |
+| NSMF 4종 | `qosMonPending: false` → `enum: [true]` 위반. 3GPP 응답 전용/true 전용 플래그는 **생략**이 정답 |
+| `7_`, `7p_` | `inclRatType: false` → 동일 |
+| `2p_` | `eventsSubs[0].eventFilter` 에 required `tgtUe` 없음 |
+| `14_e` | `anaMetaInfo.nfIds` 가 UUID 형식 위반 (`upf-uuid-001` 등, `NfInstanceId` format uuid) |
+
+#### 조용히 드롭되는 키 이름 드리프트 (11건) — 오류가 안 나서 가장 위험
+
+`notifMethod`, `nsiIds`(스칼라→배열도), `intGroupIds`/`interGroupIds`, `anyUeId`, `requestedQoe`,
+`ssIds`/`bssIds`, `predQoeVariance`. 규격이 `additionalProperties:false` 를 안 걸어서 정합 소비자가
+**알림 방식·슬라이스 id·그룹 필터·QoE 목표·SSID 필터를 전부 조용히 버린다.**
+
+> 🔴 **가려진 복합 결함:** `intGroupId` 키를 고치면 그 값 `"group-id-001"`/`"group-id-002"` 가 이번엔
+> `GroupId` 패턴(`TS29571:1071`) 위반으로 걸린다. **드롭 5건이 400 5건으로 바뀐다** — 키와 값을 반드시 같이 고쳐라.
+
+#### 그 밖에
+
+- **`_minDelayDl` 은 어느 규격 파일에도 없다**(`9_`,`9p_`,`10_a`,`10p_a`). `PerformanceData` 는
+  `_minRtt,_maxRtt,_delayUl,_minDelayUl,_maxDelayUl,_jitter` 를 정의하고, 샘플은 규격의 `_maxDelayUl` 을
+  한 번도 안 쓴다 → `_maxDelayUl` 의 복사·개명 실수로 보인다. 생성 모델이 측정된 DL 지연을 조용히 버린다.
+- `11p_b` `dispersionInfos[]` 의 `ipTrafficFilter` 는 `DispersionCollection` 에 없는 프로퍼티다.
+  거기의 플로우 필터는 `flowDesp`(**문자열**)다.
+- **파일명 오류 2건:** `13p_d` 는 이름과 달리 **NEF-shaped** 다(`NncofEventsSubscriptionNotification` 은
+  `eventNotifications` 를 쓰고 `subscriptionId` 가 required). 두두원도 NEF-shaped 로 보내므로 **이름만 틀렸다.**
+  `2p_` 도 실제로는 `NefEventExposureSubsc` 이고 `5p_` 와 거의 중복이다.
+- `8_`/`12p_c` 계열 **샘플은 깨끗하다** — 단위 접미사 214개 전부 패턴 일치, 센티넬 0건, 정수 필드 소수 0건.
+  즉 §6 의 단위·센티넬·소수 항목은 **전적으로 두두원 렌더링 단계의 문제**다(위 토큰표 회귀 참조).
+- `defaultQoSFlowInd` → 규격은 `defaultQosFlowInd`(`TS29564:542`). 3GPP JSON 관례가 `Qos` 라 **샘플·두두원 양쪽이 틀렸다.**
+- `10_a` 와 `10p_a` 는 바이트 단위로 동일하다.
+- enum 위반은 이 규격에서 **구조적으로 검출 불가**다 — `NefEvent`, `_RefSignalType`, `_BlockType`,
+  `_ConnectivityType`, `_CellPowerState`, `RatType` 이 모두 `anyOf: [enum, type:string]` 이라 아무 문자열이나 통과한다.
+
 전체 원장: `logs/lenient_ingest/ledger.jsonl` (샘플은 `captured/lenient_ledger_sample.jsonl`)
 
 ---
@@ -395,6 +466,11 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | 두두원 `send_json/` 을 보면 제어 수신 여부를 알 수 있다 | ❌ `send_json/` 은 **송신 덤프 전용**. 수신 제어는 MySQL 로만 간다 |
 | `13p_d` 와 `8_`/`9_`/`10_a` 는 별개 스케줄러로 나간다 | ❌ 단일 `Ncof_Subscription_Report_Thread`(`ncof_flow_subscription_core.cpp:905-984`) 1초 폴링이 전부 처리 |
 
+| `serviveName` 은 양측이 공유하는 오타다 | ❌ **규격 그대로다.** `TS29508…yaml:391` 이 그렇게 선언하고 description 에 명시. `serviceName` 으로 고치면 깨진다(§6.3) |
+| `_nodeAddrs` 는 배열이 맞다 | ❌ **객체가 맞다.** `ncof_yaml` 커밋 `26057fa`(2026-05-26) "fix _nodeAddrs array to object" 로 확정. 배열로 보이는 파일은 5/4 자 worktree 스냅샷이다 |
+| `notificationMethod` 는 NEF 구독에서도 맞는 이름이다 | ❌ NEF 는 `notifMethod` 다. 두두원이 규격대로 읽고 우리 샘플이 틀렸다(§6.3) |
+| 단위 없는 정수·센티넬은 규격 샘플에도 있다 | ❌ `8_`/`12p_c` 샘플은 깨끗하다(단위 214개 전부 일치, 센티넬 0건). 두두원 렌더링 단계의 토큰표 회귀다(§6.3) |
+
 > §3 의 `Detect_Ncof_Recv_Json_Type()` 인용과 "`(void)path;` 로 경로를 폐기한다" 는 서술은
 > **2026-09-10 에 정정됐다**(§3 의 📌 참조). 14/15F 분기 누락과, 5/5p 분기만은 경로를 읽는다는 점.
 
@@ -406,8 +482,14 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 
 ### ⭐ 가장 먼저 — 두두원에 §6 목록 전달
 
-`notificationURI` 오타는 **해결됐다.** 남은 치명 1건은 **ISO8601 소수 초 파서**(패치 A 가 우회 중)이고,
-그 다음이 §6.1 스키마 결함 5종(패치 B 가 우회 중)과 §6.2 하위 구독 ID 결손이다.
+`notificationURI` 오타는 **해결됐다.** 남은 두두원 치명 2건은 **ISO8601 소수 초 파서**(패치 A 가 우회 중)와
+**`_powerEnergyConsInfos` 키 이름 오류**(§6.3 — 단일 최고가치)다. 그 다음이 §6.1 구조 결함 5종
+(패치 B 가 우회 중), 토큰표 회귀(§6.3), §6.2 하위 구독 ID 결손이다.
+
+> ⚠️ **발송 전 §6.3 을 먼저 읽어라.** `serviveName`·`notifMethod`·`dlPeakThroughput` 은 두두원 잘못이 아니므로
+> 목록에서 빼야 하고, `_nodeAddrs`/`tai`/`ncgi` 는 "결함" 이 아니라 **"2026-05-26 규격 갱신 반영 요청"** 으로
+> 프레이밍해야 한다(두두원은 5/4 이전 사본 기준으로 구현했다). `timeStamp` 오타와 `nrCellId` 형식은
+> **우리 샘플이 아직 위반 중**이라 우리가 먼저 고친 뒤 함께 요청해야 한다.
 근거 데이터는 `logs/lenient_ingest/ledger.jsonl`, 실제 제어 본문은 `captured/1{4_e,5_f}_control_*.json`.
 
 **임시 패치 회수 현황:** A(소수 초) ⏳ · B(관대 수신) ⏳ · C(URI 치환) ✅ 완료
@@ -433,10 +515,20 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 2. **metric 진동 수정** — 한 구독의 두 UPF 스트림 중 최신 하나만 고르는 대신,
    WLAN_PERFORMANCE 스트림을 명시적으로 선택하거나 두 스트림을 합성. (`data_analyzer.py:213-227`)
 3. **`data_analyzer.py:184-185` 필터 정교화** — NEF/UPF 경계만 긋고 WLAN/비-WLAN 경계는 안 긋는다.
-4. 두두원이 **소수 초 파싱을 고치면** `_DODO1_NO_FRACTIONAL_SECONDS = False`(패치 A) 로 되돌리고 재검증.
-5. ~~두두원이 **`notificationURI` 오타를 고치면** 패치 C 를 비우고 재검증~~ — **완료 (2026-09-10 17:30).**
+4. **규격 원본(`ncof_yaml`) 수정** — §6.3 기준. 착수 순서 권장:
+   ① `_PowerEnergyConsumptionInfo.required` 의 `_PowerEnergyConsData` → `_powerEnergyConsData` (규격 버그)
+   ② `dlPeakThroughPut` → `dlPeakThroughput` (규격이 회선을 따라감)
+   ③ `ncof_json/13p_d_….json` 의 `timestamp` → `timeStamp`, `cell-001`/`cell-002` → hex 9자리
+   ④ NEF 샘플 5종의 `notificationMethod` → `notifMethod`
+   ⑤ 키 드리프트 11건 — **`intGroupId` 은 값(`GroupId` 패턴)까지 같이** 고칠 것
+   ⑥ `qosMonPending`/`inclRatType`: `false` → **필드 생략**
+   ⑦ `14_e` `qosPolAssistSets` 의 `appId`/`fDescs` 중 하나 제거 (`oneOf`)
+   ⑧ `13p_d`/`2p_` 파일명 정정 (내용이 아니라 이름)
+   ⛔ `validityTimes` 위치는 **두두원과 동시 수정** — 단독 이동 금지
+5. 두두원이 **소수 초 파싱을 고치면** `_DODO1_NO_FRACTIONAL_SECONDS = False`(패치 A) 로 되돌리고 재검증.
+6. ~~두두원이 **`notificationURI` 오타를 고치면** 패치 C 를 비우고 재검증~~ — **완료 (2026-09-10 17:30).**
    패치 C 제거 후 파일이 도입 이전 블롭과 동일함까지 확인. 상세는 §4.
-6. 연동이 안정화되면 **관대 수신 계층 제거** — `NCOF_LENIENT_INGEST` 를 끄고,
+7. 연동이 안정화되면 **관대 수신 계층 제거** — `NCOF_LENIENT_INGEST` 를 끄고,
    최종적으로 `core/lenient_ingest.py` 와 `main.py` 의 2줄을 삭제. (패치 B)
 
 ### 참고 — 기동 시 주의
@@ -461,6 +553,22 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
   11:11:42 전송분. 라이브 구독 id·현재 시각·`scenario2` 베이스가 반영돼 있다(회귀 비교용 쌍)
 - `captured/15_f_control_NCOF_to_RICF_sent_2026-09-10_pretty.json` — 같은 시각 RICF 로 보내 200 을 받은
   실제 제어 본문(`_cellPowerState: DEEP_SLEEP`, `gNBValue: 000002`)
+
+### 규격 원본 저장소 — `/home/labry/git/ncof_yaml` (branch `main`)
+
+| 파일 | 역할 |
+|---|---|
+| `Nncof_EventsSubscription_PoC_ETRI_DoDo1.yaml` | NCOF 자체 API (구독·통지·제어 14_e/15f) |
+| `TS29591_Nnef_EventExposure_PoC_ETRI_DoDo1.yaml` | NEF/AF/RICF. `_RfSignalInfo`, `_PowerEnergyConsumptionInfo` |
+| `TS29508_Nsmf_EventExposure_PoC_ETRI_DoDo1.yaml` | SMF. `serviveName`(:391) 이 여기 |
+| `TS29564_Nupf_EventExposure_PoC_ETRI_DoDo1.yaml` | UPF `NotificationData`, `skipReportingInstruction` |
+| `TS29571_CommonData_PoC_ETRI_DoDo1.yaml` | `NrLocation`, `Ncgi`, `NrCellId`, `BitRate`, `GroupId` 등 공통형 |
+| `SupplementaryData_PoC_ETRI_DoDo1.yaml` | `AddrFqdn`, `ReportingInformation`, `PerformanceData`, `DispersionCollection` |
+| `ncof_json/` | **참조 샘플 25종** — 감사 결과는 §6.3 |
+| `callbacks/`, `simplified/` | 생성물. 규격 버그가 여기까지 전파돼 있으니 같이 고쳐야 함 |
+
+> ⚠️ `.claude/worktrees/*` 안의 샘플은 **옛 스냅샷**이다. 반드시 `main` 을 기준으로 볼 것 —
+> `_nodeAddrs` 배열 오해가 정확히 이것 때문에 생겼다.
 
 ### NCOF 핵심 파일
 
