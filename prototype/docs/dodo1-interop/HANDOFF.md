@@ -1,9 +1,12 @@
 # NCOF ↔ 두두원(DoDoWon) SBI 연동 — 작업 인수인계
 
-**작성:** 2026-09-09 24:00 KST · **갱신:** 2026-09-10 11:20 KST
-**작업 브랜치:** `fix/dodo1-timestamp-fractional-seconds` (main 에서 분기, main 대비 8 커밋 앞섬)
+**작성:** 2026-09-09 24:00 KST · **갱신:** 2026-09-10 17:30 KST
+**작업 브랜치:** `fix/dodo1-timestamp-fractional-seconds` (main 에서 분기, main 대비 10 커밋 앞섬)
 
 ```
+(HEAD)   fix(sbi): 패치 C 제거 — 두두원이 notificationURI 오타를 고침
+81c6689  docs(dodo1): §6.1/§6.2 신설
+55b3fcb  docs(dodo1): 14_e 봉투 수정 실기동 검증
 1335888  fix(control): 14_e 제어 본문의 템플릿 고정 신원·시각 제거
 95f9ed1  docs(dodo1): 제어 루프 관통 확인 및 "RICF 에코" 전제 반증 반영
 f614abd  fix(sbi): notificationURI 오타 IP 발송 직전 치환 (패치 C, TEMP)
@@ -17,8 +20,9 @@ e33cb89  (main 이 있던 지점)
 
 미커밋으로 남긴 것은 `prototype/device_info.json` 뿐이다(두두원 IP/포트를 담은 로컬 환경 설정).
 
-**상태: 제어 루프가 닫혔다.** 2026-09-10 09:39 실측으로 구독 → 통지 → 분석 → 판정 →
-**제어 명령 전달(HTTP 200)** 까지 전 구간이 관통됐다. 남은 것은 연동 결함 통보와 정리 작업이며,
+**상태: 제어 루프가 닫혔고, 임시 패치 C 는 회수 완료.** 2026-09-10 09:39 에 전 구간을 관통했고,
+17:16 에 **두두원이 `notificationURI` 오타를 고쳐** 패치 C 없이 제어 명령이 양쪽 200 으로 도달함을
+재확인했다(치환 로그 0건). 남은 임시 패치는 **A(소수 초)와 B(관대 수신)** 둘이며,
 **차단성 블로커는 없다.**
 
 ---
@@ -188,7 +192,7 @@ _DODO1_START_BACKDATE = timedelta(seconds=60)
 
 **OFF 검증 완료:** 환경변수 없으면 미들웨어 0개, 기존 동작 그대로(422), 덤프 디렉터리도 안 만듦.
 
-### 커밋 `f614abd` — notificationURI 오타 IP 치환 (패치 C, TEMP)
+### 커밋 `f614abd` — notificationURI 오타 IP 치환 (패치 C, TEMP) → **2026-09-10 17:30 제거됨**
 
 `core/subscription_handler.py` — 모듈 상수 + 헬퍼 + `_notify_subscriber()` 3줄.
 
@@ -208,6 +212,21 @@ _DODO1_NOTIF_URI_REWRITE: dict[str, str] = {"10.254.73.46": "10.254.173.46"}
 localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 오프라인 4케이스 전수 통과 +
 아래 §5 의 실기동 종단 확인.
 
+> ✅ **회수 완료 (2026-09-10 17:30).** 두두원이 `poc_test.ncof_sub_profile` 의 `uri_pcf`/`uri_ricf` 를
+> `10.254.173.46` 으로 수정했다. 패치 C 를 끈 상태로 재검증해 **치환 없이** 제어 명령이 양쪽 200 으로
+> 도달함을 확인하고(17:16:56 PCF / 17:16:59 RICF, `TEMP 두두원 우회` 0건,
+> `All connection attempts failed` 0건), 상수·헬퍼·호출부를 전부 제거했다.
+> 파일은 패치 C 도입 이전 블롭(`1c15998`)과 바이트 단위로 동일하다.
+>
+> **오타의 출처(재발 시 여기를 보라):** 토큰 `__URI_PCF__`/`__URI_RICF__` →
+> `ncof_send_templates.cpp:183-184` 이 `config.uri_pcf/uri_ricf` 로 치환 →
+> `db.cpp:3725` 가 `poc_test.ncof_sub_profile WHERE profile_id='DEFAULT'` 에서 읽음
+> (`profile_id` 는 `config/6g.config` 의 `PROFILE`). **프로파일은 기동 시 1회만 읽으므로 앱 재시작 필요.**
+> `send_json/` 은 `Save_Json_Debug_Files()`(`app_util.cpp:145`)가 남기는 **송신 덤프(출력)** 이므로
+> 거기를 고치는 것은 아무 효과가 없다 — 소스 전체에서 읽는 코드가 없다.
+> `poc_test.sql` 덤프의 시드값은 `https://6g-i2p.etri.re.kr/poc2/pcf/` 라 오타와 무관하지만,
+> 재적재하면 그 FQDN 으로 되돌아가 또 안 붙는다.
+
 > `_notify_subscriber()` 가 NCOF 에서 **구독자 제공 URI 로 실제 요청을 보내는 유일한 지점**이다.
 > `NncofEventsSubscription` 에는 `altNotifFqdns`/`altNotifIpAddrs` 필드 자체가 없고
 > (그건 NCOF 가 *보내는* NSMF 모델에만 있으며 NCOF 는 채우지 않는다),
@@ -225,7 +244,7 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | 두두원 → NCOF 통지 발송 | ✅ 60초 주기 (`8_`, `9_`, `10_a`, `11p_b`, `12p_c`, `13p_d`) |
 | NCOF 수신·파싱 | ✅ 관대 수신으로 통과 (`13p_d` 만 422 — 의도된 것) |
 | 저장 → 분석 → gNB2 판정 | ✅ `분석 메트릭 WLAN_DL_MBPS:150.0` → `CELL_POWER_STATE: DEEP_SLEEP` |
-| **TEMP URI 치환 (패치 C)** | ✅ `10.254.73.46:55555/6` → `10.254.173.46:55555/6` |
+| ~~TEMP URI 치환 (패치 C)~~ | ✅ **불필요** — 두두원이 오타를 고쳐 17:30 제거 (§4) |
 | **NCOF → PCF 제어 발송 (09:39:30)** | ✅ **HTTP 200 수락** |
 | **NCOF → RICF 제어 발송 (09:39:34)** | ✅ **HTTP 200 수락** (`_cellPowerState: DEEP_SLEEP`, `gNBValue: 000002`) |
 | RICF 가 `cell_power_state` 를 에코 | ⛔ **에코 기능이 존재하지 않는다** (아래) |
@@ -284,7 +303,7 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 
 | 심각도 | 항목 | 근거 |
 |---|---|---|
-| **치명** | 구독 `notificationURI` IP 오타 `10.254.73.46` → `10.254.173.46` | 제어 명령 미도달 (NCOF 가 패치 C 로 임시 우회 중) |
+| ~~치명~~ **해결** (2026-09-10 17:16) | ~~구독 `notificationURI` IP 오타~~ — 두두원이 `poc_test.ncof_sub_profile.uri_pcf/uri_ricf` 를 `10.254.173.46` 으로 수정. 패치 C 회수 완료 | 치환 없이 양쪽 200 재확인 |
 | **치명** | ISO8601 소수 초 미지원 (`ncof_flow_subscription_core.cpp:226` sscanf) — TS 29.571 DateTime 은 소수 초 허용 | 현재 NCOF 가 우회 중 |
 | **높음** | throughput 을 bps **정수**로 전송 → `"150000000 bps"` 형식 **문자열** 필요 | 10⁶배 오차 |
 | **높음** | `-999` 센티넬 — 값 없으면 **필드 생략**이 규격 | `pdb`, `plr*`, `_delayUl`, `_maxRtt`, `totalVolume` 등 |
@@ -387,9 +406,11 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 
 ### ⭐ 가장 먼저 — 두두원에 §6 목록 전달
 
-`notificationURI` IP 오타(`10.254.73.46` → `10.254.173.46`)를 포함한 §6 전체.
-오타는 NCOF 가 패치 C 로 우회 중이라 **더 이상 급하지 않지만**, 임시 패치를 걷어내려면 원본이 고쳐져야 한다.
+`notificationURI` 오타는 **해결됐다.** 남은 치명 1건은 **ISO8601 소수 초 파서**(패치 A 가 우회 중)이고,
+그 다음이 §6.1 스키마 결함 5종(패치 B 가 우회 중)과 §6.2 하위 구독 ID 결손이다.
 근거 데이터는 `logs/lenient_ingest/ledger.jsonl`, 실제 제어 본문은 `captured/1{4_e,5_f}_control_*.json`.
+
+**임시 패치 회수 현황:** A(소수 초) ⏳ · B(관대 수신) ⏳ · C(URI 치환) ✅ 완료
 
 ### 남은 검증 1건 — gNB2 가 실제로 꺼졌는가
 
@@ -413,8 +434,8 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
    WLAN_PERFORMANCE 스트림을 명시적으로 선택하거나 두 스트림을 합성. (`data_analyzer.py:213-227`)
 3. **`data_analyzer.py:184-185` 필터 정교화** — NEF/UPF 경계만 긋고 WLAN/비-WLAN 경계는 안 긋는다.
 4. 두두원이 **소수 초 파싱을 고치면** `_DODO1_NO_FRACTIONAL_SECONDS = False`(패치 A) 로 되돌리고 재검증.
-5. 두두원이 **`notificationURI` 오타를 고치면** `_DODO1_NOTIF_URI_REWRITE = {}`(패치 C) 로 비우고 재검증.
-   원본 URI 를 보존하도록 만들어 두었으므로 **NCOF 쪽 다른 변경은 필요 없다.**
+5. ~~두두원이 **`notificationURI` 오타를 고치면** 패치 C 를 비우고 재검증~~ — **완료 (2026-09-10 17:30).**
+   패치 C 제거 후 파일이 도입 이전 블롭과 동일함까지 확인. 상세는 §4.
 6. 연동이 안정화되면 **관대 수신 계층 제거** — `NCOF_LENIENT_INGEST` 를 끄고,
    최종적으로 `core/lenient_ingest.py` 와 `main.py` 의 2줄을 삭제. (패치 B)
 
