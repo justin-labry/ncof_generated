@@ -1,9 +1,11 @@
 # NCOF ↔ 두두원(DoDoWon) SBI 연동 — 작업 인수인계
 
-**작성:** 2026-09-09 24:00 KST · **갱신:** 2026-09-10 10:00 KST
-**작업 브랜치:** `fix/dodo1-timestamp-fractional-seconds` (main 에서 분기, main 대비 6 커밋 앞섬)
+**작성:** 2026-09-09 24:00 KST · **갱신:** 2026-09-10 11:20 KST
+**작업 브랜치:** `fix/dodo1-timestamp-fractional-seconds` (main 에서 분기, main 대비 8 커밋 앞섬)
 
 ```
+1335888  fix(control): 14_e 제어 본문의 템플릿 고정 신원·시각 제거
+95f9ed1  docs(dodo1): 제어 루프 관통 확인 및 "RICF 에코" 전제 반증 반영
 f614abd  fix(sbi): notificationURI 오타 IP 발송 직전 치환 (패치 C, TEMP)
 4a9c8f0  docs(dodo1): HANDOFF 커밋 상태 갱신
 31e7fe2  docs(dodo1): 인수인계 문서와 실측 페이로드 보존
@@ -300,7 +302,7 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 
 | 심각도 | 항목 | 근거 |
 |---|---|---|
-| 높음 | **14_e(PCF 향) 제어 본문이 템플릿의 하드코딩 값을 그대로 내보낸다** — `subscriptionId: "SUBSCRIPTION_2026-03-01T12:01:00+09:00_2"`, `timeStampGen: "2026-03-01T12:01:00+09:00"`. 실 구독 id(`69a18bff-…`)도 현재 시각도 아니다. 15f(RICF 향)는 정상적으로 실 id/현재 시각을 쓴다 | `captured/14_e_control_NCOF_to_PCF_sent_2026-09-10_pretty.json` |
+| ~~높음~~ **해결** (`1335888`) | ~~14_e(PCF 향) 제어 본문이 템플릿의 하드코딩 값을 그대로 내보낸다~~ — `apply_qos_policy()` 가 봉투를 손대지 않아 `subscriptionId`/`notifCorrId`/`resourceUri` 와 타임스탬프 29곳이 템플릿 고정값(2026-03-01)으로 나갔다. `build_15f_cell_power()` 와 같은 시그니처로 맞추고 `sub_id`/`corr_id`/`decision_iso` 로 전부 덮어쓰도록 수정. **11:11 실기동 재확인: 잔존 0건, 양쪽 200** | `captured/14_e_control_NCOF_to_PCF_{BEFORE,AFTER}_envelope_fix.json` |
 | 높음 | metric 진동 (§5) — 한 구독의 두 UPF 스트림 중 "최신 UDUM" 하나만 골라 쓴다 | `data_analyzer.py:213-227` |
 | 중간 | `data_analyzer.py:184-185` 필터가 NEF/UPF 경계는 긋지만 **WLAN/비-WLAN 경계는 긋지 않는다** | 아래 §7 참조 |
 
@@ -356,8 +358,12 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 
 ### NCOF 측 정리 (우선순위 순)
 
-1. **14_e 제어 본문의 하드코딩 값 수정** — 실 `subscriptionId`/현재 시각을 쓰도록.
-   15f 는 이미 올바르므로 그쪽 구현을 따라가면 된다. (§6 NCOF 자체 결함 표)
+1. ~~**14_e 제어 본문의 하드코딩 값 수정**~~ — **완료** (`1335888`, 2026-09-10 11:11 실기동 확인).
+   `apply_qos_policy()` 가 `build_15f_cell_power()` 와 같은 인자를 받아 봉투 29곳을 덮어쓴다.
+   `Gnb2RLEngine` 은 `generate_notification` 을 상속받으므로 자동 적용.
+   > 하드코딩된 `subscriptionId` 는 이것 하나뿐이었다. `core/15f_….json` 에도 같은 고정값이 있지만
+   > 그 파일은 `test.py:22` 의 **주석 처리된 줄**에서만 언급되는 죽은 파일이고, 라이브 15f 는
+   > 코드로 생성된다. 저장소 전체 전수 조사 결과 다른 하드코딩 지점은 없다.
 2. **metric 진동 수정** — 한 구독의 두 UPF 스트림 중 최신 하나만 고르는 대신,
    WLAN_PERFORMANCE 스트림을 명시적으로 선택하거나 두 스트림을 합성. (`data_analyzer.py:213-227`)
 3. **`data_analyzer.py:184-185` 필터 정교화** — NEF/UPF 경계만 긋고 WLAN/비-WLAN 경계는 안 긋는다.
@@ -383,8 +389,10 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 - `captured/` — 두두원이 실제로 보낸 본문(`8_`, `9_`, `10_a`, `11p_b`, `13p_d`, 구독 `1_`/`1p_`)과
   NCOF 가 보낸 하위 구독 6건(`payload_1..6.json`). **스키마 대조·회귀 검증에 그대로 쓸 수 있다.**
 - `captured/lenient_ledger_sample.jsonl` — 관대 수신 원장 샘플 12건
-- `captured/14_e_control_NCOF_to_PCF_sent_2026-09-10_pretty.json` — 2026-09-10 09:39:30 에 PCF 로
-  보내 200 을 받은 실제 제어 본문(하드코딩 `subscriptionId` 결함이 그대로 보인다)
+- `captured/14_e_control_NCOF_to_PCF_BEFORE_envelope_fix.json` — 2026-09-10 09:39:30 에 PCF 로
+  보내 200 을 받은 실제 제어 본문. **수정 전** 상태라 템플릿 고정 `subscriptionId`/시각이 그대로 보인다
+- `captured/14_e_control_NCOF_to_PCF_AFTER_envelope_fix.json` — 같은 경로, `1335888` 적용 후
+  11:11:42 전송분. 라이브 구독 id·현재 시각·`scenario2` 베이스가 반영돼 있다(회귀 비교용 쌍)
 - `captured/15_f_control_NCOF_to_RICF_sent_2026-09-10_pretty.json` — 같은 시각 RICF 로 보내 200 을 받은
   실제 제어 본문(`_cellPowerState: DEEP_SLEEP`, `gNBValue: 000002`)
 
