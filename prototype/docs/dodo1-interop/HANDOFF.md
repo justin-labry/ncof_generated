@@ -1,10 +1,20 @@
 # NCOF ↔ 두두원(DoDoWon) SBI 연동 — 작업 인수인계
 
-**작성:** 2026-09-09 24:00 KST · **갱신:** 2026-09-10 21:30 KST
-**작업 브랜치:** `fix/dodo1-timestamp-fractional-seconds` (main 에서 분기, main 대비 10 커밋 앞섬)
+**작성:** 2026-09-09 24:00 KST · **갱신:** 2026-09-11 00:50 KST
+**작업 브랜치:** `fix/dodo1-timestamp-fractional-seconds` (main 에서 분기, main 대비 15 커밋 앞섬)
+같은 내용이 `claude/ncof-dodo1-sbi-interop-dc47e5` 에도 있다(두 브랜치 HEAD 동일).
 
 ```
-(HEAD)   fix(sbi): 패치 C 제거 — 두두원이 notificationURI 오타를 고침
+(HEAD)   docs(dodo1): 두두원 수정 요청 메일 초안 추가 (4건)          62170fc
+4449cca  docs(dodo1): 재기동 조합별 절차 신설 + "제어 명령 2배" 정정
+469b60c  docs(dodo1): 하위 구독 해지 경로 실증 — DELETE 10/10 실장비 200
+e49c613  fix(sbi): 고아 하위 구독 해소(notifId 폴백) + 저장 구독 복원 재개
+8bc14ea  docs(dodo1): §6.3 규격 원본 감사 반영
+81c6689  docs(dodo1): §6.1/§6.2 신설
+55b3fcb  docs(dodo1): 14_e 봉투 수정 실기동 검증
+1335888  fix(control): 14_e 제어 본문의 템플릿 고정 신원·시각 제거
+95f9ed1  docs(dodo1): 제어 루프 관통 확인 및 "RICF 에코" 전제 반증 반영
+f614abd  fix(sbi): notificationURI 오타 IP 발송 직전 치환 (패치 C, TEMP)
 81c6689  docs(dodo1): §6.1/§6.2 신설
 55b3fcb  docs(dodo1): 14_e 봉투 수정 실기동 검증
 1335888  fix(control): 14_e 제어 본문의 템플릿 고정 신원·시각 제거
@@ -18,17 +28,25 @@ f614abd  fix(sbi): notificationURI 오타 IP 발송 직전 치환 (패치 C, TEM
 e33cb89  (main 이 있던 지점)
 ```
 
-미커밋 변경:
-- `prototype/device_info.json` — 두두원 IP/포트를 담은 로컬 환경 설정 (**커밋하지 말 것**)
-- **§8 의 8** — 고아 하위 구독 해소(notifId 폴백) + 저장 구독 복원 재활성화.
-  `core/subscription_handler.py`, `core/subscription_manager.py`, `main.py` + 테스트 3파일.
-  **2026-09-10 22:31 실기동 검증 완료** — `external_subscriptions` 가 처음으로 채워지고
-  GUI 하향 간선 16건이 등장했다. 상세는 §8 의 8.
+미커밋 변경은 **본 체크아웃의 `prototype/device_info.json` 뿐**이다(두두원 IP/포트를 담은
+로컬 환경 설정 — **커밋하지 말 것**). 워크트리 쪽은 되돌려 놓았다.
 
-**상태: 제어 루프가 닫혔고, 임시 패치 C 는 회수 완료.** 2026-09-10 09:39 에 전 구간을 관통했고,
-17:16 에 **두두원이 `notificationURI` 오타를 고쳐** 패치 C 없이 제어 명령이 양쪽 200 으로 도달함을
-재확인했다(치환 로그 0건). 남은 임시 패치는 **A(소수 초)와 B(관대 수신)** 둘이며,
-**차단성 블로커는 없다.**
+**상태: 제어 루프 관통 + 고아 하위 구독 해소까지 완료.** 남은 임시 패치는 **A(소수 초)와
+B(관대 수신)** 둘이고 **차단성 블로커는 없다.** 두두원 발송용 메일 초안도 작성돼 있다
+(`두두원_수정요청_메일초안.md`, §8 참조).
+
+### 지금 떠 있는 것 (2026-09-11 00:50 기준)
+
+| 구성요소 | 상태 |
+|---|---|
+| NCOF | **본 체크아웃**(`/home/labry/git/ncof_generated/prototype/nncof-server`)에서 커밋된 코드로 기동 중. `MODE=DEVICE`, `NCOF_LENIENT_INGEST=1`, `ulimit -n 65536` |
+| 두두원 | 기동 중. 2026-09-10 22:31 이후 재기동하지 않았다 |
+| 루프 | 상향 구독 2건 · `external_subscriptions` 10건 · GUI 간선 18건 · 제어 PCF/RICF 발송 성공(실패 0) |
+| 브라우저 접근 | 데스크톱에서 `ssh -p 2020 -N -L 9000:127.0.0.1:9000 localhost` → `http://localhost:9000/`. 역터널이 이 서버에서 `labry.ddns.net:2020` 으로 나가 있다 |
+
+> 워크트리(`.claude/worktrees/ncof-dodo1-sbi-interop-dc47e5`)에도 `uv sync --frozen` 으로 채운
+> venv 가 있다. 다만 그 안의 `prototype/device_info.json` 은 **localhost mock 포트**로 되돌려
+> 놓았으므로, 워크트리에서 `MODE=DEVICE` 로 띄우면 두두원이 아니라 mock 을 때린다(§8 기동 주의).
 
 ---
 
@@ -336,6 +354,9 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | ~~높음~~ **해결** (`1335888`) | ~~14_e(PCF 향) 제어 본문이 템플릿의 하드코딩 값을 그대로 내보낸다~~ — `apply_qos_policy()` 가 봉투를 손대지 않아 `subscriptionId`/`notifCorrId`/`resourceUri` 와 타임스탬프 29곳이 템플릿 고정값(2026-03-01)으로 나갔다. `build_15f_cell_power()` 와 같은 시그니처로 맞추고 `sub_id`/`corr_id`/`decision_iso` 로 전부 덮어쓰도록 수정. **11:11 실기동 재확인: 잔존 0건, 양쪽 200** | `captured/14_e_control_NCOF_to_PCF_{BEFORE,AFTER}_envelope_fix.json` |
 | 높음 | metric 진동 (§5) — 한 구독의 두 UPF 스트림 중 "최신 UDUM" 하나만 골라 쓴다 | `data_analyzer.py:213-227` |
 | 중간 | `data_analyzer.py:184-185` 필터가 NEF/UPF 경계는 긋지만 **WLAN/비-WLAN 경계는 긋지 않는다** | 아래 §7 참조 |
+| ~~높음~~ **해결** (`e49c613`) | ~~`external_subscriptions` 가 항상 비어 고아 구독이 쌓인다~~ — 응답에 ID 가 없으면 요청 본문 `notifId` 를 채택. 실장비 해지 10/10 → 200 실증. §8 의 8 | `subscription_handler.py:141-165` |
+| **중간** | **중복 구독 제거가 없다** — `create_subscription`(`:92-103`)이 `uuid4()` 를 조건 없이 발급하고 무조건 삽입한다. 두두원이 재기동해 구독을 다시 보내면 고아 핸들러가 쌓이고 수렴 장치가 없다. **`e49c613` 이전에도 동일한 사전 결함.** 지금은 절차로만 방어 중(§9) | `subscription_manager.py:92-103` |
+| 중간 | **`monDur` 타임존 미정규화** — `data_analyzer.py:132-138` 이 `evt_req.mon_dur` 를 naive/aware 정규화 없이 `datetime.now(timezone.utc)` 와 비교한다(`subscription_manager._is_expired:446-450` 은 정규화한다). 오프셋 없는 `monDur` 이 오면 첫 루프에서 `TypeError` 로 분석 태스크가 죽고, 유일한 예외 처리가 `except asyncio.CancelledError` 뿐이라 **조용히 사라진다** — GUI 에서 건강한 핸들러와 구분 불가. 두두원은 오프셋을 붙여 보내므로 현재 미발동 | `data_analyzer.py:132-138`, `:162-163` |
 
 ### 6.1 `13p_d` 구조적 결함 5종 — 자동 수리 불가
 
@@ -492,11 +513,21 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 
 **차단성 블로커는 없다.** 제어 루프는 관통됐고, 남은 것은 통보·검증·정리다.
 
-### ⭐ 가장 먼저 — 두두원에 §6 목록 전달
+### ⭐ 가장 먼저 — 두두원에 메일 발송 (초안 작성 완료)
 
-`notificationURI` 오타는 **해결됐다.** 남은 두두원 치명 2건은 **ISO8601 소수 초 파서**(패치 A 가 우회 중)와
-**`_powerEnergyConsInfos` 키 이름 오류**(§6.3 — 단일 최고가치)다. 그 다음이 §6.1 구조 결함 5종
-(패치 B 가 우회 중), 토큰표 회귀(§6.3), §6.2 하위 구독 ID 결손이다.
+**초안: `prototype/docs/dodo1-interop/두두원_수정요청_메일초안.md`** (커밋 `62170fc`).
+문서 맨 위의 표와 ⚠️ 블록은 내부 검토용이고, `## 제목` / `## 본문` 아래가 발송분이다.
+4건 구성 — ① ISO8601 소수 초(패치 A 회수) ② `_powerEnergyConsInfos` 키(본문 전체 유실)
+③ 단위 접미사 누락(패치 B 상당 부분 회수) ④ 구독 응답 ID(낮음·조건부).
+
+④ 에는 **반드시 붙여야 하는 경고**가 들어 있다: 두두원이 uuid 를 발급해 헤더로만 돌려주고
+내부 식별자를 `notifId` 로 남기면, NCOF 가 헤더 값을 우선 쓰기 때문에 **현재 동작하는 구독
+해지가 404 로 깨진다.** 발급한 uuid 를 `sub.subscription_id` 에 저장하고 해지 매칭에 포함해
+달라는 문장이 초안에 있다.
+
+③ 의 단위 형식은 규격 패턴을 확인해 **값 변환 없이 기본 단위만 붙이는 방식**으로 요청한다
+(`"150000000 bps"`). `BitRate`/`PacketRate`/`Volume` 패턴은 `TS29571…yaml:4132`/`:4148`/`:4163`
+이고 접두어가 `kpps`·`kB` 는 소문자, `Kbps` 는 대문자다.
 
 > ⚠️ **발송 전 §6.3 을 먼저 읽어라.** `serviveName`·`notifMethod`·`dlPeakThroughput` 은 두두원 잘못이 아니므로
 > 목록에서 빼야 하고, `_nodeAddrs`/`tai`/`ncgi` 는 "결함" 이 아니라 **"2026-05-26 규격 갱신 반영 요청"** 으로
