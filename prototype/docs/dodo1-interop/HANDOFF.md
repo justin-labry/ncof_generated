@@ -290,13 +290,14 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | **높음** | `-999` 센티넬 — 값 없으면 **필드 생략**이 규격 | `pdb`, `plr*`, `_delayUl`, `_maxRtt`, `totalVolume` 등 |
 | **높음** | 정수 필드에 소수 | `pdb: 0.45`, `_dlMaxPacketDelay: 20.74` |
 | **높음** | Volume 필드가 정수 → `"9000000000 B"` 형식 필요 | 바이트 단위 정규식 |
-| 중간 | `13p_d`: `timeStamp`→`timestamp` 오타, `_nodeAddrs` 배열/객체 불일치, `nrLocation.tai`/`ncgi` 누락, `nrCellId="cell-002"` 가 `^[A-Fa-f0-9]{9}$` 위반 | 자동 수리 불가 |
+| **높음** | `13p_d` 계열 구조적 결함 5종 → **§6.1 에 경로·건수·규격 근거 정리** | 자동 수리 불가, `13p_d` **100% 거절 중** |
 | 중간 | AF 템플릿과 RICF 템플릿의 값 생성 규칙이 서로 다름(`9_` 는 `-999`, `10_a` 는 소수) | 한 번에 고치려면 둘 다 |
 | 낮음 | `templates/send/` 의 공백 든 중복 파일 `8p_..._v1.0 _USER_DATA_USAGE_MEASURES.tmpl` 정리 | 참조되지 않는 잔재 |
 | 중간 | **제어 명령 수용 결과를 관측할 방법이 없다** — 수신 15F 는 `poc_test.recvJson`/`gnb_control*` 로만 들어가고 어디서도 SELECT 되지 않으며, `send_json/` 에도 안 남는다. 최소한 수신 덤프 1개라도 파일로 남겨 주면 연동 검증이 가능해진다 | 종단 확인 불가 |
 | 중간 | **HTTP 200 이 실제 gNB 제어 성공을 뜻하지 않는다** — `save_count` 는 MySQL INSERT 만으로 증가하고 SSH 셸아웃 결과를 반영하지 않는다. 셸아웃 실패를 응답 코드에 반영해 달라 | 무증상 실패 |
 | 낮음 | `13p_d` 의 `_powerState` 가 템플릿 하드코딩 `"ACTIVE"`(:149, :183). 제어 반영 상태를 여기에 실어 주면 NCOF 가 폐루프를 자체 검증할 수 있다 | 폐루프 검증 |
 | 낮음 | 400 응답에 사유를 실어 달라(현재 `{"error":"bad request"}` 고정, 사유는 stderr 에만) | 왕복 비용 |
+| **높음** | **하위 구독 응답에 구독 ID 가 없다** — 본문은 `{"result":"ok"}` 뿐이고 헤더는 `:status`/`content-type`/`server` 뿐(`http2_server.cpp:78-85`, `:257-271`). uuid4 를 발급해 **`Subscription-ID` 응답 헤더**로 실어 달라(본문 구조 변경 불필요). 저장소의 mock NF 3종과 NCOF 자신의 northbound 는 모두 이 헤더 규약을 지킨다 | **§6.2** — 고아 구독 누적 |
 
 ### NCOF 측 자체 결함 (두두원과 무관, 우리가 고칠 것)
 
@@ -305,6 +306,50 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | ~~높음~~ **해결** (`1335888`) | ~~14_e(PCF 향) 제어 본문이 템플릿의 하드코딩 값을 그대로 내보낸다~~ — `apply_qos_policy()` 가 봉투를 손대지 않아 `subscriptionId`/`notifCorrId`/`resourceUri` 와 타임스탬프 29곳이 템플릿 고정값(2026-03-01)으로 나갔다. `build_15f_cell_power()` 와 같은 시그니처로 맞추고 `sub_id`/`corr_id`/`decision_iso` 로 전부 덮어쓰도록 수정. **11:11 실기동 재확인: 잔존 0건, 양쪽 200** | `captured/14_e_control_NCOF_to_PCF_{BEFORE,AFTER}_envelope_fix.json` |
 | 높음 | metric 진동 (§5) — 한 구독의 두 UPF 스트림 중 "최신 UDUM" 하나만 골라 쓴다 | `data_analyzer.py:213-227` |
 | 중간 | `data_analyzer.py:184-185` 필터가 NEF/UPF 경계는 긋지만 **WLAN/비-WLAN 경계는 긋지 않는다** | 아래 §7 참조 |
+
+### 6.1 `13p_d` 구조적 결함 5종 — 자동 수리 불가
+
+**대상**: `/home/dodo1/SBI/app/templates/send/` 의 `13p_d_…v1.0.tmpl`, `…_POWER.tmpl`, `…_SIGNAL.tmpl` **3개 모두**
+**규격 근거**: `generated/nnef/openapi.yaml`(양측 합의 규격), 3GPP TS 29.571 / TS 38.413
+**실측**: 2026-09-09~09-10 RICF 통지 **689건** 수신분 (`logs/lenient_ingest/ledger.jsonl`)
+
+| # | JSON 경로 | 현재 값 | 규격 | 건수 |
+|---|---|---|---|---|
+| 1 | `eventNotifs[].timeStamp` | 키가 **`timestamp`**(소문자 s) | `timeStamp` — **필수**, 대소문자 구분 | 1,378 |
+| 2 | `eventNotifs[]._rfSignalInfos[]._nodeAddrs` | **배열** `[{…}]` | `$ref: AddrFqdn` — **단일 객체** | 1,378 |
+| 3 | `…_loc.nrLocation.tai` | **키 없음** | `NrLocation.required: [ncgi, tai]` | 1,378 |
+| 4 | `…_loc.nrLocation.ncgi` | UE1 에 **키 없음**(UE2 는 있음) | 위와 동일 | 689 |
+| 5 | `…_loc.nrLocation.ncgi.nrCellId` | `"cell-002"` | `^[A-Fa-f0-9]{9}$` (36비트 hex 9자리, TS 38.413 §9.3.1.7) | 689 |
+
+건수는 `689건 × (UE 2개 또는 이벤트 2종)` 으로 전부 정합한다. 값 형식 자체는 정상이므로 1번은 **키 이름만** 고치면 된다.
+
+> ⚠️ 2번은 `_` 접두 **확장 필드**다. "복수 노드를 실어야 한다"는 의도라면 배열이 맞고 **우리 규격/모델을 바꾸는 게 옳다.** 어느 쪽이 의도인지 회신을 받아야 한다 — 일방적으로 두두원 결함으로 단정하지 말 것.
+
+**왜 관대 수신이 못 고치는가**: `tai`/`ncgi` 의 TAC·셀 ID 를 지어낼 수 없고, `"cell-002"` 에서 올바른 hex 를 유도할 근거가 없으며, `_nodeAddrs` 는 첫 원소만 취해도 되는지 합의가 필요하다. 키 이름 오타(`timeStamp`)는 오탐 위험 때문에 추측 수리 대상에서 의도적으로 제외했다.
+
+**영향**: `13p_d` 는 **현재 100% 거절**된다. 나머지 통지(`8_`, `9_`, `10_a`, `11p_b`, `12p_c`)는 수리 후 정상 처리된다.
+
+### 6.2 하위 구독 응답의 구독 ID — mockup 과의 결정적 차이
+
+두두원 응답에는 ID 가 **본문에도 헤더에도 없다**. 그래서 `_send_external_subscription` 이 `None` 을 돌려주고,
+`subscription_handler.py:328` 의 `if external_sub_id:` 가 레코드를 통째로 버린다 → `external_subscriptions` 가 `[]`
+→ GUI 팬아웃 미표시 · 상태 미저장 · **구독 해지 영구 불가**(고아 구독 누적).
+
+| NF | 성공 응답 | ID 위치 |
+|---|---|---|
+| mock SMF `:9001` (4건) | 201 | 본문 `subId` **+** `Subscription-ID` 헤더 |
+| mock AF/RICF `:9002` (6건) | 201 | **`Subscription-ID` 헤더 전용** (본문 주입은 `simulation.py:232` 에 주석 처리) |
+| NCOF 자신 `:9000` | 201 | `Subscription-ID` 헤더 |
+| **두두원** | **200** | **없음** |
+
+**요청 사항**: uuid4 를 발급해 **`Subscription-ID` 응답 헤더**로 실어 달라 — 본문 구조를 바꾸지 않아도 되는 가장 작은 수정이고,
+6종 요청 형태에 모두 통한다. 참조 구현은 `nsmf-server/src/nsmf/impl/subscriptions_collection_api_impl.py:51-52, 73-77`.
+
+> 📌 **주의 — 이건 순수한 두두원 결함이 아니다.** 두두원은 요청 본문의 `notifId` 를 자기 `subscription_id` 로 채택하고
+> (`ncof_flow_subscription_handlers.cpp:53-54, 353-354, 446-447, 603-604, 681-682`), DELETE 도 `key‖subscription_id‖notif_id`
+> 셋 다 매칭한다(`ncof_flow_subscription_core.cpp:1207`). **즉 NCOF 는 해지에 필요한 값을 이미 스스로 만들어 갖고 있다.**
+> 2p 핸들러(`:202`)는 요청의 `subscriptionId` 를 읽는데 **NCOF 는 그걸 보내지 않는다**(`subId` 는 `null` 로만 나감).
+> 양측 수정으로 제안할 것. NCOF 측 폴백은 §8 참조.
 
 전체 원장: `logs/lenient_ingest/ledger.jsonl` (샘플은 `captured/lenient_ledger_sample.jsonl`)
 
