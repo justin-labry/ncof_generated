@@ -142,6 +142,27 @@ class SubscriptionHandler:
                         f"[{self.subscription_id}] {target.upper()} 로부터 ID 를 획득하지 못함 "
                         f"(Status: {response.status_code})."
                     )
+                    # 상대 NF 가 ID 를 전혀 주지 않으면(두두원 장비: 200 + {"result":"ok"})
+                    # 우리가 보낸 notifId 를 하위 구독 ID 로 삼는다. 이 폴백이 없으면
+                    # external_subscriptions 가 비어 구독 해지가 영구히 불가해진다.
+                    #   - 두두원은 요청 본문의 notifId 를 자기 subscription_id 로 채택하고
+                    #     (ncof_flow_subscription_handlers.cpp:53-54 등 6곳), DELETE 는
+                    #     key/subscription_id/notif_id 중 아무것이나 매칭한다
+                    #     (ncof_flow_subscription_core.cpp:1209) — 이 값으로 해지가 성립한다.
+                    #   - ID 를 제대로 주는 NF(mock SMF/AF/RICF, NCOF 자신)에는 이 가지가
+                    #     도달하지 않는다 — 그들은 성공 경로에서 항상 uuid4 를 헤더에 싣는다.
+                    # 빈 문자열은 None 으로 정규화한다 — 반환 계약이 str | None 이다.
+                    external_sub_id = getattr(req_body, "notif_id", None) or None
+                    if external_sub_id:
+                        logger.info(
+                            f"[{self.subscription_id}] {target.upper()} 하위 구독 ID 로 "
+                            f"요청 본문의 notifId 를 채택: {external_sub_id}"
+                        )
+                    else:
+                        logger.warning(
+                            f"[{self.subscription_id}] {target.upper()} 요청 본문에 notifId 도 "
+                            "없어 하위 구독을 추적할 수 없음 (해지 불가)."
+                        )
                 logger.info(f"[NCOF] --- [구독요청] ---> [{target.upper()}]")
                 return external_sub_id
         except (httpx.RequestError, json.JSONDecodeError) as e:
@@ -164,6 +185,13 @@ class SubscriptionHandler:
             )
             return False
 
+        # external_sub_id 를 percent-encoding 하지 말 것.
+        # notifId 폴백이 채택하는 값에는 ':' 와 '+' 가 들어 있고
+        # (예: NOTIFICATION_upf_2026-09-09T19:17:29.044648+09:00), 둘 다 RFC 3986 의
+        # 경로 세그먼트에 허용되는 문자다. quote() 를 씌우면 FastAPI 계열(mock NF)은
+        # 복호해서 맞추지만, 두두원은 경로 마지막 세그먼트를 원문 그대로 잘라
+        # 보관된 notif_id 와 문자열 비교하므로
+        # (ncof_flow_subscription_core.cpp:1112-1137) '%3A' 가 남아 404 로 조용히 실패한다.
         unsubscription_url = f"{nf_uri}/subscriptions/{external_sub_id}"
 
         try:
@@ -254,17 +282,13 @@ class SubscriptionHandler:
                 f"  response: {response.text}"
             )
 
-    async def start(self):
-        """
-        핸들러를 시작한다.
-        1. 데이터 수집을 위한 외부 NF 구독 요청 전송
-        2. 주기적 분석 태스크 시작 (DataAnalyzer 에 위임)
-        """
-        self.is_running = True
-        logger.info(
-            f"[{self.subscription_id}] 구독 핸들러 시작. 외부 NF 구독 절차 실행."
-        )
+    async def teardown_stale_external_subscriptions(self) -> None:
+        """상태 파일에서 복원된, 이전 실행이 남긴 하위 구독을 해지한다.
 
+        start() 앞에서 호출되지만 별도 진입점으로 둔다 — 만료된 저장 구독처럼
+        복원하지 않고 버리는 경우에도 하위 NF 에 남은 구독은 정리해야 하고,
+        그때는 start() 를 부를 수 없기 때문이다.
+        """
         for sub_info in self._stale_external_subscriptions:
             external_sub_id = sub_info.get("external_sub_id")
             if external_sub_id:
@@ -272,6 +296,22 @@ class SubscriptionHandler:
                     sub_info["target"], external_sub_id
                 )
         self._stale_external_subscriptions.clear()
+
+    async def start(self, stagger_relations: bool = True):
+        """
+        핸들러를 시작한다.
+        1. 데이터 수집을 위한 외부 NF 구독 요청 전송
+        2. 주기적 분석 태스크 시작 (DataAnalyzer 에 위임)
+
+        stagger_relations=False 는 Phase 2 의 GUI 연출 대기를 건너뛴다.
+        복원 경로에서 쓴다 — 구독 1건당 4~6초씩 쌓여 기동 시간을 밀어올리기 때문이다.
+        """
+        self.is_running = True
+        logger.info(
+            f"[{self.subscription_id}] 구독 핸들러 시작. 외부 NF 구독 절차 실행."
+        )
+
+        await self.teardown_stale_external_subscriptions()
 
         subscription_requests = build_subscription_requests(
             self.subscription_id, self.subscription
@@ -299,7 +339,8 @@ class SubscriptionHandler:
 
         # Phase 2: 성공한 구독에 대해 relation 을 지연 시간을 두고 순차적으로 추가 (시각적 효과)
         if self._relation_manager is not None:
-            await asyncio.sleep(1)
+            if stagger_relations:
+                await asyncio.sleep(1)
             for target, subscription, external_sub_id in successful:
                 if target.lower() == "af" or target.lower() == "ricf":
                     await self._relation_manager.add_relation(
@@ -309,7 +350,8 @@ class SubscriptionHandler:
                         data=jsonable_encoder(subscription),
                         sub_id=external_sub_id + "_nef",
                     )
-                    await asyncio.sleep(0.5)
+                    if stagger_relations:
+                        await asyncio.sleep(0.5)
                     await self._relation_manager.add_relation(
                         from_node="nef",
                         to_node=target.lower(),
@@ -326,7 +368,8 @@ class SubscriptionHandler:
                         sub_id=external_sub_id,
                     )
 
-                await asyncio.sleep(0.5)
+                if stagger_relations:
+                    await asyncio.sleep(0.5)
 
         if self.subscription.evt_req and self.subscription.evt_req.rep_period:
             await self._analyzer.start()

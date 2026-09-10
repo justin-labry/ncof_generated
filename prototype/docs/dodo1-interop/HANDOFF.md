@@ -1,6 +1,6 @@
 # NCOF ↔ 두두원(DoDoWon) SBI 연동 — 작업 인수인계
 
-**작성:** 2026-09-09 24:00 KST · **갱신:** 2026-09-10 19:00 KST
+**작성:** 2026-09-09 24:00 KST · **갱신:** 2026-09-10 21:30 KST
 **작업 브랜치:** `fix/dodo1-timestamp-fractional-seconds` (main 에서 분기, main 대비 10 커밋 앞섬)
 
 ```
@@ -18,7 +18,12 @@ f614abd  fix(sbi): notificationURI 오타 IP 발송 직전 치환 (패치 C, TEM
 e33cb89  (main 이 있던 지점)
 ```
 
-미커밋으로 남긴 것은 `prototype/device_info.json` 뿐이다(두두원 IP/포트를 담은 로컬 환경 설정).
+미커밋 변경:
+- `prototype/device_info.json` — 두두원 IP/포트를 담은 로컬 환경 설정 (**커밋하지 말 것**)
+- **§8 의 8** — 고아 하위 구독 해소(notifId 폴백) + 저장 구독 복원 재활성화.
+  `core/subscription_handler.py`, `core/subscription_manager.py`, `main.py` + 테스트 3파일.
+  **2026-09-10 22:31 실기동 검증 완료** — `external_subscriptions` 가 처음으로 채워지고
+  GUI 하향 간선 16건이 등장했다. 상세는 §8 의 8.
 
 **상태: 제어 루프가 닫혔고, 임시 패치 C 는 회수 완료.** 2026-09-10 09:39 에 전 구간을 관통했고,
 17:16 에 **두두원이 `notificationURI` 오타를 고쳐** 패치 C 없이 제어 명령이 양쪽 200 으로 도달함을
@@ -235,7 +240,7 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 > `_notify_subscriber()` 가 NCOF 에서 **구독자 제공 URI 로 실제 요청을 보내는 유일한 지점**이다.
 > `NncofEventsSubscription` 에는 `altNotifFqdns`/`altNotifIpAddrs` 필드 자체가 없고
 > (그건 NCOF 가 *보내는* NSMF 모델에만 있으며 NCOF 는 채우지 않는다),
-> 나머지 읽기 지점 2곳(`subscription_manager.py:333`, `utils.py:135→:187`)은 GUI 에코일 뿐이다.
+> 나머지 읽기 지점 2곳(`subscription_manager.py:335`, `utils.py:131→:186`)은 GUI 에코일 뿐이다.
 > 따라서 **다른 곳에 오타 IP 가 남아 요청이 새는 경로는 없다.**
 
 ---
@@ -322,7 +327,7 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | 중간 | **HTTP 200 이 실제 gNB 제어 성공을 뜻하지 않는다** — `save_count` 는 MySQL INSERT 만으로 증가하고 SSH 셸아웃 결과를 반영하지 않는다. 셸아웃 실패를 응답 코드에 반영해 달라 | 무증상 실패 |
 | 낮음 | `13p_d` 의 `_powerState` 가 템플릿 하드코딩 `"ACTIVE"`(:149, :183). 제어 반영 상태를 여기에 실어 주면 NCOF 가 폐루프를 자체 검증할 수 있다 | 폐루프 검증 |
 | 낮음 | 400 응답에 사유를 실어 달라(현재 `{"error":"bad request"}` 고정, 사유는 stderr 에만) | 왕복 비용 |
-| **높음** | **하위 구독 응답에 구독 ID 가 없다** — 본문은 `{"result":"ok"}` 뿐이고 헤더는 `:status`/`content-type`/`server` 뿐(`http2_server.cpp:78-85`, `:257-271`). uuid4 를 발급해 **`Subscription-ID` 응답 헤더**로 실어 달라(본문 구조 변경 불필요). 저장소의 mock NF 3종과 NCOF 자신의 northbound 는 모두 이 헤더 규약을 지킨다 | **§6.2** — 고아 구독 누적 |
+| ~~높음~~ **NCOF 측 자체 해소** (§8 의 8) | **하위 구독 응답에 구독 ID 가 없다** — 본문은 `{"result":"ok"}` 뿐이고 헤더는 `:status`/`content-type`/`server` 뿐(`http2_server.cpp:78-85`, `:257-271`). uuid4 를 발급해 **`Subscription-ID` 응답 헤더**로 실어 달라(본문 구조 변경 불필요). 저장소의 mock NF 3종과 NCOF 자신의 northbound 는 모두 이 헤더 규약을 지킨다 | **§6.2** — 고아 구독 누적 |
 
 ### NCOF 측 자체 결함 (두두원과 무관, 우리가 고칠 것)
 
@@ -357,7 +362,7 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 ### 6.2 하위 구독 응답의 구독 ID — mockup 과의 결정적 차이
 
 두두원 응답에는 ID 가 **본문에도 헤더에도 없다**. 그래서 `_send_external_subscription` 이 `None` 을 돌려주고,
-`subscription_handler.py:328` 의 `if external_sub_id:` 가 레코드를 통째로 버린다 → `external_subscriptions` 가 `[]`
+`subscription_handler.py:290` 의 `if external_sub_id:` 가 레코드를 통째로 버린다 → `external_subscriptions` 가 `[]`
 → GUI 팬아웃 미표시 · 상태 미저장 · **구독 해지 영구 불가**(고아 구독 누적).
 
 | NF | 성공 응답 | ID 위치 |
@@ -366,6 +371,10 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | mock AF/RICF `:9002` (6건) | 201 | **`Subscription-ID` 헤더 전용** (본문 주입은 `simulation.py:232` 에 주석 처리) |
 | NCOF 자신 `:9000` | 201 | `Subscription-ID` 헤더 |
 | **두두원** | **200** | **없음** |
+
+> ✅ **NCOF 측은 2026-09-10 에 자체 해소했다** (§8 의 8). 응답에 ID 가 없으면 요청 본문의 `notifId` 를
+> 하위 구독 ID 로 채택한다. 아래 요청은 **여전히 규격상 옳지만 차단성은 아니다** — 게다가 두두원에는
+> uuid 발급기가 아예 없어(§7) 신규 기능 개발이 된다. 우선순위를 내려도 된다.
 
 **요청 사항**: uuid4 를 발급해 **`Subscription-ID` 응답 헤더**로 실어 달라 — 본문 구조를 바꾸지 않아도 되는 가장 작은 수정이고,
 6종 요청 형태에 모두 통한다. 참조 구현은 `nsmf-server/src/nsmf/impl/subscriptions_collection_api_impl.py:51-52, 73-77`.
@@ -470,6 +479,9 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | `_nodeAddrs` 는 배열이 맞다 | ❌ **객체가 맞다.** `ncof_yaml` 커밋 `26057fa`(2026-05-26) "fix _nodeAddrs array to object" 로 확정. 배열로 보이는 파일은 5/4 자 worktree 스냅샷이다 |
 | `notificationMethod` 는 NEF 구독에서도 맞는 이름이다 | ❌ NEF 는 `notifMethod` 다. 두두원이 규격대로 읽고 우리 샘플이 틀렸다(§6.3) |
 | 단위 없는 정수·센티넬은 규격 샘플에도 있다 | ❌ `8_`/`12p_c` 샘플은 깨끗하다(단위 214개 전부 일치, 센티넬 0건). 두두원 렌더링 단계의 토큰표 회귀다(§6.3) |
+| 두두원이 uuid4 로 구독 ID 를 발급한다(발급만 안 실어 준다) | ❌ **발급기 자체가 없다.** `src/`+`include/` 전체에 uuid·random 생성 코드 0건. `uuid` 가 걸리는 8곳은 전부 하드코딩 리터럴(`ncof_flow_report_common.cpp:458-461`, `ncof_send_templates.cpp:207,254-255,271` → `pcf-uuid-001` 등). 두두원 자신의 구독도 `notifCorrId` 하드코딩(`NOTIFICATION_2026-03-01T12:00:00+09:00_1`)이고 PCF·RICF 가 같은 값이다 → §6.2 의 `Subscription-ID` 헤더 요청은 **신규 기능 개발**이다 |
+| 해지 URL 의 `:`/`+` 는 percent-encoding 해야 안전하다 | ❌ **인코딩하면 두두원 해지가 깨진다.** httpx 0.28.1 → Starlette ASGI 왕복 실측: 그대로 보내면 마지막 경로 세그먼트가 notifId 와 바이트 일치, `quote(safe='')` 를 씌우면 `%3A` 가 남는다. FastAPI 는 복호하지만 두두원은 원문 그대로 잘라 비교하므로(`ncof_flow_subscription_core.cpp:1112-1137`) 404 로 조용히 실패한다. `:`/`+` 는 RFC 3986 경로 세그먼트 허용 문자다 |
+| `main.py:88` 은 주석만 해제하면 된다 | ❌ **알려진 기동 실패가 되살아난다.** 복원은 구독 1건당 수 초가 걸리고 `lifespan` 안에서 await 하면 hypercorn 기동 타임아웃(60초)에 걸려 **구독 12건에서 기동 실패**(실측). 게다가 notifId 폴백이 들어가면 Phase 2 연출 대기가 구독당 4~6초로 늘어 더 빨리 걸린다 → 백그라운드 태스크로 분리해야 한다 |
 
 > §3 의 `Detect_Ncof_Recv_Json_Type()` 인용과 "`(void)path;` 로 경로를 폐기한다" 는 서술은
 > **2026-09-10 에 정정됐다**(§3 의 📌 참조). 14/15F 분기 누락과, 5/5p 분기만은 경로를 읽는다는 점.
@@ -530,15 +542,96 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
    패치 C 제거 후 파일이 도입 이전 블롭과 동일함까지 확인. 상세는 §4.
 7. 연동이 안정화되면 **관대 수신 계층 제거** — `NCOF_LENIENT_INGEST` 를 끄고,
    최종적으로 `core/lenient_ingest.py` 와 `main.py` 의 2줄을 삭제. (패치 B)
+8. ~~**고아 하위 구독 해소 + 저장 구독 복원 재활성화**~~ — **완료 (2026-09-10, 미기동 검증)** ↓
+
+#### 8 의 상세 — 고아 하위 구독 해소 (2026-09-10)
+
+**실기동 검증 완료 (2026-09-10 22:31, MODE=DEVICE, 두두원 실장비).**
+
+| 확인 지점 | 이전 | 이후 |
+|---|---|---|
+| 하위 구독 ID 획득 | `ID 를 획득하지 못함` 10건, 채택 0건 | `요청 본문의 notifId 를 채택` **10/10** (`notifId 도 없음` 0건, 연결 오류 0건) |
+| `external_subscriptions` | 0건 (구독 2건 모두 빈 배열) | **10건** (PCF 구독 4 + RICF 구독 6), 상태 파일에도 저장됨 |
+| GUI 간선(`/api/subscriptions/relations`) | 2건 — 상향 `pcf→ncof`, `ricf→ncof` 뿐 | **18건** — `ncof→smf`×4, `ncof→nef`×6, `nef→af`×3, `nef→ricf`×3 이 추가 |
+| 제어 루프 | (동일) | 22:32:30 PCF · 22:32:38 RICF 발송, `제어명령 실패` 0건, `_cellPowerState: DEEP_SLEEP` |
+| 잘못된 해지 발송 | — | 0건 (새 상태 파일이라 stale 대상이 없음 — 의도대로) |
+
+채택된 ID 예: `NOTIFICATION_upf_2026-09-10T22:31:26.057728+09:00` (10건 전부 서로 다름).
+`13p_d` 422 거절 1건은 §6.1 대로 의도된 것이고, 분석 메트릭이 `0.0`/`150.0` 을 오가는 것은
+§5 의 미결 9번(metric 진동)으로 이번 수정 범위가 아니다.
+
+> ⚠️ **검증 시점의 기동 위치.** 이 검증은 워크트리
+> (`.claude/worktrees/ncof-dodo1-sbi-interop-dc47e5/prototype/nncof-server`)에서 띄운 것이다
+> — 변경이 아직 커밋되지 않았기 때문이다. 워크트리 `prototype/device_info.json` 에 두두원 주소를
+> 복사했고(**커밋 금지**), `uv sync --frozen` 으로 워크트리 venv 를 채웠다(`uv.lock` 무변경).
+> 본 체크아웃의 `data/ncof_state.json`(구독 2건, `external_subscriptions: []`)은 손대지 않았다.
+
+| 파일 | 변경 |
+|---|---|
+| `core/subscription_handler.py` | 추출 체인의 `if not external_sub_id:` 안에 **요청 본문 `notif_id` 폴백** 추가. 기존 "ID 를 획득하지 못함" 경고는 유지(비순응 사실을 숨기지 않는다). 빈 문자열은 `None` 으로 정규화 |
+| 같은 파일 | stale 해지 루프를 `teardown_stale_external_subscriptions()` 로 분리 — 만료 구독처럼 `start()` 를 부를 수 없는 경우에도 정리할 수 있게 |
+| 같은 파일 | `start(stagger_relations=True)` 파라미터 추가. Phase 2 의 GUI 연출 대기를 끌 수 있다 |
+| 같은 파일 `_send_external_unsubscription` | 코드 변경 없음 — **percent-encoding 금지**를 근거와 함께 주석으로 고정 |
+| `core/subscription_manager.py` | 만료 저장 구독도 `_teardown_saved_external_subscriptions()` 로 **하위 구독을 해지한 뒤** 버린다 |
+| 같은 파일 | `_pending_restore` 도입 — 복원 도중의 상태 저장이 **아직 복원하지 않은 항목을 파일에서 지우는** 문제 차단 |
+| 같은 파일 | 복원은 `start(stagger_relations=False)` 로 호출 |
+| 같은 파일 `shutdown()` | `list(...)` 스냅샷 순회 — 복원 태스크가 삽입 중이면 `RuntimeError: dictionary changed size` 로 종료가 중단돼 httpx 클라이언트가 누수된다 |
+| `main.py` | `restore_persisted_subscriptions()` 재활성화 + **백그라운드 태스크로 분리**, 예외 로깅 헬퍼, 종료 시 취소·회수 |
+
+**왜 notifId 폴백이 맞는 해법인가** — 두두원은 요청 본문의 notifId 를 자기 `subscription_id` 로 채택하고
+(`ncof_flow_subscription_handlers.cpp:53-54` 등 6곳), DELETE 는 body `subscriptionId`→`notifId`→`id`→
+**경로 마지막 세그먼트** 순으로 ID 를 찾아(`ncof_flow_subscription_core.cpp:1147-1183`)
+key/subscription_id/notif_id 중 아무것이나 매칭한다(`:1209`). 응답도 200 `{"result":"deleted"}` /
+404 `{"error":"subscription not found"}` 로 갈려 **성공 판별이 가능**하다.
+mock NF 3종은 성공 경로에서 항상 uuid4 를 헤더에 실으므로 이 폴백은 **그쪽으로는 도달하지 않는다**.
+
+**남은 결정 사항 (사용자 판단 필요)**
+
+1. **중복 구독 트리** — 두두원을 NCOF 와 같이 재기동하면 구독이 두 벌이 된다(위 "기동 시 주의").
+   지금은 절차로 막았다. `create_subscription` 에 중복 제거를 넣을지는 미결 —
+   "같은 구독" 의 기준(`consNfInfo.nfId` + `notificationURI` + 이벤트 집합?)을 정해야 한다.
+2. **하위 구독 POST 응답이 4~6초로 늘어난다** — 폴백으로 Phase 2 의 연출 대기가 실제로 돌기 시작한다
+   (이전에는 ID 가 없어 `successful` 이 비어 루프 자체가 안 돌았다). 복원 경로는 껐지만
+   **두두원이 보내는 실구독 응답은 그만큼 느려진다.** 두두원 `http2_client.cpp` 에 타임아웃 설정이
+   **0건**이라 두두원이 끊지는 않지만, 연출 대기를 응답 경로에서 아예 빼려면 별도 결정이 필요하다.
+3. **기존 고아는 회수할 수 없다** — 현재 상태 파일의 구독 2건은 `external_subscriptions: []` 라서
+   첫 기동에서 해지할 대상이 없다. 이 수정은 **앞으로 생길 구독에만** 효과가 있고,
+   두두원에 이미 쌓인 고아는 두두원 재기동 등 장비 쪽 조치가 필요하다.
+4. **복원 창에서의 404** — 기동 직후 미복원 구독에 대한 `DELETE`/`PUT` 이 404 를 받고 그 뒤 되살아난다.
+   503 + `Retry-After` 로 바꾸는 건 northbound 의미 변경이라 착수하지 않았다.
+
+**테스트** (`prototype/nncof-server/tests/`)
+
+- `test_subscription_handler.py` +7건 — 폴백 발동/미발동(헤더·본문 ID 우선), 비-2xx·연결 실패에 유령 ID 없음,
+  notifId 부재, 해지 URL 의 `:`/`+` 원문 유지(재-`quote()` 방지 가드)
+- `test_main_lifespan.py` 신규 3건 — 복원이 기동을 막지 않음, 종료 시 회수 순서, 복원 실패 로깅.
+  **변형 검증**: `cancel()` 삭제 / `await` 회수 삭제 / 회수를 `shutdown()` 뒤로 이동 — 3가지 모두 실패한다
+- `test_subscription_restore.py` 신규 5건 — 만료 구독의 해지 선행, 재구독 전 stale 해지 순서,
+  복원 중 저장이 미복원 항목을 보존, 복원이 연출 대기를 끔. (오늘까지 이 함수는 테스트 0건이었다)
+
+> 전체 스위트의 실패 4건(`test_{individual_,}ncof_event*_api.py`)은 **사전 실패**다 —
+> 미수정 본 체크아웃에서도 같은 `NameError` 로 깨진다(생성 스텁이 주석 처리된 `client.request` 뒤에서 `response` 참조).
 
 ### 참고 — 기동 시 주의
 
-- `main.py:88` 의 `restore_persisted_subscriptions()` 는 **주석 처리돼 있다.** 저장 구독을 복원하지 않으므로
-  **NCOF 를 재기동하면 두두원도 재기동해야 한다** — 두두원은 `Send_First_PCF_to_NCOF`/
-  `Send_First_RICF_to_NCOF`(`main.cpp:199`, `:258`)에서 **기동 시 딱 한 번만** 구독을 보낸다.
+- ⚠️ **운영 절차가 바뀌었다 (2026-09-10).** `restore_persisted_subscriptions()` 가 **다시 켜졌고
+  백그라운드 태스크로 돈다**(`main.py` lifespan). 따라서 **NCOF 를 재기동할 때 두두원을 함께
+  재기동하지 말 것** — NCOF 가 저장 구독을 복원하는데 두두원이 기동 시 1회 구독
+  (`Send_First_PCF_to_NCOF`/`Send_First_RICF_to_NCOF`, `main.cpp:199`, `:258`)을 또 보내면
+  **구독 트리가 두 벌이 된다**. `create_subscription` 에 중복 제거가 없고
+  (`subscription_manager.py:79-101`) 수렴 장치도 없어서 팬아웃과 제어 명령 발송이 그대로 2배가 된다.
+  두두원을 재기동해야 하는 상황이라면 NCOF 상태 파일(`data/ncof_state.json`)을 먼저 비워라.
+- 복원은 기동을 막지 않는다 — 기동 직후 수십 초 동안은 저장 구독이 아직 안 올라와 있어
+  `GET /subscriptions`·GUI 목록이 불완전하게 보이고, 그 창에서 들어온 `DELETE`/`PUT` 은 404 를 받는다.
+  (복원이 그 뒤에 해당 구독을 되살리므로 그 창에서의 해지는 신뢰하지 말 것.)
 - `NCOF_LENIENT_INGEST=1` 를 빠뜨리면 통지가 전부 422 로 거절되고 루프가 돌지 않는다.
   기동 로그 첫머리의 `[LENIENT] 임시 관대 수신 계층 활성화` 배너로 확인할 것.
 - 장기 실행 시 fd 누수로 로그가 폭주하므로 `ulimit -n` 을 올려서 띄우는 편이 안전하다.
+- 🔴 **`MODE=DEVICE` 실기동은 반드시 본 체크아웃(`/home/labry/git/ncof_generated`)에서 하라.**
+  `nrf.py:13-23` 의 `_find_upwards` 가 `__file__` 기준으로 `device_info.json` 을 찾는다.
+  **커밋된 `prototype/device_info.json` 은 localhost mock 포트(`:9001`/`:9002`/`:9004`)만 담고 있고**,
+  두두원 주소(`10.254.173.46:55555-55558`)는 본 체크아웃의 **미커밋 사본에만** 있다.
+  `.claude/worktrees/*` 에서 띄우면 두두원이 아니라 mock 을 때리면서 200 을 정상으로 받는다 — 조용히 틀린다.
 
 ---
 

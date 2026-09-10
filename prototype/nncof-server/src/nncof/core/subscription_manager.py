@@ -55,6 +55,8 @@ class SubscriptionManager:
         self.subscriptions: Dict[str, SubscriptionHandler] = {}
         self.active_relations: list[Relation] = []
         self._state_store = JsonStateStore()
+        # 복원 대기 중인 저장 항목 — _export_state 가 함께 내보내 손실을 막는다.
+        self._pending_restore: Dict[str, Any] = {}
         self._initialized = True
 
     def _get_src_nf(self, nf_id: str) -> str | None:
@@ -412,8 +414,12 @@ class SubscriptionManager:
         )
 
     def _export_state(self) -> dict[str, Any]:
-        """현재 활성 구독을 JSON 저장 형식으로 변환한다."""
-        subscriptions: dict[str, Any] = {}
+        """현재 활성 구독을 JSON 저장 형식으로 변환한다.
+
+        복원이 진행 중이면 아직 손대지 않은 저장 항목을 그대로 함께 내보낸다.
+        그러지 않으면 복원 도중의 저장이 미복원 항목을 파일에서 지워 버린다.
+        """
+        subscriptions: dict[str, Any] = dict(self._pending_restore)
         for subscription_id, handler in self.subscriptions.items():
             subscriptions[subscription_id] = {
                 "subscription": handler.subscription.to_dict(),
@@ -443,9 +449,42 @@ class SubscriptionManager:
             mon_dur = mon_dur.replace(tzinfo=timezone.utc)
         return mon_dur <= datetime.now(timezone.utc)
 
+    async def _teardown_saved_external_subscriptions(
+        self,
+        subscription_id: str,
+        subscription: NncofEventsSubscription,
+        external_subscriptions: list[dict[str, Any]],
+    ) -> None:
+        """복구하지 않는 저장 구독의 하위 NF 구독을 해지한다.
+
+        만료 등으로 복구를 건너뛰면 이 항목은 곧 상태 파일에서도 사라진다.
+        그때 하위 NF 에 남은 구독까지 정리하지 않으면 해지에 필요한 ID 가 함께
+        사라져 영구 고아가 된다 — 하위 구독 ID 를 확보해 둔 의미가 없어진다.
+        """
+        if not external_subscriptions:
+            return
+
+        handler = self._build_handler(
+            subscription_id,
+            subscription,
+            stale_external_subscriptions=external_subscriptions,
+        )
+        try:
+            await handler.teardown_stale_external_subscriptions()
+        finally:
+            # 핸들러를 등록하지 않았으므로 httpx 클라이언트를 직접 회수해야 한다.
+            await handler.shutdown()
+
     async def restore_persisted_subscriptions(self) -> None:
         """유효한 저장 구독을 복원하고 하위 NF 구독과 분석 태스크를 재개한다."""
         state = self._state_store.load()
+
+        # 복원이 끝나기 전에 상태가 저장되면(통지 수신·제어 발송·서버 종료 등)
+        # _export_state 는 메모리에 올라온 핸들러만 내보낸다 — 아직 복원하지 않은
+        # 항목이 파일에서 지워져 영구 손실된다. 처리 전까지 원본을 들고 있다가
+        # _export_state 가 함께 내보내게 한다.
+        self._pending_restore = dict(state["subscriptions"])
+
         for subscription_id, saved in state["subscriptions"].items():
             logger.info(f"✔️ [{subscription_id}] 기존구독 복구 시작")
             try:
@@ -453,6 +492,11 @@ class SubscriptionManager:
                 if self._is_expired(subscription):
                     logger.info(
                         "[%s] 만료된 저장 구독을 복구하지 않음", subscription_id
+                    )
+                    await self._teardown_saved_external_subscriptions(
+                        subscription_id,
+                        subscription,
+                        saved.get("external_subscriptions", []),
                     )
                     continue
                 handler = self._build_handler(
@@ -476,15 +520,24 @@ class SubscriptionManager:
                     data=jsonable_encoder(subscription),
                     sub_id=subscription_id,
                 )
-                await handler.start()
+                # 복원 경로에서는 GUI 연출 대기를 건너뛴다. 구독 1건당 4~6초가
+                # 쌓여 hypercorn 기동 타임아웃까지 밀어올리기 때문이다.
+                await handler.start(stagger_relations=False)
                 logger.info("✔️ [%s] 기존구독 복구 완료", subscription_id)
             except Exception:
                 self.subscriptions.pop(subscription_id, None)
                 logger.exception("[%s] 저장 구독 복구 실패", subscription_id)
+            finally:
+                # 성공·만료·실패 어느 경우든 이 항목의 처리는 끝났다.
+                self._pending_restore.pop(subscription_id, None)
+        self._pending_restore.clear()
         await self.persist_state()
 
     async def shutdown(self) -> None:
         """서버 종료 전에 상태를 저장하고 핸들러의 로컬 자원을 해제한다."""
         await self.persist_state()
-        for handler in self.subscriptions.values():
+        # 스냅샷을 돌린다 — 복원 태스크가 아직 삽입 중이면 순회 도중 dict 가 커져
+        # RuntimeError 로 종료가 중단되고 나머지 핸들러의 httpx 클라이언트가
+        # 회수되지 않는다(이 코드베이스에는 fd 누수 이력이 있다).
+        for handler in list(self.subscriptions.values()):
             await handler.shutdown()
