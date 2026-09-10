@@ -635,15 +635,48 @@ mock NF 3종은 성공 경로에서 항상 uuid4 를 헤더에 실으므로 이 
 > 전체 스위트의 실패 4건(`test_{individual_,}ncof_event*_api.py`)은 **사전 실패**다 —
 > 미수정 본 체크아웃에서도 같은 `NameError` 로 깨진다(생성 스텁이 주석 처리된 `client.request` 뒤에서 `response` 참조).
 
+### 9. 재기동 조합별 절차 (2026-09-11 코드 검증)
+
+**중복의 원인은 복원이 아니라 중복 제거의 부재다.** `create_subscription`
+(`subscription_manager.py:92-103`)은 `str(uuid.uuid4())` 를 조건 없이 발급하고
+`self.subscriptions[subscription_id] = handler` 로 무조건 삽입한다 —
+`consNfInfo.nfId`·`notificationURI`·`notifCorrId`·`prevSub`·이벤트 집합 어느 것으로도 조회하지 않는다.
+`nf_id` 는 GUI 간선 라벨(`:94`, `:96`)에만 쓰인다. 이 코드는 **커밋 `e49c613` 이 건드리지 않았다.**
+
+| 재기동 | 결과 | 절차 |
+|---|---|---|
+| **NCOF 만** | ✅ 안전. 복원이 상향 구독을 같은 ID 로 되살리고, 낡은 하위 구독을 DELETE 한 뒤 재구독한다(실측 10/10 200) | 그냥 재기동. 두두원 손대지 말 것 |
+| **두두원 만** | ⚠️ NCOF 에 고아 핸들러 잔존 → 상향 2→4건, NCOF 기록상 하위 20건(장비 실재 10건). **`e49c613` 이전에도 동일했다** | 아래 "정리 절차" 로 고아 2건 해지, 또는 "청소 후 재기동" |
+| **둘 다** | ⚠️ 복원 2건 + 두두원 신규 2건 = 4건. 예전 코드에서는 정상이던 조합이 이제 해롭다 | "청소 후 재기동" 을 쓸 것 |
+
+**청소 후 재기동** (순서가 절대적이다 — 두두원은 기동 시 1회만 구독을 보내므로 NCOF 가 먼저 떠 있어야 한다):
+
+1. NCOF 정지 (pid 로 SIGTERM. `pkill -f`/`pgrep -f` 는 자기 명령줄까지 매칭해 셸이 죽는다 — `hypercor[n]` 처럼 회피 패턴을 쓸 것)
+2. 상태 파일 비우기 — **`data/ncof_state.json` 은 cwd 기준 상대 경로**(`persistence_store.py:20-22`)이므로 **기동 디렉터리의 것**을 지워야 한다
+3. NCOF 기동 후 `:9000` 리스닝 확인
+4. 두두원 기동
+
+**정리 절차 (이미 중복된 상태의 복구).** 고아 상향 구독을 northbound 로 해지하면 깨끗이 정리된다:
+`DELETE /subscriptions/{id}` → `delete_subscription`(`subscription_manager.py:128-171`) → `handler.stop()`
+→ `external_subscriptions` 순회 해지(장비에 없으면 404 인데 `_send_external_unsubscription` 이 404 를 성공으로
+처리한다) → relation 제거 → 상태 저장. **이 경로는 `e49c613` 이후에야 실효가 있다** — 이전에는
+`external_subscriptions` 가 항상 비어 DELETE 를 한 건도 보내지 않았다.
+어느 것이 고아인지는 `/api/handlers` 로 구분한다 — 생성 시각 필드는 없지만 `external_sub_id` 에
+ISO 타임스탬프가 박혀 있어(`NOTIFICATION_upf_2026-09-10T22:37:20…`) **오래된 쪽이 고아**다.
+
+> 📌 **정정.** 이 문서의 이전 판은 중복 시 "팬아웃과 제어 명령 발송이 그대로 2배가 된다" 고 적었다.
+> **제어 명령은 2배가 되지 않는다.** `generate_notification()`(`gnb2_rule_engine.py:47-49`)의
+> `if new_state == self.last_emitted_state: return None` 게이트가 PCF·RICF 양쪽 제어 본문 생성보다
+> **앞**에 있고, `data_analyzer.py:262-263` 이 `None` 이면 즉시 반환한다. 고아 핸들러는 얼어붙은
+> 데이터를 계속 분석하므로 판정이 바뀌지 않아 **최대 1회 더 내보낸 뒤 영구히 조용해진다.**
+> 실제로 2배가 되는 것은 상향 구독 건수·NCOF 기록상 하위 구독 수·GUI `ANALYZING` 펄스(2→4회/분)다.
+> (역설적으로 미결 7번 emit-on-change 결함이 여기서는 완충 장치로 작동한다.)
+
 ### 참고 — 기동 시 주의
 
 - ⚠️ **운영 절차가 바뀌었다 (2026-09-10).** `restore_persisted_subscriptions()` 가 **다시 켜졌고
-  백그라운드 태스크로 돈다**(`main.py` lifespan). 따라서 **NCOF 를 재기동할 때 두두원을 함께
-  재기동하지 말 것** — NCOF 가 저장 구독을 복원하는데 두두원이 기동 시 1회 구독
-  (`Send_First_PCF_to_NCOF`/`Send_First_RICF_to_NCOF`, `main.cpp:199`, `:258`)을 또 보내면
-  **구독 트리가 두 벌이 된다**. `create_subscription` 에 중복 제거가 없고
-  (`subscription_manager.py:79-101`) 수렴 장치도 없어서 팬아웃과 제어 명령 발송이 그대로 2배가 된다.
-  두두원을 재기동해야 하는 상황이라면 NCOF 상태 파일(`data/ncof_state.json`)을 먼저 비워라.
+  백그라운드 태스크로 돈다**(`main.py` lifespan). 재기동 조합별 절차는 아래 §8-9 를 볼 것.
+  요지: **NCOF 만 재기동하면 된다. 두두원을 함께 올리면 구독 트리가 두 벌이 된다.**
 - 복원은 기동을 막지 않는다 — 기동 직후 수십 초 동안은 저장 구독이 아직 안 올라와 있어
   `GET /subscriptions`·GUI 목록이 불완전하게 보이고, 그 창에서 들어온 `DELETE`/`PUT` 은 404 를 받는다.
   (복원이 그 뒤에 해당 구독을 되살리므로 그 창에서의 해지는 신뢰하지 말 것.)
