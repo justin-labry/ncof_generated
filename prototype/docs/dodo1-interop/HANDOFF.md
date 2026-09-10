@@ -355,7 +355,7 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | 높음 | metric 진동 (§5) — 한 구독의 두 UPF 스트림 중 "최신 UDUM" 하나만 골라 쓴다 | `data_analyzer.py:213-227` |
 | 중간 | `data_analyzer.py:184-185` 필터가 NEF/UPF 경계는 긋지만 **WLAN/비-WLAN 경계는 긋지 않는다** | 아래 §7 참조 |
 | ~~높음~~ **해결** (`e49c613`) | ~~`external_subscriptions` 가 항상 비어 고아 구독이 쌓인다~~ — 응답에 ID 가 없으면 요청 본문 `notifId` 를 채택. 실장비 해지 10/10 → 200 실증. §8 의 8 | `subscription_handler.py:141-165` |
-| **중간** | **중복 구독 제거가 없다** — `create_subscription`(`:92-103`)이 `uuid4()` 를 조건 없이 발급하고 무조건 삽입한다. 두두원이 재기동해 구독을 다시 보내면 고아 핸들러가 쌓이고 수렴 장치가 없다. **`e49c613` 이전에도 동일한 사전 결함.** 지금은 절차로만 방어 중(§9) | `subscription_manager.py:92-103` |
+| **중간** | **중복 구독 제거가 없다** — `create_subscription`(`:92-103`)이 `uuid4()` 를 조건 없이 발급하고 무조건 삽입한다. 두두원이 재기동해 구독을 다시 보내면 고아 핸들러가 쌓이고 수렴 장치가 없다. **`e49c613` 이전에도 동일한 사전 결함.** 지금은 절차로만 방어 중(§8.1) | `subscription_manager.py:92-103` |
 | 중간 | **`monDur` 타임존 미정규화** — `data_analyzer.py:132-138` 이 `evt_req.mon_dur` 를 naive/aware 정규화 없이 `datetime.now(timezone.utc)` 와 비교한다(`subscription_manager._is_expired:446-450` 은 정규화한다). 오프셋 없는 `monDur` 이 오면 첫 루프에서 `TypeError` 로 분석 태스크가 죽고, 유일한 예외 처리가 `except asyncio.CancelledError` 뿐이라 **조용히 사라진다** — GUI 에서 건강한 핸들러와 구분 불가. 두두원은 오프셋을 붙여 보내므로 현재 미발동 | `data_analyzer.py:132-138`, `:162-163` |
 
 ### 6.1 `13p_d` 구조적 결함 5종 — 자동 수리 불가
@@ -666,7 +666,7 @@ mock NF 3종은 성공 경로에서 항상 uuid4 를 헤더에 실으므로 이 
 > 전체 스위트의 실패 4건(`test_{individual_,}ncof_event*_api.py`)은 **사전 실패**다 —
 > 미수정 본 체크아웃에서도 같은 `NameError` 로 깨진다(생성 스텁이 주석 처리된 `client.request` 뒤에서 `response` 참조).
 
-### 9. 재기동 조합별 절차 (2026-09-11 코드 검증)
+### 8.1 재기동 조합별 절차 (2026-09-11 코드 검증)
 
 **중복의 원인은 복원이 아니라 중복 제거의 부재다.** `create_subscription`
 (`subscription_manager.py:92-103`)은 `str(uuid.uuid4())` 를 조건 없이 발급하고
@@ -706,7 +706,7 @@ ISO 타임스탬프가 박혀 있어(`NOTIFICATION_upf_2026-09-10T22:37:20…`) 
 ### 참고 — 기동 시 주의
 
 - ⚠️ **운영 절차가 바뀌었다 (2026-09-10).** `restore_persisted_subscriptions()` 가 **다시 켜졌고
-  백그라운드 태스크로 돈다**(`main.py` lifespan). 재기동 조합별 절차는 아래 §8-9 를 볼 것.
+  백그라운드 태스크로 돈다**(`main.py` lifespan). 재기동 조합별 절차는 §8.1 을 볼 것.
   요지: **NCOF 만 재기동하면 된다. 두두원을 함께 올리면 구독 트리가 두 벌이 된다.**
 - 복원은 기동을 막지 않는다 — 기동 직후 수십 초 동안은 저장 구독이 아직 안 올라와 있어
   `GET /subscriptions`·GUI 목록이 불완전하게 보이고, 그 창에서 들어온 `DELETE`/`PUT` 은 404 를 받는다.
