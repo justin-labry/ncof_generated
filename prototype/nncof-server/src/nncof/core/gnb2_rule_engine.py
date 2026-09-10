@@ -71,7 +71,9 @@ class Gnb2RuleEngine:
             "cell_power_15f": build_15f_cell_power(
                 new_state, decision_iso, sub_id, corr_id
             ),
-            "qos_policy_14e": apply_qos_policy(qos_template, new_state),
+            "qos_policy_14e": apply_qos_policy(
+                qos_template, new_state, decision_iso, sub_id, corr_id
+            ),
         }
 
 

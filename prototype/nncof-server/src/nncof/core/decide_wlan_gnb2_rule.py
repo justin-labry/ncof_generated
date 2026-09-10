@@ -327,8 +327,32 @@ def _is_on_gnb(policy_set: dict, gnb_value: str) -> bool:
     return False
 
 
-def apply_qos_policy(template: list[dict], state: str) -> list[dict]:
-    """Mutate (a copy of) a 14_e-shape template's qosParamSet.gbrDl/mbrDl per rule.
+def _stamp_one_set(policy_set: dict, start: str, stop: str, ordinal: int) -> None:
+    """한 qosPolAssistSet 의 시간창과 파라미터셋 id 를 이번 판정 기준으로 갱신한다."""
+    for key in ("qosPolTimeWin", "validityPeriod"):
+        win = policy_set.get(key)
+        if isinstance(win, dict):
+            win["startTime"] = start
+            win["stopTime"] = stop
+    qps = policy_set.get("qosParamSet")
+    if isinstance(qps, dict):
+        # 15f 의 _paramSetId 규칙(CELL_POWER_PARAM_SET-{start}_1)과 같은 형식.
+        qps["qosParamSetId"] = f"QOS_PARAM_SET-{start}_{ordinal}"
+
+
+def apply_qos_policy(
+    template: list[dict],
+    state: str,
+    decision_iso: str,
+    sub_id: str,
+    corr_id: str | None,
+) -> list[dict]:
+    """14_e 템플릿 사본에 이번 판정의 신원·시각을 찍고 qosParamSet.gbrDl/mbrDl 을 규칙대로 뒤집는다.
+
+    템플릿에는 subscriptionId·notifCorrId·resourceUri 와 29곳의 타임스탬프가 2026-03-01 고정값으로
+    박혀 있다. 이전 구현은 gbr/mbr 만 뒤집고 그 봉투를 그대로 내보내, PCF 가 받는 제어 명령이
+    실제 구독 id 도 현재 시각도 아닌 값을 달고 나갔다. build_15f_cell_power() 와 동일하게
+    호출자가 준 sub_id/corr_id/decision_iso 로 전부 덮어쓴다.
 
     Rules:
         - WLAN set:         gbr/mbr = HIGH    if DEEP_SLEEP   (Wi-Fi absorbs all)
@@ -337,12 +361,28 @@ def apply_qos_policy(template: list[dict], state: str) -> list[dict]:
                             gbr/mbr = HIGH    if ACTIVE       (NR full capacity)
         - NR + gNB1 set:    untouched (this rule never touches the primary cell)
     """
+    start, stop = _time_window(decision_iso)
     out = copy.deepcopy(template)
     for top in out:
+        top["subscriptionId"] = sub_id
+        top["notifCorrId"] = corr_id
+        top["resourceUri"] = f"{NCOF_RESOURCE_BASE}/{sub_id}"
         for ev in top.get("eventNotifications", []):
+            ev["timeStampGen"] = start
+            ev["start"] = start
+            ev["expiry"] = stop
+            data_window = (ev.get("anaMetaInfo") or {}).get("dataWindow")
+            if isinstance(data_window, dict):
+                data_window["startTime"] = start
+                data_window["stopTime"] = stop
             for info in ev.get("qosPolAssistInfos", []):
                 for assist in info.get("qosPolAssistInfo", []):
-                    for ps in assist.get("qosPolAssistSets", []):
+                    assist["tsStart"] = start
+                    assist["tsDuration"] = int(SUB_DURATION.total_seconds())
+                    for ordinal, ps in enumerate(
+                        assist.get("qosPolAssistSets", []), start=1
+                    ):
+                        _stamp_one_set(ps, start, stop, ordinal)
                         _flip_one_set(ps, state)
     return out
 
@@ -425,7 +465,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Always emit both notifications; downstream decides whether to fan out.
     cell_notif = build_15f_cell_power(new_state, decision_iso, sub_id, corr_id)
-    qos_notif = apply_qos_policy(qos_template, new_state)
+    qos_notif = apply_qos_policy(qos_template, new_state, decision_iso, sub_id, corr_id)
 
     print("===15f===")
     print(json.dumps(cell_notif, indent=2, ensure_ascii=False))
