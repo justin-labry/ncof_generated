@@ -8,6 +8,7 @@ import json
 import os
 from collections.abc import Awaitable, Callable
 from typing import Any, Literal
+from urllib.parse import urlsplit, urlunsplit
 
 import httpx
 from fastapi.encoders import jsonable_encoder
@@ -40,6 +41,33 @@ def _httpx_kwargs() -> dict:
         if _TLS_ENABLED
         else {"http1": False, "http2": True}
     )
+
+
+# TEMP(두두원 연동 우회) — 두두원이 notificationURI 를 고치면 딕셔너리를 비워 되돌린다.
+# 두두원 sbi_poc_app 이 구독에 실어 보내는 notificationURI 는
+#   PCF  http://10.254.73.46:55555/
+#   RICF http://10.254.73.46:55556/
+# 인데 실제 SBI 주소는 10.254.173.46 이다 — "173" 에서 "1" 이 빠진 한 글자 오타이며,
+# 10.254.73.46 은 존재하지 않는 호스트라 ping 조차 응답하지 않는다.
+# _notify_subscriber() 는 nrf 조회 없이 구독자가 준 URI 를 그대로 쓰기 때문에, 이 오타 하나로
+# 제어 명령이 전부 `All connection attempts failed` 로 유실된다(구독·통지·분석·판정은 전부 정상).
+# 두두원 회신을 기다리는 동안 종단 루프를 완주해 보기 위한 임시 치환이다.
+_DODO1_NOTIF_URI_REWRITE: dict[str, str] = {"10.254.73.46": "10.254.173.46"}
+
+
+def _rewrite_notif_uri(uri: str) -> str:
+    """TEMP: 오타 IP 를 실제 주소로 바꾼 URL 을 돌려준다(대상이 아니면 원본 그대로).
+
+    호스트 부분만 교체한다 — 경로·포트·스킴에 우연히 같은 문자열이 들어 있어도 건드리지 않는다.
+    """
+    if not _DODO1_NOTIF_URI_REWRITE:
+        return uri
+    parts = urlsplit(uri)
+    right = _DODO1_NOTIF_URI_REWRITE.get(parts.hostname or "")
+    if right is None:
+        return uri
+    netloc = right if parts.port is None else f"{right}:{parts.port}"
+    return urlunsplit(parts._replace(netloc=netloc))
 
 
 class SubscriptionHandler:
@@ -199,9 +227,19 @@ class SubscriptionHandler:
             logger.warning("notification_uri is missing")
             return
 
+        # TEMP: 발송 직전 URL 에만 치환을 적용한다. self.subscription.notification_uri 원본은
+        # 그대로 두어야 구독 조회 응답과 상태 파일에 두두원이 보낸 값이 보존되고, 두두원이 오타를
+        # 고치는 순간 별도 조치 없이 바른 주소가 쓰인다.
+        notification_uri = _rewrite_notif_uri(self.subscription.notification_uri)
+        if notification_uri != self.subscription.notification_uri:
+            logger.warning(
+                f"[{self.subscription_id}] TEMP 두두원 우회: 제어명령 대상 URI 치환 "
+                f"{self.subscription.notification_uri} -> {notification_uri}"
+            )
+
         try:
             response = await self._client.post(
-                self.subscription.notification_uri, json=ncof_control_event
+                notification_uri, json=ncof_control_event
             )
         except httpx.RequestError as e:
             logger.error(f"[{self.subscription_id}] 제어명령 전송 중 오류 발생: {e}")
