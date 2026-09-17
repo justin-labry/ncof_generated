@@ -63,17 +63,30 @@ def _generate_notif_id(type: str):
 # 감시 창(monitoring window) 기본 길이 — 요청에 monDur 가 없을 때만 사용
 DEFAULT_MON_DURATION = timedelta(hours=1)
 
-# TEMP(두두원 연동 우회) — 두두원 파서가 고쳐지면 False 로 되돌린다.
-# 두두원 sbi_poc_app 의 ISO8601 파서(ncof_flow_subscription_core.cpp:226)는
-#   sscanf(t, "%d-%d-%dT%d:%d:%d%c%d:%d")
-# 로 파싱하는데, 소수 초가 있으면 반환값이 9 가 아니라 8 이 되어 :245 의
-# `if (ret == 9)` 오프셋 보정이 통째로 건너뛰어진다. 결과적으로 KST 벽시계를
-# UTC 로 간주해 start_epoch 이 정확히 +9 시간 미래로 잡히고, 스케줄러가
-# next_send_epoch 을 그 시각으로 예약해 UPF 주기 리포트(8_ 계열)가 사실상
-# 오지 않는다. targetPeriod 를 싣는 구독은 SMF 향 2건뿐이라 증상이 UPF 에만 나타난다.
-_DODO1_NO_FRACTIONAL_SECONDS = True
 # 양측 시계 오차로 startTime 이 상대 기준 미래가 되어 창 밖으로 밀리는 것을 막는 마진.
+# **소수 초 우회와 무관한 별개 사안이므로 무조건 적용한다.** 규격상 무해하고
+# (startTime 이 60초 과거일 뿐), 두두원은 미래 start 를 거절하지 않고 전송만 미룬다
+# (ncof_flow_subscription_core.cpp 의 next_send_epoch 분기). 실측 시계 편차는 -0.034초.
 _DODO1_START_BACKDATE = timedelta(seconds=60)
+
+# TEMP(두두원 연동 우회) — **2026-09-17 회수.** 두두원이 파서를 고쳤다.
+#
+# (구) 두두원 sbi_poc_app 의 ISO8601 파서가
+#       sscanf(t, "%d-%d-%dT%d:%d:%d%c%d:%d")
+#      라, 소수 초가 있으면 %c 가 '.' 를 읽고 뒤의 %d 가 소수부를 삼켜 반환값이
+#      9 가 아니라 8 이 되었다. 그러면 `if (ret == 9)` 오프셋 보정이 통째로
+#      건너뛰어져 timegm() 이 KST 벽시계를 UTC 로 간주하고, start_epoch 이 정확히
+#      +9 시간 미래로 잡혀 스케줄러가 next_send_epoch 을 그 시각으로 예약한다.
+#      결과적으로 UPF 계열 주기 리포트(3/3p 의 8_·8p_, 7/7p 의 12_c·12p_c)가
+#      사실상 오지 않았다. targetPeriod 를 싣는 구독은 SMF 향 2건뿐이라
+#      증상이 UPF 에만 나타났다.
+# (신) 2026-09-17 10:02 빌드에서
+#       sscanf(t, "%d-%d-%dT%d:%d:%lf%c%d:%d") + sec = (int)sec_d
+#      로 수정됨. 동일 코드를 컴파일·실행해 소수 초 유무 **양쪽 다** ret==9 를
+#      유지하고 epoch 오차가 0초임을 확인했다(구 파서 대비 -32400초 델타).
+#
+# True 로 되돌리면 마이크로초를 다시 제거한다. 백데이트는 이 플래그와 무관하게 유지된다.
+_DODO1_NO_FRACTIONAL_SECONDS = False
 
 
 def _build_target_period(evt_req) -> TimeWindow:
@@ -93,10 +106,11 @@ def _build_target_period(evt_req) -> TimeWindow:
         if m > now:
             stop = m
 
-    start = now
+    # 시계 오차 마진은 플래그와 무관하게 항상 적용한다.
+    start = now - _DODO1_START_BACKDATE
     if _DODO1_NO_FRACTIONAL_SECONDS:
-        # 마이크로초를 제거하고 startTime 을 약간 과거로 민다.
-        start = (now - _DODO1_START_BACKDATE).replace(microsecond=0)
+        # 두두원 파서 우회: 마이크로초 제거 (2026-09-17 회수됨)
+        start = start.replace(microsecond=0)
         stop = stop.replace(microsecond=0)
 
     return TimeWindow(startTime=start, stopTime=stop)
