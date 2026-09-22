@@ -92,6 +92,59 @@
         "dp": 80,
         "proto": "TCP"
       }
+    },
+    {
+      "supi": "imsi-001010070000101",
+      "ueName": "UE1_GNB1",
+      "dnai": "dnai-ue1-gnb1-001",
+      "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-1",
+      "accessType": "3GPP_ACCESS",
+      "dodo1Filter": {
+        "packFiltIdUl": "filter-001-ul",
+        "packFiltIdDl": "filter-001-dl",
+        "ueIp": "192.168.101.10",
+        "peerIp": "192.168.100.192"
+      }
+    },
+    {
+      "supi": "imsi-001010070000102",
+      "ueName": "UE2_GNB2",
+      "dnai": "dnai-ue2-gnb2-001",
+      "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-2",
+      "accessType": "3GPP_ACCESS",
+      "dodo1Filter": {
+        "packFiltIdUl": "filter-002-ul",
+        "packFiltIdDl": "filter-002-dl",
+        "ueIp": "192.168.102.10",
+        "peerIp": "192.168.100.192"
+      }
+    },
+    {
+      "supi": "imsi-001010070000103",
+      "ueName": "UE3_N3IWF",
+      "dnai": "dnai-ue1-non3gpp-001",
+      "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-1",
+      "accessType": "NON_3GPP_ACCESS",
+      "dodo1Filter": {
+        "packFiltIdUl": "filter-003-ul",
+        "packFiltIdDl": "filter-003-dl",
+        "ueIp": "192.168.103.10",
+        "peerIp": "192.168.100.192"
+      }
+    },
+    {
+      "supi": "imsi-001010070000104",
+      "ueName": "UE4_N3IWF",
+      "dnai": "dnai-ue2-non3gpp-001",
+      "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-2",
+      "accessType": "NON_3GPP_ACCESS",
+      "dodo1Filter": {
+        "packFiltIdUl": "filter-004-ul",
+        "packFiltIdDl": "filter-004-dl",
+        "ueIp": "192.168.104.10",
+        "peerIp": "192.168.100.192"
+      }
     }
-  ]
+  ],
+  "dodo1FilterSource": "dodo1 라이브 DB SELECT (poc_test.traffic_filter_setting ⋈ ue_info_setting, ip_setting), 2026-09-22. ⚠️ ~/SBI/app/poc_test.sql 의 seed 값(192.168.105.x / 205.x, app_server 10.50.1.1)은 낡았다 — DB 를 신뢰하라. packFiltId 는 두두원 Validate_Nsmf_Traffic_Filter_Ips() 가 traffic_filter_setting 에서 조회하는 키라 문자 그대로 일치해야 하고, ueIp 는 UPLINK 의 from · DOWNLINK 의 to 위치에 와야 한다."
 }

@@ -166,18 +166,80 @@ def _build_event_filter(
     return event_filter
 
 
+def _build_dodo1_traffic_filter(supi: str, dodo1: dict) -> List[FlowInformation]:
+    """두두원 `Validate_Nsmf_Traffic_Filter_Ips()` 를 통과하는 필터 2건을 만든다.
+
+    두두원(2026-09-22 빌드)은 `3_` 구독의 모든 trafficFilter 에 대해
+    `ncof_flow_subscription_handlers.cpp` 에서 이렇게 검사한다:
+
+      1. `SELECT ip FROM traffic_filter_setting WHERE pack_filt_id=?` — 없으면 400
+      2. flowDescription 에서 `from <IPv4>[/len][ port] to <IPv4>` 를 정규식으로 추출
+      3. UPLINK 는 from, DOWNLINK 는 to 가 1번의 ip 와 **일치해야** 한다
+
+    따라서 packFiltId 는 두두원 DB 의 키와 문자 그대로 같아야 하고, UE IP 는
+    방향에 따라 from/to 중 올바른 쪽에 와야 한다. 값의 출처는
+    `supi_to_ip_mapping_info.json` 의 `dodo1Filter` 이며 두두원 라이브 DB 에서 떠 온 것이다.
+    """
+    ue_ip = dodo1["ueIp"]
+    peer_ip = dodo1["peerIp"]
+
+    # proto 는 `ip`(전체) 로 둔다 — 두두원도 자기 리포트에 같은 형식을 쓴다.
+    # 포트를 붙이지 않아도 위 2번 정규식은 통과한다.
+    tf_uplink = FlowInformation()
+    tf_uplink.flow_description = f"permit in ip from {ue_ip}/32 to {peer_ip}/32"
+    tf_uplink.pack_filt_id = dodo1["packFiltIdUl"]
+    tf_uplink.packet_filter_usage = False
+    tf_uplink.flow_direction = "UPLINK"
+
+    tf_downlink = FlowInformation()
+    tf_downlink.flow_description = f"permit out ip from {peer_ip}/32 to {ue_ip}/32"
+    tf_downlink.pack_filt_id = dodo1["packFiltIdDl"]
+    tf_downlink.packet_filter_usage = False
+    tf_downlink.flow_direction = "DOWNLINK"
+
+    logger.debug(
+        "[%s] trafficFilter: %s/%s ueIp=%s",
+        supi,
+        tf_uplink.pack_filt_id,
+        tf_downlink.pack_filt_id,
+        ue_ip,
+    )
+    return [tf_uplink, tf_downlink]
+
+
 def _build_traffic_filter(supi: str, use_any_ue: bool = False) -> List[FlowInformation]:
+
+    # use_any_ue 경로(RICF WLAN_PERFORMANCE → 두두원 7p)는 필터 검증을 타지 않는다.
+    # 기존 동작을 그대로 둔다.
+    if use_any_ue:
+        permit_rules = ["permit in ip from any to any", "permit in ip from any to any"]
+        return _build_legacy_traffic_filter(permit_rules)
 
     supi_info = get_mapping_by_supi(supi)
 
-    if supi_info is not None and supi_info["flowInfo"] is not None:
-        permit_rules = _convert_flow_info_to_permit_rules(supi_info["flowInfo"])
-    else:
-        permit_rules = ["permit in ip from any to any", "permit in ip from any to any"]
+    if supi_info is not None and supi_info.get("dodo1Filter") is not None:
+        return _build_dodo1_traffic_filter(supi, supi_info["dodo1Filter"])
 
-    if use_any_ue:
-        permit_rules = ["permit in ip from any to any", "permit in ip from any to any"]
+    if supi_info is not None and supi_info.get("flowInfo") is not None:
+        # mockup 경로. mock NF 는 필터를 검증하지 않으므로 기존 crc32 방식을 유지한다.
+        return _build_legacy_traffic_filter(
+            _convert_flow_info_to_permit_rules(supi_info["flowInfo"])
+        )
 
+    # 매핑에 없는 SUPI. 예전에는 `permit in ip from any to any` 로 폴백했는데,
+    # 두두원 2026-09-22 빌드는 그 본문을 **구독 전체 400** 으로 거절한다
+    # (packFiltId 가 DB 에 없고 flowDescription 에 IP 가 없어 정규식도 실패).
+    # 조용히 400 을 맞느니 여기서 시끄럽게 남기고 필터를 빼는 편이 진단이 쉽다.
+    logger.error(
+        "[%s] trafficFilter 를 만들 수 없습니다 — supi_to_ip_mapping_info.json 에 "
+        "이 SUPI 의 dodo1Filter/flowInfo 가 없습니다. 두두원이 구독을 400 으로 거절합니다.",
+        supi,
+    )
+    return []
+
+
+def _build_legacy_traffic_filter(permit_rules: List[str]) -> List[FlowInformation]:
+    """mockup·any-UE 경로용 기존 방식(packFiltId = permit 규칙의 crc32)."""
     tf_uplink = FlowInformation()
     tf_uplink.flow_description = permit_rules[0]
     tf_uplink.pack_filt_id = str(_generate_flow_id_from_rule(permit_rules[0]))
