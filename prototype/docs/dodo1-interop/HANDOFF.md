@@ -1,11 +1,16 @@
 # NCOF ↔ 두두원(DoDoWon) SBI 연동 — 작업 인수인계
 
-**작성:** 2026-09-09 24:00 KST · **갱신:** 2026-09-22 20:20 KST
-**작업 브랜치:** `fix/dodo1-timestamp-fractional-seconds` (main 에서 분기, main 대비 **24 커밋 앞섬**. main 은 2026-09-09 21:31 에 `53e8068` 로 ff 된 뒤 그대로여서 분기점이 곧 main 의 끝이다 — 뒤처진 커밋 0)
-워크트리 브랜치 `claude/ncof-dodo1-sbi-interop-dc47e5` 는 `b7622f8` 에 멈춰 있다 — **두 브랜치 HEAD 는 더 이상 같지 않다**(본 체크아웃이 **7 커밋** 앞섬). 최신은 본 체크아웃 쪽이다.
+**작성:** 2026-09-09 24:00 KST · **갱신:** 2026-09-29 19:40 KST (9/28 두두원 3라운드 빌드 검증·재연동 반영)
+**작업 브랜치:** `fix/dodo1-timestamp-fractional-seconds` (main 에서 분기, main 대비 **29 커밋 앞섬**(이번 갱신 커밋 포함). main 은 2026-09-09 21:31 에 `53e8068` 로 ff 된 뒤 그대로여서 분기점이 곧 main 의 끝이다 — 뒤처진 커밋 0)
+워크트리 브랜치 `claude/ncof-dodo1-sbi-interop-dc47e5` 는 `b7622f8` 에 멈춰 있다 — **두 브랜치 HEAD 는 더 이상 같지 않다**(본 체크아웃이 **12 커밋** 앞섬 — 이번 갱신 커밋 포함). 최신은 본 체크아웃 쪽이다.
 
 ```
-(HEAD)   fix(sbi): packFiltId·flowDescription 을 두두원 traffic_filter_setting 에 정합  0160b92
+(HEAD)   docs(dodo1): 9/28 3라운드 빌드 검증·재연동 + 12p_c 처방 정정  (이번 커밋)
+ae40706  docs(dodo1): 9/22 세션 종료 기록 + gNB 전력값 요청 + 셧다운 레시피
+443a0b3  docs(dodo1): gNB2 SSH 제어가 9/22 빌드에서 의도적으로 비활성화됨
+d9bc08d  docs(dodo1): 미결 ② 진단 정정 — udptp 기동 인자 누락   (⛔ 이 진단도 틀렸다 — 9/28 정정)
+2f366af  docs(dodo1): HANDOFF 현행화 — 9/21 감사분 + 9/22 2라운드 검증·회귀 2건
+0160b92  fix(sbi): packFiltId·flowDescription 을 두두원 traffic_filter_setting 에 정합
 c6d23fe  docs(dodo1): 9/18 검증 반영 — §8 「남은 검증」 해소 + 패치 B ON/OFF 실측
 3267326  docs(dodo1): 1라운드 발송본 보존 + 2라운드 회신 초안 (9/18 검증분)
 c237b2d  docs(dodo1): HANDOFF 전면 현행화 (779 → 1,564행)
@@ -33,7 +38,8 @@ f614abd  fix(sbi): notificationURI 오타 IP 발송 직전 치환   (패치 C, T
 e33cb89  (분기 당시 main 이 있던 지점 — main 은 그 뒤 53e8068 까지 전진했다)
 ```
 
-이 연동 작업과 관련해 커밋되지 않은 것은 **하나뿐이다** (2026-09-21 확인).
+이 연동에서 **의도적으로 커밋하지 않는 것은 아래 하나뿐이다** (2026-09-29 확인). 그 밖에 같은 디렉터리의
+`NCOF_두두원_정수필드_규격대조표.docx`(9/21)가 미추적으로 남아 있다(커밋 여부 미정). 3라운드 메일 초안은 이 갱신과 함께 커밋했다.
 
 | 경로 | 종류 | 처리 |
 |---|---|---|
@@ -44,12 +50,19 @@ e33cb89  (분기 당시 main 이 있던 지점 — main 은 그 뒤 53e8068 까�
 
 저장소 루트의 `status.md`·각종 `.pptx`/`.pdf` 등 다른 미추적 파일은 이 연동과 무관하다.
 
+> 🆕 **2026-09-29 갱신 — 먼저 아래 「지금 떠 있는 것」, 「2026-09-28 세션」, 「9/28 정정 색인」 을 읽을 것.**
+> 9/28 두두원 3라운드 빌드(13:50)로 재연동해 제어 루프 관통을 재확인했고 gNB 전력값이 반영됐다.
+> 12p_c 는 여전히 미생성이며, **이 문서가 9/22 부터 적어 온 12p_c 처방(두두원 호스트 udptp 인자)은 틀렸다.**
+> ⏰ **2026-10-08 12:00 KST 에 구독이 만료된다**(두두원 DB `evtreq_mon_dur` 고정).
+
 **상태: 제어 루프 관통 + 고아 하위 구독 해소 + 두두원 9/17 수정 3건(소수 초·`13p_d` 구조·단위 접미사) 반영 확인까지 완료**
-(단위 접미사는 `12p_c` 경로에서만 실증됐다 — 8p 주기보고 경로는 스루풋 8필드가 100% `-999` 라 값 자체가 없다).
+(단위 접미사는 `12p_c` 경로에서만 실증됐다 — 8p 주기보고 경로는 스루풋 8필드가 100% `-999` 라 값 자체가 없다). *(9/17 기준. 9/22 빌드부터 `-999` 는 필드 생략이고,
+9/28 현재 12p_c 는 미생성이라 단위는 8_ 경로에서만 관측된다)*
 `ce71818` 로 **패치 A 는 회수했다** — `_DODO1_NO_FRACTIONAL_SECONDS = False`. 60초 백데이트는 소수 초와 무관한
 시계 오차 마진이라 `if` 밖으로 빼 **무조건 유지**한다. 남은 임시 패치는 **B(관대 수신) 하나뿐**이고
-**차단성 블로커는 없다.**
+**차단성 블로커는 없다 — 단 ⏰ 2026-10-08 12:00 KST 에 구독이 만료된다**(아래 2026-09-28 세션 절 「🆕 기한」).
 
+*(아래 세 줄은 9/17 기준 — 9/22 에 회수 조건이 충족됐고 9/28 런도 원장 0건이다. 남은 조건은 12p_c 검증뿐)*
 패치 B 는 아직 회수할 수 없다 — 지금 `NCOF_LENIENT_INGEST` 를 끄면 수신 통지의 **70.1%(2,384/3,403)가 422** 다.
 원인은 ① `-999` 센티넬(영향 2,384건 = 100%) ② 정수 필드 소수값(1,363건 = 40.1%) 둘뿐이고 **동시에 고쳐야 한다** —
 ①만 고치면 `-999` 에 가려져 있던 AF PERF_DATA 682건이 ②로 드러나 영향이 **최대 2,045건**까지 는다.
@@ -57,8 +70,219 @@ e33cb89  (분기 당시 main 이 있던 지점 — main 은 그 뒤 53e8068 까�
 두두원 발송 문서는 초안·발송본이 모두 남아 있다 — 1차는 `두두원_수정요청_메일초안.md`(4건, `62170fc`.
 두두원이 9/17 빌드로 1·2·3 을 반영했으니 발송·응답까지 끝났다), 9/17 검증 회신은
 `두두원_검증결과_회신초안.md`(내부 검토용 포함)와 발송분만 추린 `두두원_회신_발송본.md`(`3267326` 로 커밋됨)다. §8 참조.
+**3라운드(9/28)는 `두두원_3라운드_요청메일초안.md`(미발송)** 다. 9/22 저녁 메일·2라운드 초안의 실제 발송 여부는 기록이 없다.
 
-### 지금 떠 있는 것 (2026-09-22 20:10 기준) — ⛔ **양끝 모두 정지. 월요일 재기동 대기**
+### 지금 떠 있는 것 (2026-09-29 19:30 기준) — ⚠️ **NCOF 정지 · 두두원만 가동 (반쯤 정리된 상태)**
+
+| 구성요소 | 상태 |
+|---|---|
+| NCOF | ⛔ **정지.** 마지막 로그는 9/28 **18:36:13**(통지 수신)이고 `:9000` 리스너는 없다. **정상(lifespan) 종료가 아니다** — 정상 종료가 핸들러마다 남기는 `DataAnalyzer 중단됨` 이 0건이다(9/17·9/22 종료에는 있다). 워커 직접 SIGTERM(§8.1 1단계)이나 SIGKILL 로 내려간 것으로 보인다. 누가 내렸는지는 기록이 없다. 상태파일 mtime 18:36:13 은 통지마다 하는 저장의 흔적이고 내용(상향 2 / external 10)은 최신이다 |
+| 상태파일 | 9/28 **18:36:42** 에 `data/ncof_state.json.bak-183642`(상향 2 / external 10)로 옮겨졌다 → 기동 디렉터리에 `ncof_state.json` **없음**. 즉 §8.1 「청소 후 재기동」 **1·2단계까지만 된 상태**다(9/18 22:55 와 같은 미완 패턴) |
+| 두두원 | ✅ **가동 중**(2026-09-29 19:14 `ps` 로 확인) — 9/28 17:48:45 인스턴스(dodo1 tmux 세션 `sbi`, ETRI 가 기동). **내려간 NCOF 로 계속 통지를 보내는 중**이라 연동은 끊겨 있다. 바이너리 9/28 13:50:05 빌드 |
+| 다음 재기동 | 두 갈래 중 하나다(§8.1 표). ① **NCOF 만** — `cd …/prototype/nncof-server && cp -p data/ncof_state.json.bak-183642 data/ncof_state.json` 후 NCOF 기동(**`mv` 금지** — 복원 직후와 통지마다 덮어써져 백업이 사라진다) → 복원이 상향 2건을 같은 ID 로 되살리고 하위 10건을 해지 후 재구독(두두원 손대지 말 것) ② **청소 후 재기동 완료** — NCOF 를 빈 상태로 먼저 → 두두원 재기동(`tmux kill-session -t sbi` 후 아래 명령). **빈 NCOF 만 올리고 두두원을 두면 루프가 살아나지 않는다**(두두원은 기동 시 1회만 구독) |
+| mock 시험 | 이 체크아웃이 아니라 **별도 워크트리**에서 할 것(아래 🆕 「mock 은 새 워크트리에서」). 같은 체크아웃은 상태파일·로그를 공유한다 |
+| 다음 일정 | ⏰ **2026-10-08(목) 12:00 KST 구독 만료** — 그 전에 3라운드 초안 **발송(아직 미발송)** → 요청 2(`evtreq_mon_dur` 연장) 반영 확인 |
+
+**9/28 런 최종 실적 (17:48:46 ~ 18:36:13, 47분)**
+
+| 지표 | 값 |
+|---|---|
+| 수신 통지 | **376건** (AF 141 · RICF 141 · UPF 94). 두두원이 받은 응답은 200·201 뿐 |
+| 관대 수신 원장 · `[LENIENT]` · `ERROR` | **0 · 0 · 0** |
+| 구독 트리 | 상향 2 / external 10 / 간선 18 — 종료 시까지 중복 없음 |
+| 제어 | 2건(17:49:51 PCF `14_e`, 17:49:57 RICF `15f` `DEEP_SLEEP`) |
+| 12p_c | 0건 (두두원 쪽 `udptp metric incomplete` 분당 2회) |
+
+**이 런의 기동 명령 (검증됨 — 다음에도 이대로)**
+
+```bash
+# NCOF — 본 체크아웃에서, 터미널과 분리해 띄운다(창을 닫아도 죽지 않는다)
+cd /home/labry/git/ncof_generated/prototype/nncof-server && setsid nohup env MODE=DEVICE NCOF_LENIENT_INGEST=1 bash -c 'ulimit -n 65536; exec sh run_http2.sh' > logs/console.$(date +%F_%H%M).log 2>&1 < /dev/null &
+# 응답 확인 — 두두원은 NCOF 가 응답까지 해야 구독이 성립한다
+curl -s --http2-prior-knowledge -o /dev/null -w '%{http_code}\n' http://127.0.0.1:9000/api/handlers
+# 두두원 — dodo1 의 우리 툴체인 tmux 로, 로그를 남기고 (분리: Ctrl-b d)
+ssh dodo1 -t 'export PATH=$HOME/.local/bin:$PATH; tmux new -s sbi "cd ~/SBI/app && ./sbi_poc_app 2>&1 | tee ~/SBI/app/sbi_poc_app.$(date +%F_%H%M).log"'
+# 두두원 콘솔 붙기 / 내리기
+ssh dodo1 -t 'export PATH=$HOME/.local/bin:$PATH; tmux attach -t sbi'
+ssh dodo1 'export PATH=$HOME/.local/bin:$PATH; tmux kill-session -t sbi'
+```
+
+> ⚠️ `MODE` 는 `ncof_setting.conf` 에 없다 — **환경변수로 줘야 한다.** 기동 로그의 `MODE: DEVICE` 와 `[LENIENT]` 배너를 확인할 것.
+> ⚠️ `sh run_all.sh` 앞에 환경변수를 붙여도 **패널에 전달되지 않는다** — 이 호스트는 tmux 서버가 이미 떠 있어(세션 0·23)
+> 새 세션이 호출 셸의 환경을 물려받지 않는다. **DEVICE 는 위 `setsid` 명령으로 본 체크아웃에서만** 띄운다.
+> mock 은 아래 「mock 은 새 워크트리에서」 대로 한다(MODE 를 안 주는 것이 곧 mock 이라 env 가 필요 없다).
+
+**🆕 mock 은 새 워크트리에서, `:9000` 이 아닌 포트로 (2026-09-29 권고)**
+
+mock 코어 시험을 본 체크아웃에서 하지 않는다. 브랜치 전환만으로는 격리되지 않는다 — `data/ncof_state.json`·`logs/` 는
+cwd 기준 상대 경로이고 git 추적 밖이라 **같은 디렉터리면 두 모드가 같은 상태파일을 쓴다.** mock 구독이 거기 남으면
+다음 DEVICE 기동의 복원이 그 구독을 두두원으로 재구독한다. 워크트리는 ① 상태파일·로그가 분리되고 ② 커밋된
+`device_info.json`(localhost mock 포트)을 써서 `MODE=DEVICE` 가 새어 들어가도 두두원을 때리지 않는다. 본 체크아웃은
+두두원 연동 전용(미커밋 `device_info.json` 유지)으로 둔다.
+
+> ⛔ **기존 워크트리 `ncof-dodo1-sbi-interop-dc47e5` 를 mock 에 쓰지 마라.** 그 `data/ncof_state.json`(9/10 22:36)에
+> **두두원 상향 구독 2건**(notificationURI `http://10.254.173.46:55555/`·`:55556/`, `monDur` 2026-10-08 — 아직 유효)이
+> 남아 있다. 거기서 NCOF 를 띄우면 복원이 이 2건을 되살리고, 하위 구독은 localhost mock 으로 가지만 **mock 메트릭으로
+> 판정한 14_e/15f 는 상향 구독의 notificationURI, 즉 실장비 두두원으로 나간다**(제어 목적지는 device_info 가 아니다).
+> 코드도 `b7622f8`(패치 A 회수 이전)이다.
+
+> ⛔ **mock NCOF 는 항상 `:9000` 이 아닌 포트로.** `:9000` 의 mock NCOF 는 두두원 통지를 404 로 쌓을 뿐 아니라, 그동안
+> 두두원이 (재)기동하면(예고 없이 일어난다 — 9/17 3회, 9/28 13:42) 상향 구독을 그대로 받아 mock 메트릭으로 판정한
+> 제어를 실장비로 보낸다. "두두원을 내리고 `:9000` 사용" 도 쓰지 않는다.
+
+절차 — 새 브랜치로 새 워크트리를 만든다(같은 브랜치는 두 워크트리에 동시에 체크아웃할 수 없다):
+
+```bash
+git -C /home/labry/git/ncof_generated worktree add -b mock/local-core .claude/worktrees/mock-local-core HEAD
+cd /home/labry/git/ncof_generated/.claude/worktrees/mock-local-core/prototype && uv sync --frozen
+# ncof_setting.conf 의 NCOF_PORT 를 9000 이 아닌 값(예: 9100)으로 — client2.py·GUI 도 이 값을 읽는다
+# GUI 산출물은 gitignore 라 없다: run_all.sh 가 npm 으로 한 번 빌드하거나, 본 체크아웃 static/ 을 복사
+sh run_all.sh     # tmux 세션 이름이 `ncof` 로 고정 — 같은 이름 세션이 있으면 새로 안 띄우고 거기 붙는다
+```
+
+새 워크트리에는 `data/`·`logs/`·`.venv` 가 없다(모두 git 추적 밖). 상태파일이 없으니 복원할 것도 없다.
+
+#### 2026-09-28 세션 — 두두원 3라운드 빌드 검증 + 재연동
+
+**경위.** 13:30 두두원 미팅. 사용자 전언으로 두두원 반영분은 ① 12p_c 생성 수정 ② gNB 전력값 생성
+③ VLC 스트리밍 세팅이다. 두두원은 13:40 에 소스를 반입하고 **13:50:05 에 재빌드**했다. 13:42 에 한 번 띄운 흔적이
+있으나(`send_json/1_…` 덤프 13:42:27, 로그 없음) NCOF 에 구독이 닿지 않았다 — NCOF 는 그 시점에 이미 내려가
+있었던 것으로 보인다(추정, 아래 「부수 사실」). 17:15 두두원 호스트 전원 종료(운영자, 정상 절차)·17:23 부팅 → 17:46 NCOF 청소 후 기동 → 17:48 두두원 기동.
+
+**9/28 빌드의 변경 범위 (소스 대조로 확인).** 두두원 서버에 `~/SBI/app/src_old/`(= 9/22 빌드 소스)가 남아 있어
+`src/`(9/28)와 정확히 대조할 수 있었다. 변경 11파일: `ncof_flow_common` · `_control` · `_dynamic_report` · `_json_order`
+· `_report_common` · `_report_db` · `_subscription_core` · `_subscription_handlers` · `_targeting` · `ncof_json_flow` ·
+`ncof_send_templates`(.cpp). `include/`·`gnb_ssh_control.cpp`·`main.cpp`·`db.cpp`·`http2_*.cpp`·`upf_qos_udp.cpp` 는
+바이트 동일. 템플릿 `13p_d_…v1.0.tmpl`(통합)·`13p_d_…_POWER.tmpl`(9/17 신설분)의 파일 mtime 이 9/23 20:11 이다
+(`_SIGNAL.tmpl` 은 9/17 그대로. mtime 은 개발자 PC 시각이라 서버 반입 시각은 미상 — 9/23 10:42 덤프까지는 리터럴이었다).
+
+> ⚠️ **두두원 소스 파일 mtime 은 믿지 마라.** 개발자 PC 시계를 보존한 값이라 미래 시각(예: 9/28 20:12)이 섞여 있다.
+> 어느 빌드인지는 **바이너리 mtime** 으로 판별한다.
+
+**결과 (17:48 기동분).**
+
+| 항목 | 결과 |
+|---|---|
+| 상향 구독 | PCF 17:48:46 · RICF 17:48:51. 두두원 `response status: 201`×2, `main(): 329 Send_First_Send Success` |
+| 하위 구독 | 10건 전부 `HTTP/2 200`(55557×4 · 55558×3 · 55556×3). notifId 채택 10/10, `traffic filter IP validation Failed` 0 |
+| `traffic_filter_setting` | **변경 없음** — 17:24 라이브 SELECT(사용자 허용 1건): `filter-001~004-ul/-dl` → `192.168.101.10~104.10`. `0160b92` 매핑 그대로 유효 |
+| 하위 구독 수신 경로 | 판별·`Validate_Nsmf_Traffic_Filter_Ips`·`%lf` 파서·시간창·DELETE ID 탐색·응답 코드 **모두 9/22 와 기능 동일**. 응답에 구독 ID 는 여전히 없다(협의 5 불변 → notifId 폴백 계속 유효) |
+| 통지 | 17:59:26 누계 AF 30 · RICF 30 · UPF 20 (분당 약 8건 = AF 3 · RICF 3 · UPF 2. 9/17 청소 후 기준선 10건/분보다 적은 것은 12p_c 몫 UPF 2건/분이 빠져서다). 두두원이 받은 응답 `200`×80 · `201`×2 · 그 외 0 |
+| NCOF 수신 품질 | `ERROR` 0 · `[LENIENT]` 0 · 관대 수신 원장 0 — **9/28 빌드에서도 페이로드 위반 0**. `-999` 회귀 없음 |
+| 제어 | 17:49:51 PCF `14_e` 200 · 17:49:57 RICF `15f` `DEEP_SLEEP` 200 |
+| gNB 전력값 | ✅ **요청대로 구현** — gNB2 `"1.01 W"`/`"60.63 J"`(DEEP_SLEEP), gNB1 `"283.68 W"`/`"17020.60 J"`(ACTIVE). 단위 접미사·소수 2자리·흔들림 반영. 단 `_duration` 은 템플릿 리터럴 `60`, `_energy` 는 반올림 전 `_power × repPeriod` |
+| 12p_c | ❌ 미생성 — `udptp metric incomplete ul=0 dl=0` → `subscription report send Failed … label=7p` (분당 2회) |
+
+**🔴 정정 1 — 12p_c 처방이 틀렸었다. udptp 는 서버(수신) 쪽에서만 collect 로 보고한다.**
+
+9/22 이후 이 문서(미결 ② 절, §8 메일 예정 3번, §7 표)는 "두두원 호스트의 `run_client.sh:48,51` 에 `-D/-R/-Q` 를
+붙여라" 고 적었다. **틀렸다.** `udptp.c:615` 의 보고 호출은 다음 조건 안에만 있다.
+
+```c
+if (strcmp(g_role, "server") == 0 && dp > 0)      // g_role = is_server ? "server" : "client"  (:890)
+    send_collect_udp(mbps, kpps, dp, db);        // :155 의 -D/-R/-Q 검사는 그 다음 관문일 뿐
+```
+
+두두원 호스트(.182)의 udptp 는 `-c` **클라이언트**라서 인자를 붙여도 보고하지 않는다. 보고 주체는 트래픽을 받는
+**192.168.1.125 의 `udptp -s`** 다(서비스 `iperf_server` → `/home/iperf_test/run_server.sh`, .125 는 우리 접근 불가).
+
+| 근거 | 값 |
+|---|---|
+| collect_server(`192.168.1.182:2002`, `collect.service`) 수신 — 17:23 재부팅 이후 `journalctl -u collect` | udptp 보고(`type=6 role=0`) **0건**. 반면 `192.168.1.125` 는 같은 collect 로 `type=1` 보고를 계속 보냄 → **경로는 정상** |
+| 두두원 호스트에 남은 `~/NW_Collect/iperf_Test/run_server.sh` 사본 | `:40`/`:43` 이 이미 `-s … -D UL`/`-D DL … -R "$COLLECT_IP" -Q 2002`(6006=UL, 6007=DL). 그러나 **`SERVER_IP=192.168.1.210`, `COLLECT_IP=192.168.1.214`** — 현재 구성(클라이언트 목적지 .125, collect .182)과 둘 다 불일치 |
+| 해석 (추정) | .125 의 실물 스크립트도 같은 값이면 보고가 **.214 로 가고 있다** |
+
+→ **요청은 .125 의 `run_server.sh` 에서 `COLLECT_IP=192.168.1.182`(+ `SERVER_IP=192.168.1.125`)로 고치고
+`sudo systemctl restart iperf_server`.** 두두원 호스트의 `run_client.sh`·`iperf_client` 와 SBI 앱은 건드릴 필요가 없다
+(SBI 앱은 60초 창으로 SELECT 만 한다). 확인 신호: collect 로그의 `type=6 role=0 sender_ip=192.168.1.125`,
+SBI 로그의 `udptp metric incomplete` 소멸, NCOF 의 UPF `USER_DATA_USAGE_MEASURES` 수신, `send_json/12p_c…` 덤프 mtime 갱신.
+
+> 📌 **"udptp 를 우리가 수동 재기동할 수 있나" 에 대한 답: 없다, 그리고 할 필요도 없다.** 두두원 호스트의 udptp·collect 는
+> `User=root` systemd 서비스(`iperf_client`/`collect`, `Restart=on-failure`)이고 dodo1 계정 sudo 는 암호가 필요하다.
+> udptp 만 kill 하면 3초 뒤 같은 인자로 다시 뜬다. 무엇보다 고칠 곳이 .125 쪽이다.
+
+**🆕 변화 1 — `13p_d` 의 `_powerState`/`_power` 가 이제 NCOF 제어를 되돌려 준다. 단 물리 상태가 아니라 "마지막 명령" 이다.**
+
+템플릿이 자리표시자(`__POWER_STATE_n__`)로 바뀐 뒤부터 `_powerState` 는 리터럴 `"ACTIVE"` 가 아니라
+`Load_Latest_Gnb_Power_State_Local()`(`ncof_flow_report_common.cpp:301-339`)이
+`SELECT state FROM gnb_control WHERE ip=? ORDER BY date DESC LIMIT 1` 로 읽은 값이다.
+`gnb_control` 은 15F 수신 시 INSERT 되는 **명령 기록**이고(SSH 는 Mock), 따라서 이 값은 "gNB 가 실제로 그 상태다" 가
+아니라 **"마지막으로 받은 명령이 그것이다"** 를 뜻한다. 과거 행이 남아 있어 **이번 세션 15f(17:49:57)보다 6초 앞선 첫
+13p_d 부터 gNB2 가 DEEP_SLEEP 1.01 W 로 왔다.**
+치환 코드 자체는 **9/22 빌드에 이미 있었다**(`src_old/ncof_flow_report_common.cpp:688`·`:700` 의 `__POWER_STATE_1/2__`)
+— 템플릿이 리터럴이라 효과가 없었을 뿐이다(9/23 10:42 덤프까지 `"ACTIVE"`/`"20mW"`). 회선 첫 관측은 9/28 런이다.
+→ §1·§5·§7 의 "두두원에는 에코가 없다", "`gnb_control` 은 어디서도 SELECT 되지 않는다" 는 **템플릿 교체 뒤로는 틀린 서술**이다(SELECT 는 9/22 빌드 소스에 이미 있었다).
+→ 이 값을 **제어 성공(폐루프)의 증거로 인용하지 마라.** GUI 에 표시한다면 "명령 상태" 로 이름 붙일 것.
+
+**🆕 변화 2 — `14_e` QoS UDP 목적지에 수신자가 생겼다 (`192.168.1.182:26321`).**
+
+`config/6g.config` 의 `UPF_PORT` 가 **26321** 이다(9/22 14:15 변경. 이 문서의 5555 는 낡은 값). `/proc/net/udp` 에
+`B601A8C0:66D1`(= .182:26321, uid 0) 수신 소켓이 있고 14_e 발사 뒤 `rx_queue 0 · drops 0` — **패킷이 실제로 읽혀 나갔다.**
+소유자는 권한이 없어 못 봤으나 UPF(`exeCUPB`, 9/23 15:42 재빌드, `QosApplyUdpEntry`·`gbr_dl`·`mbr_dl` 심볼)로 보인다(추정·강).
+17:49:51 에 실린 값: UE1(…101) 5/10 · UE2(…103) 1000/1000 · **UE3(…102 = UE2_GNB2) 0/0** · UE4(…104) 1000/1000.
+단위(`std::stod` 가 `" Mbps"` 를 버린다)·`0` 의 의미·유효기간(UDP 패킷에 유효기간 필드 없음)·실제 적용 여부는 **미확인** —
+3라운드 초안 §4 에 질의 문안을 넣었다(**미발송**). 14_e(0/0) 전후로 …102 의 코어 카운터 증가량(deltaUl 36~38 ·
+deltaDl 18~20)에 차이가 없었다 — 현 저부하에서 `0` 의 효과(차단 여부)는 관측되지 않았다.
+→ §8 「남은 검증」 미결 ①("UDP 수신 리스너 미관측")은 **해소 — 리스너 있음.** 대신 "받은 값을 무엇으로 해석하나" 가 새 미결이다.
+→ **이제 NCOF 의 14_e 가 실장비 QoS 에 영향을 줄 수 있다.** 시연 중 UE 트래픽이 이상하면 이것부터 의심할 것.
+
+**🆕 기한 — 2026-10-08 12:00 KST 에 연동 전체가 멈춘다.**
+
+두두원 상향 구독(1_·1p_)의 `evtReq.monDur` 가 `2026-10-08T12:00:00+09:00` 로 고정돼 있다(9월 초 캡처부터 같은 값).
+출처는 DB `ncof_sub_profile.evtreq_mon_dur`(`db.cpp:1761`, seed `poc_test.sql:467` 은 2026-03-08 이라 라이브와 다르다).
+NCOF 는 이 값을 UPF 하위 구독의 `expiry`, AF·RICF 하위 구독의 `monDur` 로 **원값 그대로** 옮긴다(`targetPeriod.stopTime`
+에는 미래일 때만 쓰고 과거면 now+1h 로 보정 — `subscription_request_builder.py:100-106`, `expiry` 는 `:340`). 그 시각이 되면
+① 두두원이 하위 구독을 만료 삭제해 주기 리포트가 끊기고(`subscription expired`) ② NCOF 분석도 `감시 만료` 로 끝나 제어 0건,
+③ 그 뒤 두두원을 재기동하면 하위 POST 10건이 전부 **400**(UPF 는 `expiry`, AF·RICF 는 `monDur` 가 과거 — 두두원
+`ncof_flow_subscription_core.cpp:323-327`·`:444-449`). 양쪽 로그에 만료 기록은 남지만 서로 통보하지 않는다.
+→ 3라운드 초안 요청 2 에 연장 요청 문안을 넣었다(**미발송 — 발송이 선결**). **10/08 이전에 `logs/app.log` 의 `mon_dur=datetime.datetime(…)` 값으로 반영 여부를 확인할 것.**
+NCOF 가 `expiry`·`monDur` 를 임의로 늘리는 것은 하지 않는다(대신 기한 임박 WARN 로그를 §8 정리 목록 11번에 추가).
+
+**그 밖의 관측**
+
+- **`app_stamp` 간헐 결손** — 17:57 부터 두두원 `recent dynamic stamp not found table=app_stamp ids=notebook1_ue1,notebook2_ue1`
+  (18:21 까지 12회). 그 주기 AF `9_` 에서 UE1 의 `pdb`·`plr`·`rtt`·`delay`·`jitter` 가 **필드 생략**으로 온다(422 아님, 엔진 입력 아님).
+  시연 화면에 빈 구간이 생긴다. 3라운드 초안 §5 에 넣었다(미발송).
+- **잦은 새 연결** — 두두원은 새 h2c 연결을 자주 연다(17:48~18:15 27분에 106회 ≈ 분당 4회, 같은 기간 통지 202건). 18:14 CLOSE-WAIT 4개 → 18:15 해소, 워커 fd 15↔20.
+  기존 fd 누수(9/4 `app.log` 11.9GB 사건)가 재현될 조건이므로 장시간 가동 시 `ls /proc/<worker>/fd | wc -l` 추세를 볼 것.
+- **gNB2 셀 "비방사" 전제 재검토 필요 (추정)** — UE2(…102, `dnai-ue2-gnb2-001`)의 RF(sinr 35~36, bler 4.34~4.37)와 코어 카운터가
+  매 주기 변한다. 9/18 이후 "gNB2 셀 비방사" 라는 서술과 맞지 않는다. 그렇다면 13p_d 의 gNB2 `DEEP_SLEEP 1 W` 는 물리 상태와 반대다.
+- **엔진 입력** — 12p_c 가 없어 8_ UDUM 값(핸들러별 `WLAN_DL_MBPS` ≈0.00058 / ≈0.00115 Mbps, 94회 모두 0.0012 이하)으로 판정 → 항상 DEEP_SLEEP. DEVICE 모드 `cell-start` 불가(§8 미결 ④)는 불변.
+- **상향 구독 재시도 부재** — 두두원은 기동 시 1회만 구독하고 재시도·타임아웃이 없으며 PCF 실패 시 RICF 는 시도조차 안 한다
+  (`main.cpp:251-263`, 9/22 와 동일). **NCOF 가 먼저 떠서 응답까지 하는지 확인한 뒤 두두원을 올려라**(오늘은 `GET /api/handlers` 200 확인 후 요청).
+- **제어 결과 가시성(요청 4) 미해결** — 500 은 세트·저장 0건일 때만. UDP·SSH 실패는 여전히 200.
+
+**부수 사실 (연동과 무관, 기록용)**
+
+- 두두원 **9/22 런은 9/23 10:42 까지 살아 있었다**(그 로그 파일의 마지막 기록). 이 문서가 9/22 20:10 에 "정지 예정" 이라 적은 것과 다르다.
+- NCOF 는 **9/23 15:36 에 누군가 다시 띄웠고**(`MODE=DEVICE` + 관대 수신, 콘솔 `logs/console.2026-09-23_1536.log`) 5일간 구독 0건으로
+  떠 있다가 **9/28 13:16:37 로그를 마지막으로 종료 로그 없이 사라졌다.** 띄운 터미널이나 tmux 창이 닫혀 죽은 것으로 보인다(추정).
+  그 기동이 **빈 `data/ncof_state.json`(48B, 구독 0)을 만들어 두었다** — 9/22 의 "상태파일 없음" 전제는 9/23 부터 깨져 있었다.
+  → **NCOF 는 `setsid nohup` 으로 분리해서 띄워라**(위 「이 런의 기동 명령」).
+- 이번 세션에서도 `pkill -f '<패턴>'` 이 **자기 셸을 죽였다**(exit 144). 경고가 그대로 유효하다.
+- 두두원 호스트가 약 17:15~17:23 에 ping·ssh 모두 불통이었다. 원인은 **운영자의 정상 전원 종료**(17:15:47 `Power-Off`,
+  `journalctl -b -1`)와 17:23:25 부팅이다. 우리 쪽 연결 과다로 인한 차단이 아니다. 운영자가 전원을 끄면 tmux 로 띄운
+  SBI 앱도 사라진다는 뜻이다.
+
+#### 9/28 정정 색인 — 아래 본문에서 9/28 기준으로 낡은 서술
+
+본문의 과거 서술은 당시 기준으로 남겨 두고, 중요한 곳에는 `9/28 정정` 주석을 달았다. 주석이 없는 곳도 아래 표의
+서술은 9/28 기준으로 읽지 말 것.
+
+| 낡은 서술 | 주로 나오는 곳 | 9/28 기준 |
+|---|---|---|
+| 12p_c 원인은 "두두원 호스트 udptp 의 `-D/-R/-Q` 누락", 처방 "`run_client.sh:48,51` 에 추가 · `-R 127.0.0.1`" | 상단 9/22 미결 ②, §7 표, §8 메일 예정 3번, §8 패치 B 회수 조건 | ⛔ **원래부터 틀렸다.** 보고 주체는 .125 의 `udptp -s`(`udptp.c:615`). 위 「🔴 정정 1」 |
+| "두두원에는 에코가 없다", "`gnb_control` 은 어디서도 SELECT 되지 않는다", "`_powerState` 는 하드코딩 ACTIVE" | §1, §5, §6, §7, §9 | 템플릿 교체 뒤로 **마지막 명령 에코**가 있다(물리 상태 아님. 치환 코드는 9/22 빌드에 이미 있었다). 위 「🆕 변화 1」 |
+| `UPF_PORT=5555`, "UDP 수신 리스너 미관측" | §1, §3, §6, §8 미결 ① | 목적지는 **`:26321`**, 수신 소켓 있음. 위 「🆕 변화 2」 |
+| "제어 종착지는 물리 gNB2 의 cell-stop/start", "gNB2 상태 덤프가 두두원 로그에 찍힌다" | §1, §3, §5, §7, §8 경로 1 | 9/22 빌드부터 SSH 는 Mock(`#if 0`) — 셀도 안 바뀌고 상태 덤프도 없다 |
+| "gNB2 셀이 9/18 부터 비방사" | §1, §7, §8 | **재검토 필요**(9/28 UE2 RF·코어 카운터가 매 주기 변함 — 추정) |
+| "분석 메트릭이 `0.0`/`150.0` 두 값", "8_ 스루풋이 100% `-999`" | §5, §9 | 9/22 부터 실측값·필드 생략. 9/28 엔진 입력은 8_ UDUM(`WLAN_DL_MBPS` ≈0.00058 / ≈0.00115 Mbps) |
+| "패치 B 를 끄면 70.1% 가 422", "`-999`·정수 소수값이 치명·최우선" | 상단 상태 요약, §4 회수 조건, §5 표, §6 표·§6.1, §7 표, §8 메일 왕복·정리 8번, §8 참고 | 9/17 이력. 9/22·9/28 런 원장 0건 — 남은 회수 조건은 **12p_c 검증**뿐 |
+| "상태파일이 없다" | 9/22 현황 표 | 9/23 기동이 빈 파일(48B)을 만들었었다. 지금은 `bak-183642` 로 옮겨져 없다 |
+| 두두원 소스 줄번호 | §3, §6, §9 | 9/22·9/28 빌드에서 일부 밀렸다(판정 로직은 불변). 인용 전에 `src/` 로 재확인 |
+| "2라운드 회신 미발송", "9/22 저녁 발송 예정 메일" | §8 메일 왕복 | 실제 발송 여부는 기록이 없다. **3라운드 초안이 현행 요청 목록**이다 |
+
+#### (이력) 2026-09-22 20:10 기준 — 양끝 정지 (9/28 월요일 재기동 대기였음)
 
 | 구성요소 | 상태 |
 |---|---|
@@ -99,10 +323,11 @@ e33cb89  (분기 당시 main 이 있던 지점 — main 은 그 뒤 53e8068 까�
 > ⚠️ 단 `12p_c` 경로는 미결 ② 때문에 오늘 0건이라 **미검증**이다 — §8 회수 조건 절의 표를 볼 것.
 
 > 🔴 **오늘 새로 드러난 것 2건.** ①(두두원 신규 검증 → 우리 구독 400)은 우리 쪽 수정으로 해소,
-> ②(`12p_c` 미생성 — 신규 데이터 공급 체인의 기동 인자 누락)는 **미해소**다.
+> ②(`12p_c` 미생성)는 **미해소**다. *(9/28 정정: 원인은 "두두원 호스트 udptp 기동 인자 누락" 이 아니라
+> 보고 주체인 .125 `udptp -s` 쪽이다 — 위 2026-09-28 세션 절 「🔴 정정 1」)*
 > 상세는 아래 「(이력) 9/22 세션」 절.
 
-#### 2026-09-22 세션 — 두두원 2라운드 반영 검증 + 신규 미결 2건
+#### (이력) 2026-09-22 세션 — 두두원 2라운드 반영 검증 + 신규 미결 2건
 
 **두두원이 담당자 방문으로 2라운드 수정을 반영했다.** 바이너리 재빌드 `2026-09-22 14:10:49`.
 우리 쪽은 17:17:58 에 상태파일·원장을 모두 회전시키고 빈 상태로 기동해 검증했다
@@ -166,6 +391,12 @@ UPF 통지 수신 재개 · **제어 루프 재개**(18:04:07).
 
 **🔴 미결 ② — `12p_c` 리포트 미생성 (미해소). 코드 버그가 아니라 신규 데이터 공급 체인의 기동 인자 누락이다**
 
+> ⛔ **9/28 정정 — 이 절의 원인 진단(두두원 호스트 udptp 의 `-D/-R/-Q` 누락)과 처방은 틀렸다.**
+> `udptp.c:615` 는 **server 역할의 수신 스트림에서만** collect 로 보고한다. 두두원 호스트의 udptp 는 `-c`
+> 클라이언트라 인자를 붙여도 보고하지 않는다. 보고 주체는 192.168.1.125 의 `udptp -s` 이고, 끊긴 곳은 그 서버 →
+> collect 구간이다(9/28 collect 수신 0건, 두두원 호스트에 남은 `run_server.sh` 사본은 `COLLECT_IP=.214`).
+> 올바른 처방은 위 2026-09-28 세션 절 「🔴 정정 1」. 아래 체인 그림·표·`udptp.c:155` 설명은 **이력으로만** 읽을 것.
+
 ```
 Load_Udptp_Report_Metric_Local(): udptp metric incomplete ul=0 dl=0
 Send_7_Subscription_Json(): Load_Udptp_Report_Metric_Local Failed
@@ -225,7 +456,8 @@ if (g_collect_ip[0] == '\0' || g_collect_port <= 0 || g_direction[0] == '\0')
 > 🟢 다행히 미결 ① 해소로 `3_` 경로(`8_`/`8p_`)가 살아나 제어 엔진에 입력을 대신 공급하고 있다 —
 > **`12p_c` 가 유일한 입력이라던 종래 서술은 이 구성에서 더 이상 맞지 않는다.**
 
-**🆕 gNB 전력값 생성 요청 (2026-09-22 신규, 미발송)**
+**🆕 gNB 전력값 생성 요청 (2026-09-22 신규)** — ✅ **9/28 빌드에 반영됨**(`"1.01 W"` · `"283.68 W"`, 위 2026-09-28 세션 절).
+단 `_powerState`/`_power` 는 `gnb_control` 의 마지막 명령 에코이고, `_duration` 은 리터럴 `60` 이다.
 
 ETRI 가 두두원에 **DEEP_SLEEP 1 W · ACTIVE 280 W** 로 단순 계산해 달라고 요청해 둔 상태이고,
 값이 완전한 직선이면 부자연스러워 **흔들림**을 추가로 요청하기로 했다. 대상은
@@ -258,7 +490,7 @@ ETRI 가 두두원에 **DEEP_SLEEP 1 W · ACTIVE 280 W** 로 단순 계산해 �
 > 또 `_peakPower` 는 구간 최대라 기준 대비 +4~5%까지 올라간다 — 밴드를 같이 그리면
 > "±1.5% 라더니 왜 5% 튀냐" 는 말이 나올 수 있으니 범례에 "구간 최소/최대" 를 명시할 것.
 
-**두두원에 전달할 문안:**
+**두두원에 전달할 문안:** ⛔ **(9/28) 발송 금지 — 처방이 틀렸다.** 대체 문안은 `두두원_3라운드_요청메일초안.md` 요청 1.
 
 > `udptp` 를 `-D UL|DL -R <collect_server IP> -Q 2002` 인자를 붙여 재기동해 주십시오.
 > 현재 `run_client.sh:48,51` 에 이 세 인자가 빠져 있어 측정값이 `collect_server` 로 가지 않고,
@@ -390,6 +622,12 @@ NCOF 는 `ce71818` 로 **패치 A 를 회수**했고(소수 초 제거만 해제
 UE 4개(`QOS_APPLY_UE_COUNT`)가 다 차야 발사). **두 경로 모두 NCOF 의 가시성은 0 이다 — HTTP 200 은
 여전히 제어 성공을 뜻하지 않는다.**
 
+> 🆕 **9/28 정정.** 템플릿이 자리표시자로 바뀐 뒤(9/28 런에서 첫 관측) `13p_d` 의 `_powerState`/`_power` 가 `gnb_control` 의 **마지막 명령**을
+> 되돌려 준다 — 에코가 생겼지만 물리 상태가 아니다. 15f 의 SSH 는 9/22 빌드부터 Mock 이라 물리 gNB2 에 닿지 않고,
+> 14_e UDP 의 목적지는 `192.168.1.182:26321` 이며 **수신 소켓이 실재한다.** 상세는 위 2026-09-28 세션 절.
+> ①의 "9/18 부터 비방사" 전제도 **재검토 필요**하다 — 9/28 UE2(…102) RF·코어 카운터가 매 주기 변한다(추정).
+> 확인 전까지 "먼저 풀어야 한다" 로 읽지 말 것.
+
 ---
 
 ## 2. 환경
@@ -407,6 +645,8 @@ UE 4개(`QOS_APPLY_UE_COUNT`)가 다 차야 발사). **두 경로 모두 NCOF �
 
 > ⚠️ 두두원 장비는 **읽기 전용**으로만 다룰 것. 앱 재시작·요청 주입·DB 접근 금지.
 > 허용 명령은 `cat` · `sed -n` · `grep` · `ls` · `head` · `find` · `pgrep` · `stat` 까지다.
+> **예외(9/28 사례)**: `sbi_poc_app` 의 기동·종료(tmux `sbi`)와 DB `SELECT` 는 **ETRI 사용자가 직접 하거나 명시적으로
+> 허용한 경우에만** 한다. 기동·종료 전에는 두두원에 사전 공유한다. Claude·자동화는 이 예외를 스스로 쓰지 않는다.
 
 ### 산출물·문서 위치
 
@@ -416,6 +656,7 @@ UE 4개(`QOS_APPLY_UE_COUNT`)가 다 차야 발사). **두 경로 모두 NCOF �
 | 1차 수정 요청 메일 초안(4건) | `prototype/docs/dodo1-interop/두두원_수정요청_메일초안.md` (커밋 `62170fc`) |
 | 9/17 검증 결과 회신 초안 | `prototype/docs/dodo1-interop/두두원_검증결과_회신초안.md` (커밋 `ba8c7d4`) |
 | 두두원에 실제로 보낸 회신 | `prototype/docs/dodo1-interop/두두원_회신_발송본.md` — `3267326` |
+| 3라운드 요청 메일 초안 (9/28, 미발송) | `prototype/docs/dodo1-interop/두두원_3라운드_요청메일초안.md` |
 | 실측 페이로드 보존본 | `prototype/docs/dodo1-interop/captured/` — 파일별 설명은 §9 |
 | 관대 수신 원장 (현행) | `prototype/nncof-server/logs/lenient_ingest/ledger.jsonl` — 9/17 20:24 이후분만 |
 | 관대 수신 원장 (20:24 이전 전체) | 같은 디렉터리 `ledger.jsonl.upto-20260917-202439` — 77,904행 / 487 MB |
@@ -436,14 +677,15 @@ UE 4개(`QOS_APPLY_UE_COUNT`)가 다 차야 발사). **두 경로 모두 NCOF �
 ### 기동
 
 ```bash
-# NCOF (관대 수신 진단 계층 포함)
-cd /home/labry/git/ncof_generated/prototype/nncof-server && NCOF_LENIENT_INGEST=1 sh run_http2.sh
+# NCOF (관대 수신 진단 계층 포함) — 9/28 검증된 형태. 터미널과 분리해 띄운다
+cd /home/labry/git/ncof_generated/prototype/nncof-server && setsid nohup env MODE=DEVICE NCOF_LENIENT_INGEST=1 bash -c 'ulimit -n 65536; exec sh run_http2.sh' > logs/console.$(date +%F_%H%M).log 2>&1 < /dev/null &
 
-# 두두원 (사용자가 직접) — 반드시 로그를 남기고 띄울 것 (9/17 회신으로 요청함, 20:54 현재 미적용)
-ssh dodo1 -> cd /home/dodo1/SBI/app && ./sbi_poc_app 2>&1 | tee ~/SBI/app/sbi_poc_app.$(date +%F_%H%M).log
+# 두두원 — 담당자에게 요청하거나, 9/28 처럼 ETRI 가 dodo1 의 우리 tmux 로 직접 (로그를 남긴다)
+ssh dodo1 -t 'export PATH=$HOME/.local/bin:$PATH; tmux new -s sbi "cd ~/SBI/app && ./sbi_poc_app 2>&1 | tee ~/SBI/app/sbi_poc_app.$(date +%F_%H%M).log"'
 ```
 
-`MODE=DEVICE` 는 셸에 export 되어 있어야 한다. `NCOF_LENIENT_INGEST` 를 빼면 관대 수신이 완전히
+`MODE=DEVICE` 는 NCOF 프로세스 환경에 있어야 한다(`ncof_setting.conf` 에 없다). tmux 서버가 이미 떠 있으면
+`sh run_all.sh` 앞에 붙인 환경변수는 패널에 전달되지 않는다(tmux 3.4 에서 9/29 실측). `NCOF_LENIENT_INGEST` 를 빼면 관대 수신이 완전히
 비활성화된다(미들웨어가 아예 설치되지 않음).
 
 ---
@@ -582,7 +824,7 @@ NcofRecvJsonType Detect_Ncof_Recv_Json_Type(const std::string& path, const std::
   **`set_count` 가 0 이면 500, 1 이상이면 UDP 가 실패해도 200.**
   게다가 9/17 20:27 재기동본은 stdout 을 파일로 남기지 않아(`~/SBI/app/*.log` 0건)
   **두두원 서버에서조차 발사 여부를 사후 확인할 수 없다.**
-- 대상 주소는 두두원 설정 파일 값이다 — `config/6g.config` 의 `UPF_IP=192.168.1.182`, `UPF_PORT=5555`
+- 대상 주소는 두두원 설정 파일 값이다 — `config/6g.config` 의 `UPF_IP=192.168.1.182`, `UPF_PORT=5555` *(9/28 확인: 지금은 **26321** — 6g.config 9/22 14:15 변경)*
   (`config.cpp:90`, `:94`). **NCOF 가 지정할 수 없고, 비어 있지 않으므로 발사 조건은 이미 갖춰져 있다**
   (`upf_qos_udp.cpp` 는 ip 가 비었거나 port≤0 일 때만 `invalid UPF UDP target` 으로 되돌아온다).
 - 9/17 회신(`두두원_회신_발송본.md` §3-①)에서 ① 이 경로가 지금 활성인지 ② 실패를 NCOF 가 알 방법이
@@ -594,9 +836,9 @@ NcofRecvJsonType Detect_Ncof_Recv_Json_Type(const std::string& path, const std::
   `Handle_Recv_14e_Qos_Assist_Set()`(:37-168) 이 `packet.ue[ue_index]` 를 채우고(:157-160),
   `udp_fill_count == QOS_APPLY_UE_COUNT`(=4) 일 때 `:332-341` 의
   `Send_Qos_Apply_To_Upf_Udp(config.upf_ip, config.upf_port, packet)` 이 발사된다.
-  - **대상 `UPF_IP=192.168.1.182` / `UPF_PORT=5555`(`config/6g.config`) 는 두두원 호스트 자신의
+  - **대상 `UPF_IP=192.168.1.182` / `UPF_PORT=5555`(`config/6g.config`, *9/28: 26321*) 는 두두원 호스트 자신의
     5G 코어측 NIC 다** — `enp131s0f0 = 192.168.1.182`, `enp131s0f1 = 10.254.173.46`(우리가 ssh 하는 쪽).
-    별도의 "실장비 UPF 박스" 가 아니다. **조사 시점에 UDP/5555 에 리스너가 없었다**
+    별도의 "실장비 UPF 박스" 가 아니다. **조사 시점에 UDP/5555 에 리스너가 없었다** *(9/28: 실제 목적지 26321 에는 수신 소켓이 있고 14_e 뒤 읽혀 나갔다 — 소유자는 UPF `exeCUPB` 로 추정)*
     (`ss -lun` 에 PFCP 8805/8806 만 존재). UDP `sendto()` 는 수신자가 없어도 성공하므로
     `upf_qos_udp.cpp:43-47` 판정은 늘 통과하고 `:50` 이 `QOS UDP send Success` 를 찍는다 —
     **아무도 안 받아도 성공 로그가 남는다.**
@@ -907,9 +1149,9 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | TEMP 관대 수신 (패치 B) | 🟡 **가동 중** — 끄면 70.1% 422 (§4·§6) |
 | **NCOF → PCF 제어 발송 (20:28:58)** | ✅ **HTTP/2 200 수락** |
 | **NCOF → RICF 제어 발송 (20:29:06)** | ✅ **HTTP/2 200 수락** (`_cellPowerState: DEEP_SLEEP`, `gNBValue: 000002`) |
-| 두두원 → 실장비 UPF 로 QoS UDP 발사 | ❓ **NCOF 가시성 0** — 보낸 14_e 에 `GBR_DL` 4세트가 실린 것까지만 확인. 실제 발사 여부는 미확인 |
-| 두두원 → gNB2 `cell-stop` SSH | ❓ 읽기 전용 제약으로 미확인 (§8) |
-| RICF 가 `cell_power_state` 를 에코 | ⛔ **에코 기능이 존재하지 않는다** (아래) |
+| 두두원 → 실장비 UPF 로 QoS UDP 발사 | ❓ **NCOF 가시성 0** — 보낸 14_e 에 `GBR_DL` 4세트가 실린 것까지만 확인. 실제 발사 여부는 미확인 · **9/28: 발사 확인(`→ 192.168.1.182:26321`, UE count=4), 수신 소켓이 읽어 감. 적용 여부·단위는 미확인** |
+| 두두원 → gNB2 `cell-stop` SSH | ❓ 읽기 전용 제약으로 미확인 (§8) · **9/22 빌드부터 SSH 비활성(`#if 0`, `GNB Control Mock Success`) — 물리 gNB2 는 제어되지 않는다** |
+| RICF 가 `cell_power_state` 를 에코 | ⛔ **에코 기능이 존재하지 않는다** (아래) · 🆕 **템플릿 교체 뒤(9/28 런 첫 관측) `_powerState` 가 gnb_control 의 마지막 명령을 에코 — 물리 상태 아님** |
 
 `[ERROR]` 0건 · `제어명령 실패` 0건 · `422` 0건 (20:27 이후 전 구간, `logs/app.log:818697` 이하 전수).
 
@@ -951,6 +1193,12 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 `captured/15_f_control_NCOF_to_RICF_sent_2026-09-10_pretty.json` 에 보존했다.
 
 ### ⛔ "RICF 가 cell_power_state 를 에코한다" 는 전제가 틀렸다 — 조사 종료
+
+> 🆕 **9/28 런에서 바뀐 것이 확인됐다 — 아래는 9/10 무렵 빌드의 조사다**(tmpl `:149`·`:183` 줄번호 기준). 템플릿이 바뀌어
+> `_powerState`/`_power` 가 자리표시자가 됐고, `Load_Latest_Gnb_Power_State_Local()`(`ncof_flow_report_common.cpp:301-339`)이 `gnb_control` 의
+> 최근 1행을 SELECT 해 채운다. 즉 **"마지막으로 받은 명령" 의 에코**는 생겼고 "물리 상태" 의 에코는 여전히 없다.
+> 아래의 "하드코딩 ACTIVE" 는 템플릿 교체 전까지, "두 테이블은 어디에서도 SELECT 되지 않는다" 는 9/22 빌드 이전까지
+> (9/22 빌드 소스에는 이미 SELECT·치환이 있다), "종착지는 물리 gNB2" 는 9/22 빌드 이전까지(9/22 부터 SSH Mock)의 서술이다.
 
 이전 판 §8 은 종단 확인 지점을 "다음 주기 `13p_d` 에서 `cell_power_state` 에코" 로 잡았다.
 **그런 기능은 두두원에 없다.** 실측·소스 양쪽으로 확정했다.
@@ -1052,18 +1300,18 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | ~~높음~~ **해결 (적용 범위 부분)** (2026-09-17) | ~~throughput 을 bps **정수**로 전송~~ — 토큰표가 `ncof_flow_report_common.cpp:829` `Json_Quote("50000000 bps")` ~ `:833` `("300000000 bps")`, `:837-838` `("300000 pps")`/`("500000 pps")` 로 수정됐다. **단 `8p` 주기 보고 경로(682건)는 스루풋 8필드가 100% `"-999"` 라 이 수정과 무관하다** — 값을 채우는 곳이 토큰표가 아니라 `ncof_flow_dynamic_report.cpp:289` `Set_Json_Bps_To_Mbps` 다. 아래 `-999` 항목과 함께 봐야 한다. (9/11 판의 `:527-539`·`:524`·`:907-934` 는 §6.3 의 9/10 감사 기준 줄번호) | 10⁶배 왜곡 해소. `12p_c` 678건 정상, 분석값 `150.0 Mbps` 로 산출 |
 | ~~높음~~ **해결** (2026-09-17) | ~~Volume 필드가 정수~~ — 같은 토큰표 `:840-841` 이 `Json_Quote("3000000000 B")` / `Json_Quote("9000000000 B")` 로 수정됐다 | 바이트 단위 정규식 통과 |
 | ~~높음~~ **해결** (2026-09-17) | ~~`13p_d` 계열 구조적 결함 5종~~ — `timeStamp`(대소문자)·`_nodeAddrs`(배열→단일 객체)·`tai`·`ncgi`·`nrCellId` hex 9자리 5종 전부 템플릿 3종에서 수정됐다. 상세는 **§6.1**(9/17 해소 — 이력으로 보존) | 9/17 검증 창 `13p_d` **341건 수신, 잔존 위반 0건**. 직전 창에서는 940건 전량 422(§6.1 의 689건은 9/9~9/10 창 수치) |
-| 🔴 **치명 — 최우선 1** | **`-999` 센티넬** — 값 없으면 **필드 생략**이 규격. 영향 통지 **2,384건(수신 3,403건의 70.1%)**, 이는 **422 거절분 2,384건 전체(100%)** 다. 근원은 `ncof_flow_targeting.cpp:21-28` `Json_Stamp_Number_Default()`, `:56-68` `Replace_Stamp_One()`(RTT/DELAY/JITTER/LOSS 8종 일괄), `:85-91` `Json_Qos_Throughput_Default()`, `:102-107` `Json_Available_Bitrate_Value()`, `ncof_flow_report_common.cpp:341-348` `Json_Metric_Number_Or_999` / `:359-366` `Json_Metric_Text_Or_999` / `:378-385` `Json_Metric_RF_With_Unit_Or_999`(9/11 판의 `:225-247` 은 재빌드로 밀린 줄번호), 같은 파일 `:908`·`:911`·`:1219`, `ncof_flow_dynamic_report.cpp:289,311`. 🆕 **2026-09-18 성격 규명 — `-999` 는 표기 취향이 아니라 DB 조회 실패 시의 폴백이다.** 두두원 로그에 `traffic row not found table=gnb_traffic id=gnb1/gnb2`, `recent dynamic stamp not found table=app_stamp` 가 함께 찍힌다. 실제로 측정값이 있는 필드는 `"0.000317 Mbps"` 처럼 정상 형식으로 온다 → 요청을 **"값이 없으면 필드 생략"** 으로 좁혔다. ⚠️ **"3GPP 에 데이터 없음 표현이 없다" 고 쓰지 말 것** — `BitRateRm`/`PacketDelBudgetRm`/`PacketLossRateRm` 등 nullable `…Rm` 계열이 실재해 grep 한 번에 반증된다. 올바른 논거는 "이 필드들이 **non-nullable 타입에 바인딩**돼 있어 `null` 도 못 넣으므로 생략이 유일" 이다 | **패치 B 를 붙잡는 둘 중 하나.** 보정 계층이 지운 필드 73,352건 |
-| 🔴 **치명 — 최우선 2** | **정수 필드에 소수값** — 영향 통지 **1,363건(수신의 40.1%)**, 3GPP 표준 필드만으로 1,362건. `pdb: 0.45`, `_dlMaxPacketDelay: 20.74`. `pdb`·`pdbDl`·`maxPdbUl`·`maxPdbDl`(TS 29.517), `dl/ul/rtrPacketDelay`(TS 29.508)는 정수 타입이라 관대 수신으로 완화 불가. 출처는 위와 같은 `Replace_Stamp_One()` 계열 | **둘은 동시 수정 필수.** ①만 먼저 고치면 `-999` 에 가려져 있던 AF `PERF_DATA` 682건이 ②로 드러나 영향이 최대 2,045건까지 는다. 한 번에 어려우면 **②를 먼저** |
-| 🔴 **높음 (2026-09-18 신규)** | **UDP 목적지 `192.168.1.182:5555` 에 수신 리스너가 관측되지 않는다** — 9/18 21시경 `ss -lun` 에 해당 포트 없음(PFCP 8805/8806 만). `sendto()` 는 수신자가 없어도 성공하므로 `QOS UDP send Success` 는 수신 증거가 아니다 | 2라운드 회신 §2 로 질의 |
-| 🔴 **높음 (2026-09-18 신규)** | **UDP 에 단위가 실리지 않는다** — 우리가 보낸 `"5.0 Mbps"` 가 `gbrDl=5.000000` 으로 실린다(`std::stod` 가 접미사 폐기, `ncof_flow_control.cpp:87-88`). UPF 의 해석 단위에 따라 **10⁶배** | 2라운드 회신 §3 으로 질의. 단위를 알려 주면 **우리가 맞추겠다**고 제안 |
+| ~~🔴 **치명 — 최우선 1**~~ ✅ **해결(9/22 14:10 빌드, 9/22·9/28 원장 0건)** | **`-999` 센티넬** — 값 없으면 **필드 생략**이 규격. 영향 통지 **2,384건(수신 3,403건의 70.1%)**, 이는 **422 거절분 2,384건 전체(100%)** 다. 근원은 `ncof_flow_targeting.cpp:21-28` `Json_Stamp_Number_Default()`, `:56-68` `Replace_Stamp_One()`(RTT/DELAY/JITTER/LOSS 8종 일괄), `:85-91` `Json_Qos_Throughput_Default()`, `:102-107` `Json_Available_Bitrate_Value()`, `ncof_flow_report_common.cpp:341-348` `Json_Metric_Number_Or_999` / `:359-366` `Json_Metric_Text_Or_999` / `:378-385` `Json_Metric_RF_With_Unit_Or_999`(9/11 판의 `:225-247` 은 재빌드로 밀린 줄번호), 같은 파일 `:908`·`:911`·`:1219`, `ncof_flow_dynamic_report.cpp:289,311`. 🆕 **2026-09-18 성격 규명 — `-999` 는 표기 취향이 아니라 DB 조회 실패 시의 폴백이다.** 두두원 로그에 `traffic row not found table=gnb_traffic id=gnb1/gnb2`, `recent dynamic stamp not found table=app_stamp` 가 함께 찍힌다. 실제로 측정값이 있는 필드는 `"0.000317 Mbps"` 처럼 정상 형식으로 온다 → 요청을 **"값이 없으면 필드 생략"** 으로 좁혔다. ⚠️ **"3GPP 에 데이터 없음 표현이 없다" 고 쓰지 말 것** — `BitRateRm`/`PacketDelBudgetRm`/`PacketLossRateRm` 등 nullable `…Rm` 계열이 실재해 grep 한 번에 반증된다. 올바른 논거는 "이 필드들이 **non-nullable 타입에 바인딩**돼 있어 `null` 도 못 넣으므로 생략이 유일" 이다 | **패치 B 를 붙잡는 둘 중 하나.** 보정 계층이 지운 필드 73,352건 |
+| ~~🔴 **치명 — 최우선 2**~~ ✅ **해결(9/22 14:10 빌드, 9/22·9/28 원장 0건)** | **정수 필드에 소수값** — 영향 통지 **1,363건(수신의 40.1%)**, 3GPP 표준 필드만으로 1,362건. `pdb: 0.45`, `_dlMaxPacketDelay: 20.74`. `pdb`·`pdbDl`·`maxPdbUl`·`maxPdbDl`(TS 29.517), `dl/ul/rtrPacketDelay`(TS 29.508)는 정수 타입이라 관대 수신으로 완화 불가. 출처는 위와 같은 `Replace_Stamp_One()` 계열 | **둘은 동시 수정 필수.** ①만 먼저 고치면 `-999` 에 가려져 있던 AF `PERF_DATA` 682건이 ②로 드러나 영향이 최대 2,045건까지 는다. 한 번에 어려우면 **②를 먼저** |
+| 🔴 **높음 (2026-09-18 신규)** | **UDP 목적지 `192.168.1.182:5555` 에 수신 리스너가 관측되지 않는다** — 9/18 21시경 `ss -lun` 에 해당 포트 없음(PFCP 8805/8806 만). `sendto()` 는 수신자가 없어도 성공하므로 `QOS UDP send Success` 는 수신 증거가 아니다. **9/28: 실제 목적지는 `:26321` 이고 수신 소켓이 있다(읽혀 나감) → 리스너 문제는 해소, 해석(단위·0·유효기간)이 새 미결** | 3라운드 초안 §4 로 질의 |
+| 🔴 **높음 (2026-09-18 신규)** | **UDP 에 단위가 실리지 않는다** — 우리가 보낸 `"5.0 Mbps"` 가 `gbrDl=5.000000` 으로 실린다(`std::stod` 가 접미사 폐기, `ncof_flow_control.cpp:87-88`). UPF 의 해석 단위에 따라 **10⁶배** | ~~2라운드 회신 §3 으로 질의~~ → 3라운드 초안 §4 Q2 로 질의(미발송). 단위를 알려 주면 **우리가 맞추겠다**고 제안 |
 | ~~중간~~ **해소 (2026-09-18)** — 활성·발사 확인(§8) | ~~**`upf_qos_udp` 경로에 NCOF 가시성이 0 이다**~~ — 두두원이 우리 14_e `QOS_POLICY_ASSIST` 를 받으면 실장비 UPF 로 바이너리 UDP 를 직접 발사한다(`ncof_flow_control.cpp:332-336` `Send_Qos_Apply_To_Upf_Udp(config.upf_ip, config.upf_port, packet)`, `QOS_APPLY_UE_COUNT`=4 라 UE 4개가 다 차야 발사). SBI 응답은 여전히 `200` 이라 성공·실패를 알 수 없다. 활성화 여부 · UDP 실패 통보 방법 · 최소 UE 수를 확인 요청함 | 9/15 신규 모듈 `include/upf_qos_udp.h`, `src/upf_qos_udp.cpp` |
 | 중간 | AF 템플릿과 RICF 템플릿의 값 생성 규칙이 서로 다름(`9_` 는 `-999`, `10_a` 는 소수) — 위 최우선 2건을 고치면 대부분 함께 해소된다 | 한 번에 고치려면 둘 다 |
-| 중간 | **제어 명령 수용 결과를 관측할 방법이 없다** — 수신 15F 는 `poc_test.recvJson`/`gnb_control*` 로만 들어가고 어디서도 SELECT 되지 않으며, `send_json/` 에도 안 남는다. 최소한 수신 덤프 1개라도 파일로 남겨 주면 연동 검증이 가능해진다 | 종단 확인 불가 |
+| 중간 | **제어 명령 수용 결과를 관측할 방법이 없다** — 수신 15F 는 `poc_test.recvJson`/`gnb_control*` 로만 들어가고 어디서도 SELECT 되지 않으며, `send_json/` 에도 안 남는다. 최소한 수신 덤프 1개라도 파일로 남겨 주면 연동 검증이 가능해진다. **9/28: `gnb_control` 은 이제 13p_d 로 에코된다(마지막 명령). 물리 수용 결과는 여전히 관측 불가** | 종단 확인 불가 |
 | 중간 | **HTTP 200 이 실제 gNB 제어 성공을 뜻하지 않는다** — `save_count` 는 MySQL INSERT 만으로 증가하고 SSH 셸아웃 결과를 반영하지 않는다. 셸아웃 실패를 응답 코드에 반영해 달라 | 무증상 실패 |
 | 중간 | **앱이 로그를 파일로 남기지 않는다** — 9/17 15:23:01 정지의 원인을 끝내 특정하지 못한 직접 원인이다(§8). `./sbi_poc_app 2>&1 \| tee ~/SBI/app/sbi_poc_app.$(date +%F_%H%M).log` 로 기동해 달라고 요청함 | 터미널 스크롤백이 유일한 단서였다 |
 | 낮음 | **gNB1·gNB2 가 동일한 `nrCellId`(`123456789`)** 를 보고한다 — 값 하드코딩이 `ncof_flow_report_common.cpp:450`(`gnb1_nr_cell_id`)·`:460`(`gnb2_nr_cell_id`)이고 주입은 `:617`·`:627` 이다. `mcc`/`mnc` 도 같아 **NCGI 기준으로는 같은 셀**이다. 형식은 규격 합격이고 지금은 `gNbId`(000001/000002)·FQDN 으로 구분하므로 제어에 지장 없으나, 셀 단위 에너지 집계를 넣으면 두 gNB 가 병합된다 | 9/17 회신에 후속 요청으로 포함 |
 | 낮음 | `templates/send/` 의 공백 든 중복 파일 `8p_..._v1.0 _USER_DATA_USAGE_MEASURES.tmpl` 정리 | 참조되지 않는 잔재 — 9/17 현재 그대로 |
-| 낮음 | `13p_d` 의 `_powerState` 가 템플릿 하드코딩 `"ACTIVE"` — 9/17 재작성 후 통합 tmpl `:178`·`:224`, `_POWER.tmpl` `:53`·`:100`(9/11 판의 `:149, :183` 은 재작성 전 줄번호). 제어 반영 상태를 여기에 실어 주면 NCOF 가 폐루프를 자체 검증할 수 있다 | 폐루프 검증 — 재작성 후에도 그대로 |
+| 낮음 | `13p_d` 의 `_powerState` 가 템플릿 하드코딩 `"ACTIVE"` — 9/17 재작성 후 통합 tmpl `:178`·`:224`, `_POWER.tmpl` `:53`·`:100`(9/11 판의 `:149, :183` 은 재작성 전 줄번호). 제어 반영 상태를 여기에 실어 주면 NCOF 가 폐루프를 자체 검증할 수 있다 | 🟡 **9/28 부분 반영** — 마지막 명령 에코(물리 상태 아님) |
 | 낮음 | 400 응답에 사유를 실어 달라(현재 `{"error":"bad request"}` 고정, 사유는 stderr 에만) | `http2_server.cpp:122,149,348,378,887`, `ncof_flow_subscription_core.cpp:1287` — 9/17 현재 그대로 |
 | ~~높음~~ **강등 — 수정 요청 아님, 협의 항목** | ~~하위 구독 응답에 구독 ID 가 없다~~ — NCOF 가 `notifId` 폴백으로 자체 해소했고(§8 의 8), 규격이 요구하는 것은 `201` + **필수 `Location` 헤더**이지 `Subscription-ID` 가 아니다(`ncof_yaml` 전체에 `Subscription-ID` 0건). 9/17 회신에서 요청 목록에서 뺐다 | **§6.2** — 근거·경위(표의 mockup 비교는 이력으로 보존) |
 
@@ -1290,13 +1538,13 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | 제어 명령 실패는 400 으로 나타난다 | ❌ 라우팅 후 대상 0건이면 **500** 이다(`ncof_flow_subscription_handlers.cpp:761-784`) |
 | `Content-Type` 이나 최상위 `[` vs `{` 가 문제가 될 수 있다 | ❌ 검출은 원문 substring 매칭이라 `[`/`{` 무관. Content-Type 은 저장만 하고 아무 데서도 읽지 않는다 |
 | 포트(55555 vs 55556)가 메시지 라우팅에 영향을 준다 | ❌ 네 포트 모두 같은 `Start_Http2_Server` + 단일 디스패처(`main.cpp:277-306`, `http2_server.cpp:369-370`) |
-| **RICF 가 다음 주기 통지에 `cell_power_state` 를 에코한다** | ❌ **에코 기능 자체가 없다.** `_powerState` 는 템플릿 하드코딩이고 수신 제어는 DB INSERT 2건 + gNB2 SSH 로 끝난다(§5) |
+| **RICF 가 다음 주기 통지에 `cell_power_state` 를 에코한다** | ❌ **(템플릿 교체 전까지) 에코 기능 자체가 없었다.** 🆕 교체 뒤(9/28 런 첫 관측)로는 gnb_control 의 마지막 명령을 에코한다 — 물리 상태가 아니므로 폐루프 증거로 쓰지 말 것. (당시) `_powerState` 는 템플릿 하드코딩이었고 수신 제어는 DB INSERT 2건 + gNB2 SSH 로 끝났다(§5). 지금은 SSH 가 Mock 이다 |
 | 두두원 `send_json/` 을 보면 제어 수신 여부를 알 수 있다 | ❌ `send_json/` 은 **송신 덤프 전용**이다. 수신 제어의 부수효과는 메시지별로 갈린다 — `14_e` 는 MySQL INSERT(`Save_14e_Ncof_To_Pcf_By_Config`, `ncof_flow_control.cpp:123`) + **2026-09-15 신설 경로**로 UE 4개(`upf_qos_udp.h:6` `QOS_APPLY_UE_COUNT`)가 다 차면 실장비 UPF 로 바이너리 UDP 발사(`ncof_flow_control.cpp:332-336` → `upf_qos_udp.cpp:9`), `15f` 는 MySQL INSERT 2건 + gNB2 SSH 셸아웃(§5). **셋 다 `send_json/` 에 아무 흔적을 남기지 않는다.** 관측 경로는 MySQL 직접 조회(읽기 전용 제약으로 우리는 불가)와 두두원 앱 stderr 뿐이고, stderr 는 `tee ~/SBI/app/sbi_poc_app.<날짜>.log` 로 기동하기 시작한 2026-09-17 이후에만 사후 확인이 된다 |
 | `13p_d` 와 `8_`/`9_`/`10_a` 는 별개 스케줄러로 나간다 | ❌ 단일 `Ncof_Subscription_Report_Thread`(`ncof_flow_subscription_core.cpp:905-984`) 1초 폴링이 전부 처리 |
 | `serviveName` 은 양측이 공유하는 오타다 | ❌ **규격 그대로다.** `TS29508…yaml:391` 이 그렇게 선언하고 description 에 명시. `serviceName` 으로 고치면 깨진다(§6.3) |
 | `_nodeAddrs` 는 배열이 맞다 | ❌ **객체가 맞다.** `ncof_yaml` 커밋 `26057fa`(2026-05-26) "fix _nodeAddrs array to object" 로 확정. 배열로 보이는 파일은 5/4 자 worktree 스냅샷이다 |
 | `notificationMethod` 는 NEF 구독에서도 맞는 이름이다 | ❌ NEF 는 `notifMethod` 다. 두두원이 규격대로 읽고 우리 샘플이 틀렸다(§6.3) |
-| 단위 없는 정수·센티넬은 규격 샘플에도 있다 | ❌ `8_`/`12p_c` 샘플은 깨끗하다(단위 214개 전부 일치, 센티넬 0건). 두두원 렌더링 단계의 토큰표 회귀다(§6.3). **단위 접미사는 9/17 빌드에서 해소**(`ncof_flow_report_common.cpp` 토큰표가 `Json_Quote("50000000 bps")` 로 복구), **센티넬 `-999` 는 미해소** — 패치 B 회수를 막는 원인 ① 이다 |
+| 단위 없는 정수·센티넬은 규격 샘플에도 있다 *(이 칸의 센티넬 미해소 서술은 9/17 기준 — 9/22 해소)* | ❌ `8_`/`12p_c` 샘플은 깨끗하다(단위 214개 전부 일치, 센티넬 0건). 두두원 렌더링 단계의 토큰표 회귀다(§6.3). **단위 접미사는 9/17 빌드에서 해소**(`ncof_flow_report_common.cpp` 토큰표가 `Json_Quote("50000000 bps")` 로 복구), **센티넬 `-999` 는 미해소** — 패치 B 회수를 막는 원인 ① 이다 |
 | 두두원이 uuid4 로 구독 ID 를 발급한다(발급만 안 실어 준다) | ❌ **발급기 자체가 없다.** `src/`+`include/` 전체에 uuid·random 생성 코드 0건(`uuid_generate`·`boost/uuid`·`random_device`·`mt19937`·`rand()` 전부 0). `uuid` 가 걸리는 8곳은 전부 하드코딩 리터럴(`ncof_flow_report_common.cpp:740-743` — 9/17 재빌드로 `:458-461` 에서 밀렸다, `ncof_send_templates.cpp:207,254-255,271` → `pcf-uuid-001` 등). 두두원 자신의 구독도 `notifCorrId` 하드코딩(`NOTIFICATION_2026-03-01T12:00:00+09:00_1` — `1_`/`1p_` 템플릿이 같은 `__NOTIF_CORR_ID__` 기본값을 쓴다)이고 PCF·RICF 가 같은 값이다 → §6.2 의 `Subscription-ID` 헤더 요청은 **신규 기능 개발**이다. 게다가 그 헤더는 **어느 규격에도 없다** — `ncof_yaml` 전체(`*.yaml`·`callbacks/`·`simplified/`)에 `Subscription-ID` **0건**이고, 규격이 요구하는 것은 `201` + `Location` 헤더다(`TS29591_Nnef_EventExposure_PoC_ETRI_DoDo1.yaml:45-58`, `required: true`). §6.2 의 "가장 작은 수정" 문구(400행)와 어긋나므로 함께 고칠 것 |
 | 해지 URL 의 `:`/`+` 는 percent-encoding 해야 안전하다 | ❌ **인코딩하면 두두원 해지가 깨진다.** httpx 0.28.1 → Starlette ASGI 왕복 실측: 그대로 보내면 마지막 경로 세그먼트가 notifId 와 바이트 일치, `quote(safe='')` 를 씌우면 `%3A` 가 남는다. FastAPI 는 복호하지만 두두원은 원문 그대로 잘라 비교하므로(`ncof_flow_subscription_core.cpp:1112-1137`) 404 로 조용히 실패한다. `:`/`+` 는 RFC 3986 경로 세그먼트 허용 문자다 |
 | `main.py:88` 은 주석만 해제하면 된다 | ❌ **알려진 기동 실패가 되살아난다.** 복원은 구독 1건당 수 초가 걸리고 `lifespan` 안에서 await 하면 hypercorn 기동 타임아웃(60초)에 걸려 **구독 12건에서 기동 실패**(실측). 게다가 notifId 폴백이 들어가면 Phase 2 연출 대기가 구독당 4~6초로 늘어 더 빨리 걸린다 → 백그라운드 태스크로 분리해야 한다 |
@@ -1332,7 +1580,7 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | `12p_c`(7p) 는 제어 엔진의 유일한 입력이다 | ❌ **`8_`/`8p_`(3\_ 경로)도 입력이 된다.** `data_analyzer` 는 출처 구독을 구분하지 않고 UDUM `timeStamp` 가 가장 최신인 통지 하나를 고른다. 2026-09-22 에 `7p` 가 93회 연속 실패하는 동안에도 `3_` 복구만으로 제어 루프가 재개됐다(18:04:07) |
 | 두두원이 보내는 분석 메트릭은 템플릿 상수라 `0.0`/`150.0` 두 값뿐이다 | ❌ **9/22 빌드부터 전부 실측값이다.** 관측 6종이 `0.001767` ~ `4.35225` 이고 `150.0` 은 **0건**이다. §5 의 해당 서술은 9/21 까지의 것이다. 다만 전부 임계 `500.0` 미만이라 판정이 `DEEP_SLEEP` 뿐인 것은 그대로다 |
 | 관대 수신 원장이 0건이면 두두원이 고친 것이다 | ❌ **통지 수신 건수와 반드시 대조하라.** 2026-09-22 17:20 시점에 원장이 0건이었는데 통지도 0건이었다 — 두두원 리포트가 아예 안 오고 있었을 뿐이다. "고쳐졌다" 는 판정은 **원장 0건 AND 통지 > 0** 일 때만 성립한다(§7 의 raw 덤프 행과 같은 함정) |
-| `12p_c` 가 안 오는 것은 두두원 SBI 앱의 코드 버그다 | ❌ **앱 코드 문제가 아니다.** 앱은 `poc_test.udptp_traffic` 을 **SELECT 만** 한다(소스 전체에 INSERT 0건). 그 테이블을 채우는 것은 `~/NW_Collect/` 의 별도 체인(`udptp` 측정 → UDP → `collect_server :2002` → INSERT)이고, 끊긴 곳은 **`udptp` → `collect` 보고 구간**이다 — `udptp.c:155` 가 `-D`/`-R`/`-Q`(direction·collect IP·collect port) 중 하나라도 비면 조기 반환하는데 `run_client.sh:48,51` 의 기동 줄에 셋 다 없다. 부하는 생성되지만 측정값이 보고되지 않는다 |
+| `12p_c` 가 안 오는 것은 두두원 SBI 앱의 코드 버그다 | ❌ **앱 코드 문제가 아니다.** ⛔ **9/28 정정: 이 칸 뒷부분의 "`run_client.sh` 인자 누락" 원인 서술은 틀렸다 — 보고 주체는 .125 의 `udptp -s`(`udptp.c:615`).** 앱은 `poc_test.udptp_traffic` 을 **SELECT 만** 한다(소스 전체에 INSERT 0건). 그 테이블을 채우는 것은 `~/NW_Collect/` 의 별도 체인(`udptp` 측정 → UDP → `collect_server :2002` → INSERT)이고, 끊긴 곳은 **`udptp` → `collect` 보고 구간**이다 — `udptp.c:155` 가 `-D`/`-R`/`-Q`(direction·collect IP·collect port) 중 하나라도 비면 조기 반환하는데 `run_client.sh:48,51` 의 기동 줄에 셋 다 없다. 부하는 생성되지만 측정값이 보고되지 않는다 |
 > §3 의 `Detect_Ncof_Recv_Json_Type()` 인용과 "`(void)path;` 로 경로를 폐기한다" 는 서술은
 > **2026-09-10 에 정정됐다**(§3 의 📌 참조). 14/15F 분기 누락과, 5/5p 분기만은 경로를 읽는다는 점.
 >
@@ -1343,6 +1591,12 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 ---
 
 ## 8. 다음 할 일
+
+> ⏰ **(9/28) 시한 항목 — 2026-10-08 12:00 KST 구독 만료.** 두두원 `evtreq_mon_dur` 연장(3라운드 요청 2) 전에는 그 시각
+> 이후 어떤 재기동으로도 복구되지 않는다.
+> 🆕 **(9/28) 최우선은 `두두원_3라운드_요청메일초안.md` 발송**이다. 발송 전에 NCOF 를 되살리거나(상단 「다음 재기동」),
+> 메일 §1 의 NCOF 정지 안내 문장을 남겨 둘 것 — 9/28 18:36 이후 두두원 로그의 통지 송신 실패는 NCOF 정지 때문이다 — 요청 1(.125 udptp 서버의 collect 보고 설정 → 12p_c),
+> 요청 2(`monDur`), 확인 요청(26321 해석). 아래 9/21·9/22 의 "최우선" 서술은 이력이다.
 
 **차단성 블로커는 없다.** 제어 루프는 관통됐고, 남은 것은 발송·답신 대기·검증·정리다.
 
@@ -1361,7 +1615,8 @@ localhost) 전수 통과 + `_notify_subscriber()` 를 httpx 목으로 호출한 
 | `두두원_수정요청_메일초안.md` (`62170fc` → 감사 반영 `ba8c7d4`) | **발송 완료.** 요청 4건 + 협의 1건 |
 | `두두원_검증결과_회신초안.md` (`ba8c7d4`) | 9/17 검증 결과의 내부 초안 |
 | `두두원_회신_발송본.md` (`3267326`, 9/17 20:36) | **발송 완료.** 실제로 나간 본문 |
-| `두두원_2라운드_회신초안.md` (`3267326`, 9/18 21:45) | 🔴 **미발송.** 위 ①②③ 추가 후 발송할 것 |
+| `두두원_2라운드_회신초안.md` (`3267326`, 9/18 21:45) | 🔴 **미발송.** 위 ①②③ 추가 후 발송할 것 — *(9/28) 3라운드로 대체. ②③(cell-start·rfState)은 비방사 전제 재검토 후 판단* |
+| `두두원_3라운드_요청메일초안.md` (9/28 18:25 정정판) | 🔴 **미발송 — 현행 요청 목록.** 2라운드의 UDP 단위·제어 결과 가시성·재기동 공유를 흡수 |
 
 > 📌 이 절의 옛 서술 "4건 구성 — ① 소수 초 ② 키 ③ 단위 ④ **구독 응답 ID**" 는 **오기였다.**
 > 9/11 감사에서 구독 ID 는 **협의 5(요청 아님)** 로 내려가고, 그 자리에 **요청 4 = 제어 결과 확인 수단**이
@@ -1390,11 +1645,13 @@ UDP 단위 미적재 · 제어 실패 시 `500` 재청구 · `-999`/정수화 �
 > 1. `-999`·정수 필드 해소 확인 보고(통지 932건 / 관대 계층 수리 0건)
 > 2. `3_` 구독 400 을 우리 쪽에서 맞췄다는 공유 + **`traffic_filter_setting` 값이 바뀌면 다시 깨진다**는 경고
 > 3. `udptp` 재기동 요청 — **두 프로세스에 `-D UL` / `-D DL` 을 나눠** 붙이고 `-R 127.0.0.1 -Q 2002` 추가
+>    ⛔ **(9/28) 무효 처방 — 따르지 말 것.** 두두원 호스트의 udptp 는 클라이언트라 보고하지 않는다. 대체: 3라운드 초안
+>    요청 1(.125 `run_server.sh` 의 `COLLECT_IP`/`SERVER_IP` 정정 + `sudo systemctl restart iperf_server`)
 > 4. gNB 전력값 생성 요청(위 절) + 파이썬 참고 구현 첨부
 >
 > gNB SSH Mock 건은 **ETRI 가 의도한 설정**이라 메일에서 뺐다.
 
-> 🔴 **답신이 와도 바로 패치 B 를 끄지 마라.** `-999` 와 정수 필드 소수값은 **동시 수정**을 요청했다.
+> 🔴 *(9/17~9/21 기준 — 9/22 에 둘 다 해소)* **답신이 와도 바로 패치 B 를 끄지 마라.** `-999` 와 정수 필드 소수값은 **동시 수정**을 요청했다.
 > ①만 반영되면 `-999` 에 가려져 있던 AF `PERF_DATA` 682건이 소수값 위반으로 새로 드러나
 > 영향 통지가 최대 2,045건까지 **오히려 늘어난다.** 근거는 `두두원_회신_발송본.md` §2 와
 > `logs/lenient_ingest/ledger.jsonl`.
@@ -1548,7 +1805,7 @@ QOS UDP send Complete UE count=4
 
 | # | 항목 | 근거 | 위험 |
 |---|---|---|---|
-| ① | **UDP 목적지에 수신 리스너가 관측되지 않는다** | 9/18 21시경 `ss -lun` 에 `5555` 없음(PFCP 8805/8806 만). `192.168.1.182` 는 두두원 호스트 자신의 `enp131s0f0`. **2026-09-21 14:20 재확인 — 여전히 없다** | `sendto()` 는 수신자가 없어도 성공하므로 `QOS UDP send Success` 로그로는 구분 불가 — **아무도 안 받아도 성공 로그가 남는다** |
+| ① | ~~**UDP 목적지에 수신 리스너가 관측되지 않는다**~~ ✅ **9/28 해소 — 실제 목적지 `:26321` 에 수신 소켓 있음(읽혀 나감). 남은 것: 수신 주체 확정·단위·0 의미·유효기간(3라운드 §4)** | 9/18 21시경 `ss -lun` 에 `5555` 없음(PFCP 8805/8806 만). `192.168.1.182` 는 두두원 호스트 자신의 `enp131s0f0`. **2026-09-21 14:20 재확인 — 여전히 없다** | `sendto()` 는 수신자가 없어도 성공하므로 `QOS UDP send Success` 로그로는 구분 불가 — **아무도 안 받아도 성공 로그가 남는다** |
 | ② | **UDP 에 단위가 실리지 않는다** | 우리가 보낸 `"5.0 Mbps"` 가 `gbrDl=5.000000` 으로 찍힌다(`std::stod` 가 접미사 폐기) | UPF 가 Mbps 로 읽는지 bps 로 읽는지에 따라 **10⁶배**. 양쪽 다 검증 수단이 없다 |
 | ③ | 🔕 **[9/22 비활성] 두두원이 gNB2 의 명시적 `ERROR` 를 무시하고 `Success`/200 을 낸다** — 9/22 빌드가 SSH 호출을 `#if 0` 으로 뺐으므로 현 빌드에서는 발현하지 않는다. SSH 를 되살리면 그대로 재발한다 | `sbi_poc_app.2026-09-18_2053.log` :641·:1071, `_2247.log` :178-179 — `ERROR=INVALID gNB STATE` 바로 다음 줄이 `gnb_ssh_control.cpp:123 GNB Control command Success` | 제어 4회 중 3회가 거절됐는데 NCOF·두두원 로그 양쪽 다 성공으로 보인다. **경로 1 에는 성공/실패 판별자가 아예 없다** |
 | ④ | **`cell-start` 가 DEVICE 모드에서 발생 불가** (NCOF 측 제약이라 9/22 빌드와 무관하게 유효) | `gnb2_rule_engine.py:21` `th_mbps=500.0` vs 9/18 메트릭 229/234 회가 `150.0`. 두 로그 전체에 `cell-start` **0건** | 한 번 내려간 셀을 NCOF 가 깨울 수 없다. `emit-on-change` 로 프로세스당 `cell-stop` 1회만 나가고 영구히 조용해진다 |
@@ -1700,7 +1957,7 @@ QOS UDP send Complete UE count=4
    실측: 나간 `startTime: 2026-09-17T20:26:54.615759+09:00` — 소수 초가 실렸고 백데이트 60초도 살아 있다.
 7. ~~두두원이 **`notificationURI` 오타를 고치면** 패치 C 를 비우고 재검증~~ — **완료 (2026-09-10 17:30).**
    패치 C 제거 후 파일이 도입 이전 블롭과 동일함까지 확인. 상세는 §4.
-8. 🎉 **관대 수신 계층 제거 (패치 B) — 조건 충족. 이제 실제로 끌 수 있다 (2026-09-22).**
+8. 🎉 **관대 수신 계층 제거 (패치 B) — 조건 ①② 충족 (2026-09-22). 단 12p_c 검증 뒤에 제거한다.**
    조건이던 두두원의 `-999` + 정수 필드 소수값 **동시 수정**이 9/22 빌드로 반영됐고,
    통지 932건 동안 관대 계층이 수리를 **0건** 한 것으로 실증됐다(단 `12p_c` 경로는 미검증) ↓
    > 🟢 **단계적 회수의 문이 열렸다 (2026-09-18 4번째 런).** "끄면 루프가 멈춘다" 가 아니다 —
@@ -1716,6 +1973,12 @@ QOS UDP send Complete UE count=4
    "아래 정리 목록에 넣을 것" 이라고 적어 둔 항목이며 여태 번호가 없었다 — 여기 넣는다.
    최소 구현: `404` 를 성공으로 치되 **경고 로그 + 고아 후보 목록에 적재**, 단위 테스트로 고정.
    라이브 세션 없이 착수 가능하다.
+11. 🆕 **상향 구독 `monDur` 임박 경고 (9/28).** 두두원 `monDur` 가 2026-10-08 12:00 으로 고정돼 있어도 NCOF 는 아무 경고 없이
+   받는다(과거 시각이어도 받아서 하위 10건을 뿌린 뒤 전부 400). `monDur` 를 임의로 늘리는 것은 규격 이탈이라 하지 않고,
+   **N일 이내이거나 이미 지났으면 WARN 로그**를 남기는 정도만 한다. 라이브 세션 없이 착수 가능.
+12. 🆕 **inbound 연결 추세 감시 (9/28).** 두두원은 새 h2c 연결을 자주 연다(27분에 106회 ≈ 분당 4회, 같은 기간 통지 202건). 9/28 런에서는 CLOSE-WAIT 가
+   생겼다가 해소됐지만(워커 fd 15↔20), 장시간 가동 때는 `ls /proc/<worker>/fd | wc -l` 과
+   `ss -tan state close-wait '( sport = :9000 )'` 추세를 볼 것 — 9/4 의 fd 누수(`app.log` 11.9GB)가 재현될 조건이다.
 
 #### 8 의 상세 — 패치 B(관대 수신) 회수 조건 — **2026-09-22 충족**
 
@@ -1750,7 +2013,7 @@ QOS UDP send Complete UE count=4
 > `12p_c` 가 바로 미결 ② 때문에 생성되지 않는 리포트다. **그 페이로드는 9/22 빌드에서
 > 한 번도 검증되지 않았다.** 미결 ②가 풀리면 들어오기 시작하고, 거기서 위반이 나올 수 있다.
 >
-> **권고 순서: 미결 ②(udptp 기동 인자) 해소 → `12p_c` 가 몇 주기 들어오는 동안 원장이 계속
+> **권고 순서: 미결 ②(~~udptp 기동 인자~~ → 9/28 정정: .125 `udptp -s` 의 collect 보고 설정) 해소 → `12p_c` 가 몇 주기 들어오는 동안 원장이 계속
 > 0건인지 확인 → 그 다음 제거.** 순서를 바꾸면 422 가 나도 눈치채기 어렵다 — NCOF 는 자기 422 를
 > 로그에 남기지 않아 "안 온 것" 과 구별되지 않는다(§7).
 
@@ -1787,8 +2050,6 @@ QOS UDP send Complete UE count=4
 `main.py` 의 2줄을 삭제한다.
 
 #### 9 의 상세 — 고아 하위 구독 해소 (2026-09-10)
-
-#### 8 의 상세 — 고아 하위 구독 해소 (2026-09-10)
 
 **실기동 검증 완료 (2026-09-10 22:31, MODE=DEVICE, 두두원 실장비).**
 
@@ -1927,9 +2188,13 @@ mock NF 3종은 성공 경로에서 항상 uuid4 를 헤더에 실으므로 이 
 
 | 재기동 | 결과 | 절차 |
 |---|---|---|
-| **NCOF 만** | ✅ 안전. 복원이 상향 구독을 같은 ID 로 되살리고, 낡은 하위 구독을 DELETE 한 뒤 재구독한다(실측 10/10 200) | 그냥 재기동. 두두원 손대지 말 것 |
+| **NCOF 만** | ✅ 안전. 복원이 상향 구독을 같은 ID 로 되살리고, 낡은 하위 구독을 DELETE 한 뒤 재구독한다(실측 10/10 200) | 그냥 재기동. 두두원 손대지 말 것 — **단 기동 디렉터리에 구독이 든 `ncof_state.json` 이 있을 때만**(아래 ⚠️ 분기) |
 | **두두원 만** | 🔴 **9/17 에 실제로 3회 터진 조합.** 재기동 1회마다 상향 +2 / NCOF 기록상 하위 +10 / 간선 +18 이 얹히고 고아 핸들러가 잔존한다. **장비에 그 세트가 실재하는지는 재기동 방식에 따라 다르다** — 9/10 검증에서는 기록 20건에 장비 실재 10건이었으나, 9/17 10:10대에는 최소 3세트가 살아 통지가 3배로 들어왔다. **`e49c613` 이전에도 동일했다** | 아래 "정리 절차" 로 고아 해지, 또는 "청소 후 재기동" |
 | **둘 다** | ⚠️ 복원 2건 + 두두원 신규 2건 = 4건. 예전 코드에서는 정상이던 조합이 이제 해롭다 | "청소 후 재기동" 을 쓸 것 |
+
+> ⏰ **(9/28) 기한 — 2026-10-08 12:00 KST 이후에는 어느 조합으로도 복구되지 않는다.** 두두원 상향 구독의 `monDur`
+> (DB `evtreq_mon_dur`) 가 그 시각으로 고정돼 있어 하위 구독이 만료 삭제되고, 재기동하면 하위 POST 가 400 이다.
+> 연장(3라운드 요청 2) 확인이 먼저다.
 
 > ⚠️ **"두두원 만" 은 우리가 막을 수단이 없다.** 9/17 회신에서 재기동 전 사전 공유를 요청해 뒀지만,
 > 근본 해소는 NCOF 쪽 중복 제거뿐이다(§8 목록 2번).
@@ -1947,11 +2212,15 @@ mock NF 3종은 성공 경로에서 항상 uuid4 를 헤더에 실으므로 이 
    > kill -TERM <워커pid>            # 30초 내 안 내려가면 워커에 직접
    > ```
    > 그래도 안 되면 프로세스 그룹(`kill -TERM -<pgid>`)까지 간다.
+   > ⚠️ **워커 직접 SIGTERM 은 lifespan 종료를 건너뛴다**(hypercorn 워커에 신호 처리기가 없어 즉시 죽는다) — 최종 저장·
+   > httpx 회수·`DataAnalyzer 중단됨` 로그가 없다. 9/28 18:36 종료가 이 모양이었다. 상태파일은 통지마다 저장되므로
+   > 내용은 대개 최신이지만, 부모 SIGTERM 으로 내려가면 그쪽이 낫다.
 2. 상태 파일 치우기 — **`data/ncof_state.json` 은 cwd 기준 상대 경로**(`persistence_store.py:21-22`)이므로
    **기동 디렉터리의 것**을 치워야 한다. **지우지 말고 `ncof_state.json.bak-<타임스탬프>` 로 옮길 것** —
    9/17 에는 이 백업(`bak-20260917-202439`)이 중복 4벌을 사후 입증한 유일한 근거였다
 3. NCOF 기동 후 `:9000` 리스닝 확인
-4. 두두원 기동 — 두두원 쪽은 우리가 못 올리므로 담당자에게 요청해야 한다
+4. 두두원 기동 — 담당자에게 요청하거나, 9/28 처럼 ETRI 가 dodo1 의 우리 tmux 로 직접 올린다(명령은 상단
+   「이 런의 기동 명령」). 호스트가 재부팅되면 `sbi_poc_app` 은 자동으로 뜨지 않는다
 
 | 지표 | 청소 전 | 청소 후 |
 |---|---|---|
@@ -1965,11 +2234,14 @@ mock NF 3종은 성공 경로에서 항상 uuid4 를 헤더에 실으므로 이 
 > 18×4 환산값이다.
 
 > ⚠️ **상태파일이 없을 때의 분기 (판단 기준).**
-> "NCOF 만 재기동 ✅ 안전" 은 **복원이 읽을 상태파일이 있을 때만** 성립한다. 파일이 없으면 복원이
+> "NCOF 만 재기동 ✅ 안전" 은 **복원이 읽을 구독이 든 상태파일이 있을 때만** 성립한다(빈 파일도 없는 것과 같다 — 9/23 기동이 48B 짜리 빈 파일을 남긴 사례). 파일이 없으면 복원이
 > 돌지 않아 **장비에 남은 하위 구독 10건이 고아가 된다.** 그때는 두 갈래다:
 > - **NCOF 만 올릴 생각이면** — 가장 최근의 "청소 후 트리(상향 2 / external 10)" 백업을
->   `ncof_state.json` 으로 되돌린 뒤 띄워라. 2026-09-21 현재 그 백업은 **`bak-225512`**(9/18 22:55:12 이동,
->   내용 mtime 22:54:35)다. (구독 PUT 등으로 상태 저장을 새로 유발하는 방식은 장비 실재 10건과
+>   `ncof_state.json` 으로 **복사해**(`cp -p`, `mv` 금지) 띄워라. **2026-09-29 현재 그 백업은 `bak-183642`**(9/28 18:36:42 이동,
+>   내용 mtime 18:36:13, 상향 `a43a6a40…`/`cae29d05…` · external 4+6)다. 고르는 기준은 "가장 최근 파일" 이 아니라
+>   **지금 떠 있는 두두원 인스턴스에 하위 구독을 건 NCOF 런의 마지막 상태**다 — 이름이 더 최근인 `bak-174817`·
+>   `bak-20260928-174655` 는 48B 빈 파일이고, `bak-225512`(9/18)·`bak-20260922-201034` 를 되돌리면 두두원이 들고 있는
+>   9/28 17:48 세트 10건이 고아로 남고 하위 구독이 두 벌이 된다. (구독 PUT 등으로 상태 저장을 새로 유발하는 방식은 장비 실재 10건과
 >   어긋난 트리를 만들 수 있어 쓰지 말 것.)
 > - **두두원까지 함께 올릴 거라면** — 되돌리지 마라. 위 "청소 후 재기동" 을 그대로 쓰면 된다.
 >   두두원 구독 맵은 in-memory 라 두두원 재기동으로 장비 쪽도 함께 비므로, 빈 상태에서 시작하는 것이 맞다.
@@ -2004,14 +2276,16 @@ ISO 타임스탬프가 박혀 있어(`NOTIFICATION_upf_2026-09-10T22:37:20…`) 
 
 - ⚠️ **운영 절차가 바뀌었다 (2026-09-10).** `restore_persisted_subscriptions()` 가 **다시 켜졌고
   백그라운드 태스크로 돈다**(`main.py` lifespan). 재기동 조합별 절차는 §8.1 을 볼 것.
-  요지: **NCOF 만 재기동하면 된다. 두두원을 함께 올리면 구독 트리가 두 벌이 된다.**
+  요지: 기동 디렉터리에 상태파일(상향 2 / external 10)이 **있으면** NCOF 만 재기동, **없으면** §8.1 ⚠️ 분기(백업 복사 또는
+  청소 후 재기동). 2026-09-29 현재는 **없다** — 상단 「다음 재기동」.
 - 복원은 기동을 막지 않는다 — 기동 직후 수십 초 동안은 저장 구독이 아직 안 올라와 있어
   `GET /subscriptions`·GUI 목록이 불완전하게 보이고, 그 창에서 들어온 `DELETE`/`PUT` 은 404 를 받는다.
   (복원이 그 뒤에 해당 구독을 되살리므로 그 창에서의 해지는 신뢰하지 말 것.)
-- `NCOF_LENIENT_INGEST=1` 를 빠뜨리면 통지가 전부 422 로 거절되고 루프가 돌지 않는다.
+- `NCOF_LENIENT_INGEST=1` 를 빠뜨리면 관대 계층이 설치되지 않는다. 9/22 빌드 이후 관측된 경로(8_·9_·10_a·11p_b·13p_d)는
+  원장 0건이라 그대로 통과할 것으로 보이나, 12p_c 는 한 번도 검증되지 않았고 NCOF 는 자기 422 를 로그에 남기지 않는다(§7).
   기동 로그 첫머리의 `[LENIENT] 임시 관대 수신 계층 활성화` 배너로 확인할 것(`lenient_ingest.py:398`).
-  **아직 끄면 안 된다** — 두두원 9/17 수정 이후에도 `-999` 센티넬과 정수 필드 소수값이 남아 있어,
-  지금 끄면 수신 통지의 **70.1%(2,384/3,403)가 422** 다. 회수 조건은 §8 "다음 할 일" 7번을 볼 것.
+  **아직 끄지 말 것** — 근거는 이제 `-999`·소수값이 아니라(9/22 해소, 9/28 런도 원장 0건) **12p_c 가 한 번도
+  검증되지 않았다는 것**이다(9/17 당시에는 끄면 통지의 70.1% 가 422 였다). 회수 조건은 §8 "다음 할 일" 8번.
 - 🆕 **패치 A 는 회수됐다 (2026-09-17, `ce71818`).** `_DODO1_NO_FRACTIONAL_SECONDS` 가 `False` 로
   내려가 NCOF 는 이제 `targetPeriod` 에 **소수 초를 실어 보낸다**(`subscription_request_builder.py:89`).
   두두원이 **9/17 10:02 이전 바이너리로 롤백되면** 구 파서가 소수 초에서 `ret==8` 을 반환해
@@ -2048,8 +2322,9 @@ ISO 타임스탬프가 박혀 있어(`NOTIFICATION_upf_2026-09-10T22:37:20…`) 
 | `두두원_검증결과_회신초안.md` (`ba8c7d4`) | 9/17 검증 결과 회신의 내부 초안. 검증 창 `2026-09-17 10:07:06~15:23:01` |
 | `두두원_회신_발송본.md` (`3267326`, 9/17 20:36) | 1라운드 실제 발송 본문. 후속 요청 2 · 확인 요청 2 · 협조 요청 1 |
 | `두두원_2라운드_회신초안.md` (`3267326`, 9/18) | **2라운드 초안 — 미발송.** 제어 2경로 실행 확인 보고 · 신규 확인 요청 2건(UDP 리스너·단위) · 후속 요청 2건 근거 갱신 · 우리 미이행 3건 자인. 적대적 검토 17건 반영본이며 맨 위 ⚠️ 블록에 "다시 틀리지 말 것" 목록이 있다 |
+| `두두원_3라운드_요청메일초안.md` (9/28, 18:25 정정판) | **3라운드 요청 — 미발송.** 요청 1 .125 udptp 서버의 collect 보고 설정(12p_c) · 요청 2 `evtreq_mon_dur` 연장 · 확인 요청 26321 해석 · 협조(재기동 사전 공유) · 참고 4건. 첫 판의 `run_client.sh` 처방은 틀려서 교체했다(머리말 참조) |
 
-> ⚠️ `두두원_회신_발송본.md` 은 아직 커밋되지 않았다. **다음 커밋에 반드시 포함시킬 것** —
+> ✅ ~~`두두원_회신_발송본.md` 은 아직 커밋되지 않았다. 다음 커밋에 반드시 포함시킬 것 —~~ `3267326` 으로 커밋됐다.
 > 이후 왕복의 기준이 되는 문서다.
 > `두두원_검증결과_회신초안.md` 와 `ba8c7d4` 커밋 메시지는 관대 계층 조기 반환 위치를
 > `lenient_ingest.py:353-356` 으로 적었는데 **오기다. 실제는 `:358-359`** (아래 참조).
@@ -2156,16 +2431,16 @@ ISO 타임스탬프가 박혀 있어(`NOTIFICATION_upf_2026-09-10T22:37:20…`) 
 | `src/ncof_flow_control.cpp:571-628` | 15F(NCOF→RICF) 셀 전력 제어 수신 핸들러 `Handle_Recv_15f_Cell_Power_Ctrl`. 최상위 JSON 배열 지원은 `:607-619`. **이전 판의 `:487-543` 은 낡았다** | 변경 9/16 |
 | **`include/upf_qos_udp.h`, `src/upf_qos_udp.cpp`** | **신규 모듈.** 페이로드는 JSON 이 아니라 구조체 바이너리 — `{double gbr_dl; double mbr_dl; char imsi[16];}`(`QosApplyUdpEntry`) × `QOS_APPLY_UE_COUNT(=4)` 고정 길이. `sendto()` 한 방(`upf_qos_udp.cpp:39`). 대상은 두두원 설정의 `upf_ip`/`upf_port`(`config.cpp:90`, `:94`, `config.h:25-26`) | 신규 9/15 |
 | ⚠️ `include/upf_qos_packet.h` | **죽은 헤더 — 헷갈리지 마라.** `UpfQosPacket`(magic/version/kbps) 은 `src/`·`include/` 어디서도 include 되지 않는다. 실제 발사 구조체는 위의 `QosApplyUdpPacket` 이다 | — (6/13) |
-| `src/db.cpp:287`, `:336` | 수신 제어를 `gnb_control_recv`/`gnb_control` 에 INSERT (어디서도 SELECT 안 함). **줄번호는 9/17 변경 후에도 그대로** | 변경 9/17 |
+| `src/db.cpp:287`, `:336` | 수신 제어를 `gnb_control_recv`/`gnb_control` 에 INSERT (SELECT 는 9/22 빌드 소스에 이미 있었다 — 치환 `src_old/ncof_flow_report_common.cpp:688`·`:700`. 출력에 반영된 것은 템플릿이 자리표시자로 바뀐 뒤이고 회선 첫 관측은 9/28 런. 9/28 소스 기준 `:301-339`). **줄번호는 9/17 변경 후에도 그대로** | 변경 9/17 |
 | `src/ncof_flow_report_common.cpp:826-833` | 송신 토큰표. 단위 접미사 **해소됨** — `Json_Quote("50000000 bps")`(`:829`) 등. `:826-827` 의 `"0.0 Mbps"`/`"1000.0 Mbps"` 는 원래 정상이었다. 헬퍼 `Json_Bps_To_Mbps_Text` 는 `:1211-1240`. **이전 판(§6)의 `:527-539`/`:524`/`:907-934` 는 전부 낡았다** | 변경 9/17 |
 | `src/ncof_flow_report_common.cpp:341-357`, `:359-367`, `:370-386`, `:902-911`, `:1211-1240` | `-999` 주입처 — `Json_Metric_Number_Or_999`(`:345`), `Json_Metric_Text_Or_999`(`:363`), RF 단위값(`:382`), Traffic(`:908`, `:911`), Mbps(`:1219`). **이전 판(§6)의 `:225-247` 은 낡았다** | 변경 9/17 |
 | `src/ncof_flow_dynamic_report.cpp:289`, `:311` | `8p` 경로 값 주입 — 스루풋 8필드가 100% `"-999"` 인 출처. 이 경로(682건)는 9/17 단위 접미사 수정과 무관하다 | 변경 9/17 |
 | `src/ncof_flow_targeting.cpp:21-29`, `:58-75`, `:85-93`, `:102-110` | `Json_Stamp_Number_Default`/`Replace_Stamp_One`/`Json_Qos_Throughput_Default`/`Json_Available_Bitrate_Value` — `-999` 센티넬과 정수 필드 소수값의 **공통 출처**(패치 B 회수의 1·2순위). §6 표의 `:21-29` 와 일치 | — (9/1) |
 | `src/ncof_flow_report_db.cpp` | 보고 데이터 DB 조회 | 변경 9/15 |
-| `src/gnb_ssh_control.cpp:109`, `:156`, `:160` | `sshpass` 명령 조립(`:109`) → gNB2 로 `eu.gnbControl.py cell-stop`(`:156`) / `cell-start`(`:160`) SSH 셸아웃 | — (7/29) |
-| `src/main.cpp:199`, `:239` | 기동 시 1회 구독 발송 — `1_…from_PCF_to_NCOF`(`:199`, `Send_First_PCF_to_NCOF` `:170-208`), `1p_…from_RICF_to_NCOF`(`:239`, `Send_First_RICF_to_NCOF` `:210-248`). 둘 다 `Send_First_Send()`(`:250-262`)가 호출. **이전 판의 `:258` 은 틀렸다 — 그 줄은 실패 분기의 `{` 다** | — (8/7) |
+| `src/gnb_ssh_control.cpp:109`, `:156`, `:160` | `sshpass` 명령 조립(`:109`) → gNB2 로 `eu.gnbControl.py cell-stop`(`:156`) / `cell-start`(`:160`) SSH 셸아웃 — ⛔ **9/22 빌드부터 `:174-180` `#if 0` 으로 비활성(`GNB Control Mock Success`), 9/28 유지** | 9/22 비활성화 |
+| `src/main.cpp:199`, `:239` | 기동 시 1회 구독 발송 — `1_…from_PCF_to_NCOF`(`:199`, `Send_First_PCF_to_NCOF` `:170-208`), `1p_…from_RICF_to_NCOF`(`:239`, `Send_First_RICF_to_NCOF` `:210-248`). 둘 다 `Send_First_Send()`(`:251-263`)가 호출. **이전 판의 `:258` 은 틀렸다 — 그 줄은 실패 분기의 `{` 다** | — (8/7) |
 | `src/main.cpp:277-307` | 네 포트(55555~55558) 모두 같은 `Start_Http2_Server` 로 기동. **이전 판의 `:277-306` 은 마지막 스레드 람다를 한 줄 잘라먹었다** | — (8/7) |
-| `templates/send/13p_d_….tmpl:178`, `:224` | `"_powerState": "ACTIVE"` 하드코딩 (에코 아님). **이전 판의 `:149`/`:183` 은 9/17 템플릿 수정으로 밀렸다** | 변경 9/17 |
+| `templates/send/13p_d_….tmpl:178`, `:224` | `"_powerState": "ACTIVE"` 하드코딩 (에코 아님 — **템플릿 교체 전까지**. 🆕 교체 뒤(파일 mtime 9/23 20:11, 9/23 10:42 덤프까지는 리터럴) `__POWER_STATE_n__` 자리표시자, gnb_control 마지막 명령으로 채워짐). **이전 판의 `:149`/`:183` 은 9/17 템플릿 수정으로 밀렸다** | 변경 9/17 |
 | `templates/send/13p_d_…_POWER.tmpl`(`_powerState` `:53`, `:100`), `…_SIGNAL.tmpl` | 9/17 신설. **회선 미실증이 아니라 현행 NCOF 로는 구조적으로 도달 불가** — NCOF 가 `_RF_SIGNAL` 과 `_POWER_ENERGY_CONSUMPTION` 을 **한 구독에** 함께 싣기 때문에(`subscription_request_builder.py:210-211`, `:241` `eventsSubs=[…, …]`) `Select_2p_Report_File` 이 항상 `2p_both` 로 가고, 실전송은 통합 `13p_d_…v1.0.tmpl` 1종뿐이다 | 신규 9/17 |
 
 > ⚠️ **같은 줄번호가 본문 다른 절에도 박혀 있다 — 같이 고쳐야 문서가 안 깨진다.**
