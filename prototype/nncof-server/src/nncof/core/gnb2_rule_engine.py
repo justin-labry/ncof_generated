@@ -31,6 +31,29 @@ class Gnb2RuleEngine:
         """
         return decide_gnb2_state(metric, self.th_mbps)
 
+    def update_state(self, metric: float, decision_iso: str) -> str:
+        """
+        metric 으로 판정해 확정된 현재 gNB2 상태를 반환한다.
+        판정이 바뀌어도 minimum-dwell guard 에 걸리면 직전 상태를 유지한다.
+        (15f·14_e 생성 없이 상태만 필요한 DataAnalyzer 의 fan-out 경로가 쓴다)
+        """
+        new_state = self._decide(metric)
+
+        if new_state == self.last_emitted_state:
+            return new_state
+
+        # 선택적 minimum-dwell guard (flap 방지)
+        if self.min_dwell_sec and self.last_change_at:
+            elapsed = (
+                datetime.fromisoformat(decision_iso) - self.last_change_at
+            ).total_seconds()
+            if elapsed < self.min_dwell_sec:
+                return self.last_emitted_state  # 직전 변경 후 dwell 시간 안 됨 → 보류
+
+        self.last_emitted_state = new_state
+        self.last_change_at = datetime.fromisoformat(decision_iso)
+        return new_state
+
     def generate_notification(
         self,
         notif_12p_c: dict,
@@ -43,21 +66,12 @@ class Gnb2RuleEngine:
         logger.info(f"분석 메트릭 WLAN_DL_MBPS:{metric}")
 
         logger.info("AI 분석 시작")
-        new_state = self._decide(metric)
+        prev_state = self.last_emitted_state
+        new_state = self.update_state(metric, decision_iso)
 
-        if new_state == self.last_emitted_state:
-            return None  # no change → 통지 안 보냄
+        if new_state == prev_state:
+            return None  # no change(또는 dwell 보류) → 통지 안 보냄
 
-        # 선택적 minimum-dwell guard (flap 방지)
-        if self.min_dwell_sec and self.last_change_at:
-            elapsed = (
-                datetime.fromisoformat(decision_iso) - self.last_change_at
-            ).total_seconds()
-            if elapsed < self.min_dwell_sec:
-                return None  # 직전 변경 후 dwell 시간 안 됨 → 보류
-
-        self.last_emitted_state = new_state
-        self.last_change_at = datetime.fromisoformat(decision_iso)
         # return {
         #     "cell_power_15f": NncofEventsSubscriptionNotification.from_dict(
         #         build_15f_cell_power(new_state, decision_iso, sub_id, corr_id)[0]
