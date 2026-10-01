@@ -17,7 +17,7 @@ from nnef.models.nef_event_exposure_subsc import NefEventExposureSubsc
 from nsmf.models.nsmf_event_exposure import NsmfEventExposure
 from nupf.models.notification_data import NotificationData
 
-from .data_analyzer import DataAnalyzer
+from .data_analyzer import WLAN_SOURCE_EVENT, DataAnalyzer
 from .data_store import NotificationDataStore
 from .nrf import nrf
 from .subscription_request_builder import (
@@ -220,12 +220,13 @@ class SubscriptionHandler:
 
         return False
 
-    async def _notify_subscriber(self, nf_type: str, ncof_control_event: list[dict]):
-        """제어 명령을 NF(PCF 또는 RICF)로 전송한다."""
+    async def _notify_subscriber(self, nf_type: str, ncof_control_event: list[dict]) -> bool:
+        """제어 명령을 NF(PCF 또는 RICF)로 전송한다. 상대가 2xx 로 받았으면 True.
+        (False 면 DataAnalyzer 가 다음 틱에 같은 상태를 다시 보낸다)"""
         await self._state_changed()
         if not self.subscription.notification_uri:
             logger.warning("notification_uri is missing")
-            return
+            return False
 
         try:
             response = await self._client.post(
@@ -233,7 +234,7 @@ class SubscriptionHandler:
             )
         except httpx.RequestError as e:
             logger.error(f"[{self.subscription_id}] 제어명령 전송 중 오류 발생: {e}")
-            return
+            return False
 
         if response.status_code in (204, 200):
             logger.info(f"[NCOF] --- [제어명령] ---> [{nf_type.upper()}]")
@@ -273,6 +274,7 @@ class SubscriptionHandler:
                     msg_type="NOTIFICATION",
                     data=_data,
                 )
+            return True
         else:
             logger.warning(
                 f"[{self.subscription_id}] 제어명령 실패\n"
@@ -281,6 +283,7 @@ class SubscriptionHandler:
                 f"  reason: {response.reason_phrase}\n"
                 f"  response: {response.text}"
             )
+            return False
 
     async def teardown_stale_external_subscriptions(self) -> None:
         """상태 파일에서 복원된, 이전 실행이 남긴 하위 구독을 해지한다.
@@ -334,8 +337,19 @@ class SubscriptionHandler:
                         "target": target,
                         "external_sub_id": external_sub_id,
                         "subscription": subscription,
+                        "source_event": sub_req.get("source_event"),
                     }
                 )
+
+        # 판정 입력은 WLAN_PERFORMANCE SMF 하위 구독(12p_c) 스트림으로 한정한다 — DataAnalyzer._get_wlan_performance_data().
+        # UPF 통지의 correlationId 가 그 하위 구독의 notifId 이고, notif_data_store 의 키다.
+        wlan_stream_ids = {
+            notif_id
+            for sub_req in subscription_requests
+            if sub_req.get("source_event") == WLAN_SOURCE_EVENT
+            and sub_req.get("target") == "smf"
+            and (notif_id := getattr(sub_req.get("subscription"), "notif_id", None))
+        }
 
         # Phase 2: 성공한 구독에 대해 relation 을 지연 시간을 두고 순차적으로 추가 (시각적 효과)
         if self._relation_manager is not None:
@@ -372,6 +386,7 @@ class SubscriptionHandler:
                     await asyncio.sleep(0.5)
 
         if self.subscription.evt_req and self.subscription.evt_req.rep_period:
+            self._analyzer.set_wlan_stream_ids(wlan_stream_ids)
             await self._analyzer.start()
         await self._state_changed()
 

@@ -13,14 +13,64 @@ from nncof.models.nncof_events_subscription import NncofEventsSubscription
 from nncof.models.nncof_events_subscription_notification import (
     NncofEventsSubscriptionNotification,
 )
-from nnef.models.nef_event_exposure_notif import NefEventExposureNotif
 from nupf.models.notification_data import NotificationData
 
 from .data_store import NotificationDataStore
+from .decide_wlan_gnb2_rule import (
+    apply_qos_policy,
+    build_15f_cell_power,
+    extract_wlan_dl_mbps,
+)
+from .decision_config import current_decision_config
 from .gnb2_rl_engine import create_decision_engine
+from .gnb2_rule_engine import Gnb2RuleEngine
 from .websocket_manager import broadcast_web_message
 
 logger = logging.getLogger(__name__)
+
+
+# gNB2 판정은 프로세스 전체에서 하나여야 한다.
+# 구독(PCF 의 QOS_POLICY_ASSIST, RICF 의 _CELL_POWER_CTRL)마다 분석기가 따로 돌며 각자 엔진 상태를 가지면,
+# 한 판정의 두 절반인 15f(cellPowerState → RICF)와 14_e(NR gNB2 GBR → PCF)가 서로 다른 틱·서로 다른 UPF 샘플로
+# 따로 결정된다(9/30 mock 실측: 지연 11~30초, 일치율 26% · 9/30 실망: PCF 에만 ACTIVE 14_e).
+# 그래서 엔진을 하나 공유하고, **판정은 리더(가장 먼저 시작한 활성 구독)의 틱에서만** 한 번 한 뒤
+# 그 상태를 아직 받지 못한 활성 구독 전부에 같은 순간 내보낸다(각 구독의 sub_id/corrId 로 스탬프).
+# 다른 구독의 틱은 판정 없이 "아직 못 받은 상태" 만 전달한다 — 늦게 들어온 구독이 리더 틱을 기다리지 않게.
+_shared_engine: Gnb2RuleEngine | None = None
+_active_analyzers: list["DataAnalyzer"] = []
+# shield 로 띄운 fan-out 은 참조가 사라지면 수거될 수 있어 끝날 때까지 들고 있는다.
+_inflight_fanouts: set[asyncio.Future] = set()
+
+# 판정 입력으로 쓰는 하위 구독 이벤트 — 12p_c(WLAN) 스트림. SubscriptionHandler 가 그 SMF 하위 구독의 notifId 를 알려 준다.
+WLAN_SOURCE_EVENT = "WLAN_PERFORMANCE"
+
+
+def _get_shared_engine() -> Gnb2RuleEngine:
+    global _shared_engine
+    if _shared_engine is None:
+        # NCOF_DECISION_ENGINE(rule|rl) 환경변수에 따라 룰 베이스 또는 RL 정책
+        # 엔진을 생성한다 (RL 로드 실패 시 룰로 폴백). 판정 설정은 ncof_setting.conf 의 GNB2_*.
+        _shared_engine = create_decision_engine()
+        _shared_engine.apply_config(current_decision_config())
+    return _shared_engine
+
+
+def _leader() -> "DataAnalyzer | None":
+    """판정을 맡는 분석기 — 시작 순서상 첫 활성 분석기(PCF/RICF 구독). 빠지면 다음 것이 이어받는다."""
+    for a in _active_analyzers:
+        if a.is_running and a.get_source_nf_type() is not None:
+            return a
+    return None
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+# 판정 입력 샘플의 허용 나이 = repPeriod × 이 값. 두두원은 무트래픽이면 12p_c 를 아예 보내지 않고(9/28 `udptp metric
+# incomplete`), 보고 주기도 약 61초씩 밀린다. 끊긴 스트림의 마지막 값으로 계속 판정하면 상태가 그 값에 고정되고,
+# 그 사이 임계를 바꾸면 몇 시간 전 값으로 실장비 제어가 나간다(10/1 실측: 12p_c 가 02:58:40 이후 끊김).
+_STALE_FACTOR = 3
 
 
 def _now_iso_kst() -> str:
@@ -62,18 +112,28 @@ class DataAnalyzer:
 
         self.is_running = False
         self._task: asyncio.Task | None = None
-        # 결정 엔진 선택: NCOF_DECISION_ENGINE(rule|rl) 환경변수에 따라
-        # 룰 베이스 또는 RL 정책 엔진을 생성한다 (RL 로드 실패 시 룰로 폴백).
-        self.decision_engine = create_decision_engine()
         logger.info(
             f"[{subscription_id}]결정 엔진: {type(self.decision_engine).__name__}"
         )
+        # 이 구독에 마지막으로 내보낸 gNB2 상태 — 공유 판정 상태와 다를 때만 내보낸다.
+        self._delivered_state: str | None = None
+        # 이 구독의 WLAN_PERFORMANCE SMF 하위 구독 notifId(= 12p_c 통지의 correlationId)
+        self._wlan_stream_ids: set[str] = set()
         self._qos_template: list[dict] | None = None
         self._qos_template_path = Path(
             qos_template_path
             or Path(__file__).parent
             / "14_e_NncofEventsSubscriptionNotification_from NCOF_to_PCF_v1.0.json"
         )
+
+    @property
+    def decision_engine(self) -> Gnb2RuleEngine:
+        """프로세스 공유 결정 엔진 (_shared_engine 주석 참조)."""
+        return _get_shared_engine()
+
+    def set_wlan_stream_ids(self, notif_ids: set[str]) -> None:
+        """판정 입력으로 쓸 WLAN(12p_c) 스트림의 notifId 들을 받는다 — SubscriptionHandler.start() 가 호출."""
+        self._wlan_stream_ids = set(notif_ids)
 
     def get_source_nf_type(self) -> Literal["PCF", "RICF"] | None:
         if not self.subscription.event_subscriptions:
@@ -90,18 +150,32 @@ class DataAnalyzer:
 
     async def start(self):
         self.is_running = True
+        if self not in _active_analyzers:
+            _active_analyzers.append(self)
         self._task = asyncio.create_task(self._periodic_process())
 
     async def stop(self):
         self.is_running = False
+        self._leave_active_analyzers()
         if self._task:
             self._task.cancel()
             try:
                 await self._task
             except asyncio.CancelledError:
                 pass
-        self.decision_engine = create_decision_engine()
+            except Exception as e:  # noqa: BLE001 — 구독 해지·상태 저장이 끝까지 가도록
+                logger.warning(f"[{self.subscription_id}] 분석 태스크가 오류로 끝나 있었음: {e}")
         logger.info(f"[{self.subscription_id}] DataAnalyzer 중단됨")
+
+    def _leave_active_analyzers(self) -> None:
+        """fan-out 대상에서 빠진다. 마지막 분석기가 빠지면 공유 엔진을 버려,
+        다음 구독이 첫 판정부터 새 엔진으로 시작하게 한다 (예전의 분석기별 엔진 재생성과 같은 효과)."""
+        global _shared_engine
+        self._delivered_state = None
+        if self in _active_analyzers:
+            _active_analyzers.remove(self)
+            if not _active_analyzers:
+                _shared_engine = None
 
     async def _notify_analyzing(self):
         await broadcast_web_message(
@@ -121,6 +195,13 @@ class DataAnalyzer:
         )
 
     async def _periodic_process(self):
+        try:
+            await self._periodic_loop()
+        finally:
+            # 감시 만료 등으로 루프가 끝나면 다른 분석기의 fan-out 대상에서도 빠진다.
+            self._leave_active_analyzers()
+
+    async def _periodic_loop(self):
         if self.subscription.evt_req is None:
             return
 
@@ -156,7 +237,10 @@ class DataAnalyzer:
                     logger.warning("cannot retrieve control type...")
                     continue
 
-                await self._analyze_and_generate(nf_type)
+                try:
+                    await self._analyze_and_generate(nf_type)
+                except Exception:  # noqa: BLE001 — 한 틱의 오류로 판정 루프(와 fan-out 대상 등록)가 끝나면 안 된다
+                    logger.exception(f"[{self.subscription_id}] 분석 틱 오류 — 다음 틱에 계속")
 
 
         except asyncio.CancelledError:
@@ -195,81 +279,126 @@ class DataAnalyzer:
                 latest = ts
         return latest
 
-    def _get_wlan_performance_data(
-        self,
-    ) -> (
-        NncofEventsSubscriptionNotification
-        | NefEventExposureNotif
-        | NotificationData
-        | None
-    ):
+    def _get_wlan_performance_data(self) -> tuple[NotificationData, datetime] | None:
         """
-        UPF WLAN 성능 데이터를 notif_data_store 에서 조회한다.
+        판정 입력(UPF USER_DATA_USAGE_MEASURES)과 그 timeStamp 를 조회한다.
 
-        USER_DATA_USAGE_MEASURES 이벤트 타입의 NotificationData 중 timeStamp 가
-        가장 최신인 것을 반환한다. 저장 순서상 첫 번째 것을 고르면, 그 스트림의
-        주기 통지가 끊겼을 때 갱신되지 않는 값을 계속 읽어 분석 결과가 고정된다.
+        - 판정은 프로세스 공유이므로 활성 구독 전부의 store 에서 고른다.
+        - **WLAN_PERFORMANCE 하위 구독(12p_c) 스트림만** 쓴다. 한 구독의 두 UPF 스트림(8_ SERVICE_EXPERIENCE 와
+          12p_c WLAN) 중 "가장 늦게 온 것" 을 고르던 예전 방식은 도착 순서에 따라 의미가 다른 합계(9/30 실망 8_ ≈104 Mbps
+          vs 12p_c ≈285 Mbps)를 번갈아 써서, 8_ 이상값(12458.99595 Mbps)으로 ACTIVE 오판을 냈다.
+        - WLAN 스트림이 설정된 구독이 하나도 없을 때만 예전처럼 아무 UDUM 이나 쓴다(하위 호환).
+        - 그중 timeStamp 가 가장 최신인 것을 반환한다. 저장 순서상 첫 번째 것을 고르면, 그 스트림의
+          주기 통지가 끊겼을 때 갱신되지 않는 값을 계속 읽어 분석 결과가 고정된다.
         """
-        newest: (
-            NncofEventsSubscriptionNotification
-            | NefEventExposureNotif
-            | NotificationData
-            | None
-        ) = None
+        pool = list(_active_analyzers)
+        if self not in pool:
+            pool.append(self)
+        wlan_only = any(a._wlan_stream_ids for a in pool)
+
+        newest: NotificationData | None = None
         newest_ts: datetime | None = None
-
-        for notif in self.notif_data_store.get_all().values():
-            ts = self._udum_timestamp(notif)
-            if ts is None:
-                continue
-            if newest_ts is None or ts > newest_ts:
-                newest, newest_ts = notif, ts
-        return newest
+        for a in pool:
+            for notif_id, notif in a.notif_data_store.get_all().items():
+                if wlan_only and notif_id not in a._wlan_stream_ids:
+                    continue
+                ts = self._udum_timestamp(notif)
+                if ts is None:
+                    continue
+                if newest_ts is None or ts > newest_ts:
+                    newest, newest_ts = notif, ts
+        if newest is None or newest_ts is None:
+            return None
+        return newest, newest_ts
 
     async def _analyze_and_generate(self, nf_type: str) -> None:
+        """리더 틱이면 판정해 공유 엔진에 반영하고, 그 상태를 아직 받지 못한 활성 구독 전부
+        (RICF 15f · PCF 14_e)에 같은 순간 내보낸다. 리더가 아니면 판정 없이 전달만 한다."""
+        engine = self.decision_engine
+        decision_iso = _now_iso_kst()
+        leader = _leader()
 
-        qos_template = self._load_qos_template()
-        if qos_template is None:
-            logger.warning("cannot retrieve qos template...")
-            return
-
-        wlan_perf_data = self._get_wlan_performance_data()
-        if wlan_perf_data is None:
-            logger.warning("fail to retrieve wlan performance data...")
-            return
-
-        if isinstance(wlan_perf_data, NefEventExposureNotif):
-            logger.info(f"RLlib 입력 데이터 추출:")
-            pass
-
-        if isinstance(wlan_perf_data, NotificationData):
-            logger.info(f"RLlib 입력 데이터 추출:")
-            pass
-
-        try:
-
-            # if isinstance(wlan_perf_data, NotificationData):
-                # logger.info("\n%s", pretty_repr(wlan_perf_data.notification_items[0], expand_all=True))
-
-
-            result = self.decision_engine.generate_notification(
-                wlan_perf_data.to_dict(),
-                qos_template,
-                _now_iso_kst(),
-                self.subscription_id,
-                self.subscription.notif_corr_id,
-            )
-            if result is None:
-                return
-            logger.info("AI 분석 완료")
-            cell_notif = result.get("cell_power_15f")
-            qos_notif = result.get("qos_policy_14e")
-
-            logger.info("AI 분석 결과:")
-            if cell_notif is not None and nf_type == "RICF":
-                self.control_data_store.add_data(
-                    "ricf", self.subscription.notif_corr_id, cell_notif[0]
+        if leader is self:
+            sample = self._get_wlan_performance_data()
+            rep_period = (self.subscription.evt_req.rep_period if self.subscription.evt_req else None) or 60
+            age = (_utcnow() - sample[1]).total_seconds() if sample else None
+            if sample is None:
+                logger.warning(
+                    "fail to retrieve wlan performance data... (판정 입력 12p_c 샘플 없음 — 판정 보류)"
                 )
+            elif age > _STALE_FACTOR * rep_period:
+                logger.warning(
+                    f"판정 입력 12p_c 끊김: 마지막 샘플 {sample[1].astimezone().isoformat(timespec='seconds')}"
+                    f"({age:.0f}초 전, 허용 {_STALE_FACTOR * rep_period}초) — 판정 보류"
+                )
+            else:
+                wlan_perf_data, sample_ts = sample
+                logger.info(f"RLlib 입력 데이터 추출:")
+                try:
+                    engine.apply_config(current_decision_config())
+                    metric = extract_wlan_dl_mbps(wlan_perf_data.to_dict())
+                    logger.info(
+                        f"입력 샘플 timeStamp {sample_ts.astimezone().isoformat(timespec='seconds')}({age:.0f}초 전)"
+                    )
+                    logger.info(f"분석 메트릭 WLAN_DL_MBPS:{metric}")
+                    logger.info("AI 분석 시작")
+                    engine.update_state(metric, decision_iso)
+                    logger.info("AI 분석 완료")
+                except Exception as e:  # noqa: BLE001
+                    logger.warning(f"[{self.subscription_id}] 분석 중 오류 발생: {e}")
+                    return
+        elif leader is not None:
+            logger.debug(
+                f"[{self.subscription_id}] 판정은 리더 구독 {leader.subscription_id[:8]} 의 틱에서 한다 — 이번 틱은 전달만"
+            )
+
+        state = engine.last_emitted_state
+        if state is None:
+            return  # 아직 첫 판정 전
+        await self._fan_out(state, decision_iso)
+
+    async def _fan_out(self, state: str, decision_iso: str) -> None:
+        targets = [
+            a
+            for a in _active_analyzers
+            if a.is_running and a._delivered_state != state
+        ]
+        if not targets:
+            return  # 모든 구독이 이미 이 상태를 받음 → 통지 안 보냄
+
+        # await 전에 표시한다 — 전송 중 다른 분석기의 틱이 같은 상태를 중복 발송하지 않도록.
+        for a in targets:
+            a._delivered_state = state
+        logger.info(
+            f"AI 분석 결과: gNB2 {state} → 구독 {len(targets)}건 동시 전송 "
+            f"({', '.join(f'{a.get_source_nf_type()}:{a.subscription_id[:8]}' for a in targets)})"
+        )
+        # 순차 await 이면 RICF 경로의 GUI 연출 대기(0.5s) 등이 PCF 전송을 밀어낸다.
+        # shield: 이 틱을 돈 분석기가 전송 도중 stop() 되어도 다른 구독으로 가는 전송은 끝까지 간다.
+        fanout = asyncio.gather(
+            *(a._deliver(state, decision_iso) for a in targets),
+            return_exceptions=True,
+        )
+        _inflight_fanouts.add(fanout)
+        fanout.add_done_callback(_inflight_fanouts.discard)
+        await asyncio.shield(fanout)
+
+    def _forget_delivery(self, state: str) -> None:
+        """전송이 끝나지 못했으면 표시를 되돌려 다음 틱(리더든 자기 틱이든)에 다시 보내게 한다."""
+        if self.is_running and self._delivered_state == state:
+            self._delivered_state = None
+
+    async def _deliver(self, state: str, decision_iso: str) -> None:
+        """gNB2 상태를 이 구독의 NF 형식(RICF 15f / PCF 14_e)으로 만들어 전송한다."""
+        nf_type = self.get_source_nf_type()
+        corr_id = self.subscription.notif_corr_id
+        delivered = True
+        try:
+            if nf_type == "RICF":
+                cell_notif = build_15f_cell_power(
+                    state, decision_iso, self.subscription_id, corr_id
+                )
+                self.control_data_store.add_data("ricf", corr_id, cell_notif[0])
 
                 ncof_event_sub_notif = NncofEventsSubscriptionNotification.from_dict(cell_notif[0])
                 cell_power_state = (ncof_event_sub_notif.event_notifications[0]  # type: ignore
@@ -281,12 +410,18 @@ class DataAnalyzer:
                 logger.info(f"RICF 제어 데이터:")
                 logger.info(f"CELL_POWER_STATE: {cell_power_state}")
 
-                await self._notify_callback("ricf", cell_notif)
+                delivered = await self._notify_callback("ricf", cell_notif) is not False
 
-            if qos_notif is not None and nf_type == "PCF":
-                self.control_data_store.add_data(
-                    "pcf", self.subscription.notif_corr_id, qos_notif[0]
+            elif nf_type == "PCF":
+                qos_template = self._load_qos_template()
+                if qos_template is None:
+                    logger.warning("cannot retrieve qos template...")
+                    self._forget_delivery(state)
+                    return
+                qos_notif = apply_qos_policy(
+                    qos_template, state, decision_iso, self.subscription_id, corr_id
                 )
+                self.control_data_store.add_data("pcf", corr_id, qos_notif[0])
 
                 ncof_event_sub_notif = NncofEventsSubscriptionNotification.from_dict(qos_notif[0])
                 qos_param_sets = (ncof_event_sub_notif
@@ -311,7 +446,14 @@ class DataAnalyzer:
                     logger.info(f"GBR_DL: {set.qos_param_set.gbr_dl}")  #type: ignore
                 # logger.info(f"qos_param_set: {qos_param_set.}") #type: ignore
 
-                await self._notify_callback("pcf", qos_notif)
+                delivered = await self._notify_callback("pcf", qos_notif) is not False
 
+        except asyncio.CancelledError:
+            self._forget_delivery(state)
+            raise
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"[{self.subscription_id}] 분석 중 오류 발생: {e}")
+            delivered = False
+            logger.warning(f"[{self.subscription_id}] 제어 명령 생성/전송 중 오류 발생: {e}")
+
+        if not delivered:
+            self._forget_delivery(state)

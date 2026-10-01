@@ -2,7 +2,7 @@ import os
 import logging
 import zlib
 
-from typing import List, TypedDict
+from typing import List, NotRequired, TypedDict
 from datetime import datetime
 
 from nncof.models.event_subscription import EventSubscription as NncofEventSubscription
@@ -684,6 +684,8 @@ class ExternalSubscriptionRequest(TypedDict):
     target: str
     subscription: NsmfEventExposure | NefEventExposureSubsc
     external_sub_id: str | None
+    # 이 하위 구독을 만든 상향 이벤트(예: WLAN_PERFORMANCE) — 판정 입력 스트림 선별에 쓴다
+    source_event: NotRequired[str]
 
 
 def build_subscription_requests(
@@ -702,12 +704,12 @@ def build_subscription_requests(
             logging.warning(f"Unhandled event: {event_subscription.event}")
             continue
 
-        requests.extend(
-            builde_subscription_request(
-                subscription_id,
-                nncof_events_subscription,
-                event_subscription,
-            )
-        )
+        for request in builde_subscription_request(
+            subscription_id,
+            nncof_events_subscription,
+            event_subscription,
+        ):
+            request["source_event"] = event_subscription.event
+            requests.append(request)
 
     return requests
