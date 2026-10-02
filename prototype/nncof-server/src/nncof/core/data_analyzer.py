@@ -239,13 +239,13 @@ class DataAnalyzer:
             logger.warning("fail to retrieve wlan performance data...")
             return
 
-        logger.info(f"Feeding input data to AI/ML model")
-        # if isinstance(wlan_perf_data, NefEventExposureNotif):
-        #     pass
+        if isinstance(wlan_perf_data, NefEventExposureNotif):
+            logger.info(f"Feeding input data to AI/ML model")
+            pass
 
-        # if isinstance(wlan_perf_data, NotificationData):
-        #     logger.info(f"Feeding input data to AI/ML model")
-        #     pass
+        if isinstance(wlan_perf_data, NotificationData):
+            logger.info(f"Feeding input data to AI/ML model")
+            pass
 
         try:
 
