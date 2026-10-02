@@ -88,7 +88,7 @@ def printKPI(notif_data: NefEventExposureNotif):
                 jitter = perf_data_info.perf_data.jitter # type: ignore
 
                 if ue_ip_addr is not None:
-                    logger.info(f"Input data related to QoS flow {ue_ip_addr.ipv4_addr}")
+                    logger.info(f"Input data related to QoS flow {ue_ip_addr.ipv4_addr}:8554")
                 logger.info(f"""
                     - DL average packet delay of UE <---> gNB: {perf_data}
                     - UL average packet delay of UE <---> gNB: {delay_ul}

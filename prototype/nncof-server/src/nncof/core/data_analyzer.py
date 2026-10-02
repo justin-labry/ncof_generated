@@ -239,13 +239,13 @@ class DataAnalyzer:
             logger.warning("fail to retrieve wlan performance data...")
             return
 
-        if isinstance(wlan_perf_data, NefEventExposureNotif):
-            logger.info(f"Input data for AI/ML model")
-            pass
+        logger.info(f"Feeding input data to AI/ML model")
+        # if isinstance(wlan_perf_data, NefEventExposureNotif):
+        #     pass
 
-        if isinstance(wlan_perf_data, NotificationData):
-            logger.info(f"Input data for AI/ML model")
-            pass
+        # if isinstance(wlan_perf_data, NotificationData):
+        #     logger.info(f"Feeding input data to AI/ML model")
+        #     pass
 
         try:
 
@@ -291,7 +291,7 @@ class DataAnalyzer:
                 )
 
                 ncof_event_sub_notif = NncofEventsSubscriptionNotification.from_dict(qos_notif[0])
-                logger.info("\n%s", pretty_repr(ncof_event_sub_notif, expand_all=True))
+                # logger.info("\n%s", pretty_repr(ncof_event_sub_notif, expand_all=True))
 
                 qos_param_sets = (ncof_event_sub_notif
                                  .event_notifications[0] # type: ignore
@@ -311,10 +311,15 @@ class DataAnalyzer:
                 #     for flow in flow_desc:
                 #         logger.info(f"FLOW.IP_TRAFFIC_FILTER: {flow.ip_traffic_filter}")
 
-                for set in qos_param_sets:
-                    # logger.info(f"GBR_DL: {set.qos_param_set.gbr_dl}")  #type: ignore
+                # for set in qos_param_sets:
+                #     logger.info(f"DL GBR/MBR of QoS flow 192.168.101.XXX:XXXXX: {set.qos_param_set.gbr_dl} / {set.qos_param_set.mbr_dl} ")  #type: ignore
 
-                    logger.info(f"DL GBR/MBR of QoS flow 192.168.101.XXX:XXXXX: {set.qos_param_set.gbr_dl} / {set.qos_param_set.mbr_dl} ")  #type: ignore
+                # 공인시험
+
+                for idx, qos_set in enumerate(qos_param_sets, start=11):
+                    logger.info(f"DL GBR/MBR of QoS flow 192.168.1.{idx}:8554: {qos_set.qos_param_set.gbr_dl} / {qos_set.qos_param_set.mbr_dl} ")  #type: ignore
+
+
                 # logger.info(f"qos_param_set: {qos_param_set.}") #type: ignore
 
                 await self._notify_callback("pcf", qos_notif)

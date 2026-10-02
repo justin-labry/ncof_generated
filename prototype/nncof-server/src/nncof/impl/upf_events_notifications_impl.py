@@ -81,7 +81,7 @@ def printKPI(notif_data: NotificationData):
             jitter = notif_item.qos_monitoring_measurement.jitter  # type: ignore
 
 
-            logger.info(f"Input data related to QoS flow {ue_ipv4_addr}")
+            logger.info(f"Input data related to QoS flow {ue_ipv4_addr}:8554")
             logger.info(f"""
                     - DL average packet delay of UE <---> CN: {dl_packet_delay}
                     - UL average packet delay of UE <---> CN: {ul_packet_delay}

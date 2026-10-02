@@ -49,7 +49,11 @@ class NCOFEventNotificationImpl(
             #     logger.info(f"GBR_DL: {set.qos_param_set.gbr_dl}, MBR_DL: {set.qos_param_set.mbr_dl}")  #type: ignore
 
             logger.info(f"PCF drives to change the DL GBR/MBR of QoS flows as: ")
-            for set in qos_param_sets:
-                logger.info(f"DL GBR/MBR of QoS flow 192.168.101.XXX:XXXXX:  {set.qos_param_set.gbr_dl} /  {set.qos_param_set.mbr_dl} ")  #type: ignore
+            # for set in qos_param_sets:
+                # logger.info(f"DL GBR/MBR of QoS flow 192.168.101.XXX:XXXXX:  {set.qos_param_set.gbr_dl} /  {set.qos_param_set.mbr_dl} ")  #type: ignore
+
+            # 공인시험
+            for idx, qos_set in enumerate(qos_param_sets, start=11):
+                logger.info(f"DL GBR/MBR of QoS flow 192.168.1.{idx}:8554: {qos_set.qos_param_set.gbr_dl} / {qos_set.qos_param_set.mbr_dl} ")  #type: ignore
 
         return None

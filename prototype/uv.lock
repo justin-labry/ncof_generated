@@ -44,7 +44,7 @@ wheels = [
 
 [[package]]
 name = "callback-server"
-version = "0.1.0"
+version = "1.0.0"
 source = { editable = "callback-server" }
 dependencies = [
     { name = "colorlog" },
@@ -251,7 +251,7 @@ wheels = [
 
 [[package]]
 name = "nncof-server"
-version = "0.1.0"
+version = "1.0.0"
 source = { editable = "nncof-server" }
 dependencies = [
     { name = "colorlog" },
@@ -296,7 +296,7 @@ dev = [{ name = "pytest", specifier = ">=9.0.3" }]
 
 [[package]]
 name = "nnef-server"
-version = "0.1.0"
+version = "1.0.0"
 source = { editable = "nnef-server" }
 dependencies = [
     { name = "callback-server" },
@@ -323,7 +323,7 @@ requires-dist = [
 
 [[package]]
 name = "nsmf-server"
-version = "0.1.0"
+version = "1.0.0"
 source = { editable = "nsmf-server" }
 dependencies = [
     { name = "colorlog" },
@@ -348,7 +348,7 @@ requires-dist = [
 
 [[package]]
 name = "nupf-server"
-version = "0.1.0"
+version = "1.0.0"
 source = { editable = "nupf-server" }
 dependencies = [
     { name = "fastapi" },
