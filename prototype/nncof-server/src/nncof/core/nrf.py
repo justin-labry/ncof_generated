@@ -26,8 +26,10 @@ def _find_upwards(filename: str) -> str | None:
 # 포트 단일 출처(prototype/ncof_setting.conf)를 읽어온다.
 _ports_file = _find_upwards("ncof_setting.conf")
 _conf: dict[str, str | None] = dict(dotenv_values(_ports_file)) if _ports_file else {}
+
 if _ports_file:
-    logger.info(f"NF ports loaded from {_ports_file}")
+    # logger.info(f"NF ports loaded from {_ports_file}")
+    pass
 else:
     logger.warning("ncof_setting.conf not found; using built-in default ports.")
 
@@ -70,7 +72,7 @@ def _build_mockup_nfs() -> dict[str, Any]:
             "services": {"npcf-eventexposure": ""},
         },
     }
-    print(map)
+
     return map
 
 
@@ -135,7 +137,7 @@ class NFDiscovery:
 
         return base
 
-logger.info(f"MODE: {os.getenv("MODE")}", )
+# logger.info(f"MODE: {os.getenv("MODE")}", )
 
 nrf = NFDiscovery(use_nrf=False)  # 현재는 Dummy 모드
 

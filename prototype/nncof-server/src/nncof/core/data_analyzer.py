@@ -65,9 +65,10 @@ class DataAnalyzer:
         # 결정 엔진 선택: NCOF_DECISION_ENGINE(rule|rl) 환경변수에 따라
         # 룰 베이스 또는 RL 정책 엔진을 생성한다 (RL 로드 실패 시 룰로 폴백).
         self.decision_engine = create_decision_engine()
-        logger.info(
-            f"[{subscription_id}]결정 엔진: {type(self.decision_engine).__name__}"
-        )
+        # logger.info(
+        #     # f"[{subscription_id}]결정 엔진: {type(self.decision_engine).__name__}"
+        #     f"[{subscription_id}] AI/ML model for decision making: rl-agent-20260910"
+        # )
         self._qos_template: list[dict] | None = None
         self._qos_template_path = Path(
             qos_template_path
@@ -101,7 +102,7 @@ class DataAnalyzer:
             except asyncio.CancelledError:
                 pass
         self.decision_engine = create_decision_engine()
-        logger.info(f"[{self.subscription_id}] DataAnalyzer 중단됨")
+        logger.info(f"[{self.subscription_id}] DataAnalyzer stopped.")
 
     async def _notify_analyzing(self):
         await broadcast_web_message(
@@ -239,11 +240,11 @@ class DataAnalyzer:
             return
 
         if isinstance(wlan_perf_data, NefEventExposureNotif):
-            logger.info(f"RLlib 입력 데이터 추출:")
+            logger.info(f"Input data for AI/ML model")
             pass
 
         if isinstance(wlan_perf_data, NotificationData):
-            logger.info(f"RLlib 입력 데이터 추출:")
+            logger.info(f"Input data for AI/ML model")
             pass
 
         try:
@@ -251,7 +252,7 @@ class DataAnalyzer:
             # if isinstance(wlan_perf_data, NotificationData):
                 # logger.info("\n%s", pretty_repr(wlan_perf_data.notification_items[0], expand_all=True))
 
-
+            logger.info("AI/ML model starts analyzing input data")
             result = self.decision_engine.generate_notification(
                 wlan_perf_data.to_dict(),
                 qos_template,
@@ -261,11 +262,11 @@ class DataAnalyzer:
             )
             if result is None:
                 return
-            logger.info("AI 분석 완료")
+            logger.info("AI/ML model completes the analysis")
             cell_notif = result.get("cell_power_15f")
             qos_notif = result.get("qos_policy_14e")
 
-            logger.info("AI 분석 결과:")
+            logger.info("AI/ML model produces the following results")
             if cell_notif is not None and nf_type == "RICF":
                 self.control_data_store.add_data(
                     "ricf", self.subscription.notif_corr_id, cell_notif[0]
@@ -278,8 +279,9 @@ class DataAnalyzer:
                                     .cell_power_param_sets[0]
                                     .cell_power_param_set.cell_power_state # type: ignore
                                     )
-                logger.info(f"RICF 제어 데이터:")
-                logger.info(f"CELL_POWER_STATE: {cell_power_state}")
+                # logger.info(f"RICF 제어 데이터:")
+                # logger.info(f"CELL_POWER_STATE: {cell_power_state}")
+                logger.info(f"Power state of gNB 2: {cell_power_state}")
 
                 await self._notify_callback("ricf", cell_notif)
 
@@ -289,6 +291,8 @@ class DataAnalyzer:
                 )
 
                 ncof_event_sub_notif = NncofEventsSubscriptionNotification.from_dict(qos_notif[0])
+                logger.info("\n%s", pretty_repr(ncof_event_sub_notif, expand_all=True))
+
                 qos_param_sets = (ncof_event_sub_notif
                                  .event_notifications[0] # type: ignore
                                  .qos_pol_assist_infos[0]
@@ -302,13 +306,15 @@ class DataAnalyzer:
                                  .qos_pol_assist_infos[0].qos_pol_assist_info[0].qos_pol_assist_sets[0].f_descs # type: ignore
                 )
 
-                logger.info("PCF 제어 데이터:")
-                if flow_desc is not None:
-                    for flow in flow_desc:
-                        logger.info(f"FLOW.IP_TRAFFIC_FILTER: {flow.ip_traffic_filter}")
+                # logger.info("PCF 제어 데이터:")
+                # if flow_desc is not None:
+                #     for flow in flow_desc:
+                #         logger.info(f"FLOW.IP_TRAFFIC_FILTER: {flow.ip_traffic_filter}")
 
                 for set in qos_param_sets:
-                    logger.info(f"GBR_DL: {set.qos_param_set.gbr_dl}")  #type: ignore
+                    # logger.info(f"GBR_DL: {set.qos_param_set.gbr_dl}")  #type: ignore
+
+                    logger.info(f"DL GBR/MBR of QoS flow 192.168.101.XXX:XXXXX: {set.qos_param_set.gbr_dl} / {set.qos_param_set.mbr_dl} ")  #type: ignore
                 # logger.info(f"qos_param_set: {qos_param_set.}") #type: ignore
 
                 await self._notify_callback("pcf", qos_notif)

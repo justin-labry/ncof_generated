@@ -85,12 +85,12 @@ async def periodic_notification_sender(sub_id: str, interval_seconds: int):
 
         notif_uri = event_subscription.notif_uri
 
-        logger.info(f"interval_seconds: {interval_seconds}")
+        # logger.info(f"interval_seconds: {interval_seconds}")
         await asyncio.sleep(interval_seconds)
 
-        logger.info(
-            f"cell_power_state changed: {NCOFEventNotificationImpl.cell_power_state}"
-        )
+        # logger.info(
+        #     f"cell_power_state changed: {NCOFEventNotificationImpl.cell_power_state}"
+        # )
         simulation_notification_data(event_notification)
 
         # 13p_d 전력 피드백: NCOF가 제어하는 gNB#2(000002)만 명령한 2-state
@@ -107,7 +107,7 @@ async def periodic_notification_sender(sub_id: str, interval_seconds: int):
                     gnb = _gnb_value_of(pec_info)
                     state = cmd_state if gnb == _CONTROLLED_GNB else "ACTIVE"
                     pec_info.power_energy_cons_data = _power_energy_for_state(state)
-        logger.info(f"[{sub_id}] [NOTIFICATION]---> [NCOF]")
+        # logger.info(f"[{sub_id}] [NOTIFICATION]---> [NCOF]")
         # 3GPP alias(_powerEnergyConsData, eventNotifs 등)로 직렬화한다.
         # by_alias 없이 보내면 snake_case(power_energy_cons_data)로 나가 스펙과
         # 어긋난다. 수신부는 populate_by_name=True라 둘 다 파싱되지만, 13p_d

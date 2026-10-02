@@ -40,9 +40,8 @@ class Gnb2RuleEngine:
         corr_id: str | None,
     ) -> Dict[str, List[dict]] | None:
         metric = extract_wlan_dl_mbps(notif_12p_c)
-        logger.info(f"분석 메트릭 WLAN_DL_MBPS:{metric}")
-
-        logger.info("AI 분석 시작")
+        # logger.info(f"분석 메트릭 WLAN_DL_MBPS:{metric}")
+        # logger.info("AI 분석 시작")
         new_state = self._decide(metric)
 
         if new_state == self.last_emitted_state:

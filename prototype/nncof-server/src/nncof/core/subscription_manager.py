@@ -114,12 +114,14 @@ class SubscriptionManager:
         )
 
         # 3. 핸들러 시작 (비동기 작업 수행: 외부 NF 구독 등)
+
         await handler.start()
+        logger.info(f"[{subscription_id}] Data analytics task starts")
 
         # 4. 활성 상태 영속화
         await self.persist_state()
 
-        # logger.info(f"[{subscription_id}]새로운 구독 생성 완료")
+        logger.info(f"[{subscription_id}] Subscriptions for input data collection are established")
 
         return subscription_id
 

@@ -46,7 +46,7 @@ class AFImpl(BaseSubscriptionsCollectionApi):
                 status_code=400, detail=f"Unknown event: {event_sub.event}"
             )
 
-        print(f"AF - {sample_file}")
+        # print(f"AF - {sample_file}")
         logger.info(f"[NCOF] --- [SUBSCRIPTION] ---> [AF]")
         return await simulation.handle_subcription_request(
             sample_file, nef_event_exposure_subsc

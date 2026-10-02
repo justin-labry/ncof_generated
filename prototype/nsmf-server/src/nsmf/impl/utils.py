@@ -53,7 +53,7 @@ def print_logo():
     port = int(os.getenv("PORT", 8000))  #
 
     panel = Panel(
-        f"Mode: {app_mode} port: {port}",
+        f"""MODE: {app_mode}\nPORT: {port}\nVERSION: 1.0.0""",
         style="bold magenta",
         title="SMF Mockup",
         expand=False,

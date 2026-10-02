@@ -45,6 +45,8 @@ class NefEventsNotificationsApiImpl(
             logger.info(f"[{nf_type.upper()}] --- [NOTIFICATION] ---> [NCOF]")
             logger.info("\n%s", pretty_repr(notif_data, expand_all=True))
 
+            printKPI(notif_data)
+
             # 핸들러를 통해 수신된 데이터 저장
             await handler.handle_notification(nf_type, notif_data)
 
@@ -67,12 +69,73 @@ class NefEventsNotificationsApiImpl(
             )
 
 def printKPI(notif_data: NefEventExposureNotif):
-    for item in notif_data.event_notifs:
-        if item.event == "PERF_DATA":
-            pass
-        if item.event == "_RF_SIGNAL":
-            pass
-        if item.event == "_POWER_ENERGY_CONSUMPTION":
-            pass
-        if item.event == "DISPERSION":
+    logger.info("[KPI]")
+    event_notif_1 = notif_data.event_notifs[0]
+
+    try:
+        if event_notif_1 is not None and event_notif_1.perf_data_infos is not None:
+
+            for perf_data_info in event_notif_1.perf_data_infos:
+                ue_ip_addr = perf_data_info.ue_ip_addr
+                perf_data = perf_data_info.perf_data.pdb_dl  # type: ignore
+                delay_ul = perf_data_info.perf_data.delay_ul  # type: ignore
+
+                pdb = perf_data_info.perf_data.pdb_dl  # type: ignore
+                delay = perf_data_info.perf_data.delay_ul  # type: ignore
+                thrput_dl = perf_data_info.perf_data.thrput_dl  # type: ignore
+                thrput_ul = perf_data_info.perf_data.thrput_ul # type: ignore
+                plr_dl = perf_data_info.perf_data.plr_dl # type: ignore
+                jitter = perf_data_info.perf_data.jitter # type: ignore
+
+                if ue_ip_addr is not None:
+                    logger.info(f"Input data related to QoS flow {ue_ip_addr.ipv4_addr}")
+                logger.info(f"""
+                    - DL average packet delay of UE <---> gNB: {perf_data}
+                    - UL average packet delay of UE <---> gNB: {delay_ul}
+                    - DL average packet delay of UE <---> DN: {pdb}
+                    - UL average packet delay of UE <---> DN: {delay}
+                    - DL average throughput of UE <---> DN: {thrput_dl}
+                    - UL average throughput of UE <---> DN: {thrput_ul}
+                    - DL average packet loss rate of UE <---> DN: {plr_dl}
+                    - Jitter of UE <---> DN: {jitter}
+                """)
+
+        # if event_notif_1 is not None and event_notif_1.rf_signal_infos is not None and len(event_notif_1.rf_signal_infos) > 1:
+        if event_notif_1 is not None and event_notif_1.rf_signal_infos is not None:
+            for rf_signal_info in event_notif_1.rf_signal_infos:
+                supi = rf_signal_info.supi # type: ignore
+                logger.info(f"Input data related to SUPI {supi} and gNB 1")
+                ue_ip_addr = rf_signal_info.ue_ip_addr # type: ignore
+                rsrp = rf_signal_info.rf_signal_data.ref_signal_measurements[0].rsrp # type: ignore
+                rsrq = rf_signal_info.rf_signal_data.ref_signal_measurements[0].rsrq # type: ignore
+                sinr = rf_signal_info.rf_signal_data.ref_signal_measurements[0].sinr # type: ignore
+                bler = rf_signal_info.rf_signal_data.ref_signal_measurements[0].bler # type: ignore
+                connectivity = rf_signal_info.rf_signal_data.ref_signal_measurements[0].connectivity # type: ignore
+
+                logger.info(f"""
+                    - DL RSRP: {rsrp}
+                    - DL RSRQ: {rsrq}
+                    - DL SINR: {sinr}
+                    - DL BLER: {bler}
+                    - DL connectivity: {connectivity}
+                """)
+
+    except (AttributeError, IndexError, TypeError) as e:
+        print(e)
+        pass
+
+    try:
+        if len(notif_data.event_notifs) > 1:
+            event_notif_2 = notif_data.event_notifs[1]
+
+            if event_notif_2 is not None:
+                logger.info(f"Input data related to power consumption")
+                power_1 = event_notif_2.power_energy_consumption_infos[0].power_energy_cons_data.power# type: ignore
+                power_2 = event_notif_2.power_energy_consumption_infos[1].power_energy_cons_data.power# type: ignore
+                logger.info(f"""
+                    - Mean power consumption of gNB 1: {power_1}
+                    - Mean power consumption of gNB 2: {power_2}
+                """)
+    except (AttributeError, IndexError, TypeError) as e:
+            print(e)
             pass

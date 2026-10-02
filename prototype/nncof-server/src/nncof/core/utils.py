@@ -87,7 +87,7 @@ def system_info():
     description = os.getenv(
         "APP_DESCRIPTION", "NCOF Event Exposure Service for 6G-I2P PoC Scenario."
     )
-    version = os.getenv("APP_VERSION", "0.1.0")
+    version = os.getenv("APP_VERSION", "1.0.0")
     title = os.getenv("APP_TITLE", "Nncof_EventsSubscription")
     ip = _get_local_ip()
     # 기본 h2c(평문 HTTP/2, http). NCOF_TLS 설정 시 HTTP/2 over TLS(https).

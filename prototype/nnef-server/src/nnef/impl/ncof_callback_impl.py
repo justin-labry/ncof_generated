@@ -27,7 +27,7 @@ class NCOFEventNotificationImpl(
     ) -> None:
         # Add color code below print statement
         logger.info(f"[NCOF] --- [NOTIFICATION] ---> [{type.upper()}]")
-        logger.info("\n%s", pretty_repr(notifications, expand_all=True))
+        logger.info("\n%s", pretty_repr(notifications[0], expand_all=True))
         if len(notifications) == 0:
             return None
 
@@ -62,5 +62,6 @@ class NCOFEventNotificationImpl(
             logger.warning(f"에러 메시지: {e}")  # ex) 'NoneType' object has no attribute ...
             NCOFEventNotificationImpl.cell_power_state = None
 
-        logger.info(f"CELL_POWER_STATE: {NCOFEventNotificationImpl.cell_power_state} 로 설정 하겠음")
+        # logger.info(f"CELL_POWER_STATE: {NCOFEventNotificationImpl.cell_power_state} 로 설정 하겠음")
+        logger.info(f"RICF drives to change the power state of gNB 2: From ACTIVE to {NCOFEventNotificationImpl.cell_power_state} ")
         return None

@@ -48,11 +48,11 @@ from rich import box
 
 
 def print_logo():
-    app_mode = os.getenv("APP_MODE", "Callback Server(PCF, RICF)").upper()
+    app_mode = os.getenv("APP_MODE", "Callback Server").upper()
     port = int(os.getenv("PORT", 8000))  #
 
     panel = Panel(
-        f"Mode: {app_mode} port: {port}",
+        f"MODE: {app_mode}\nPORT: {port}\nVERSION:1.0.0",
         style="bold magenta",
         title="Callback Mockup",
         expand=False,

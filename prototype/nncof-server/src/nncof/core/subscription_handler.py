@@ -142,7 +142,7 @@ class SubscriptionHandler:
                         f"[{self.subscription_id}] {target.upper()} 로부터 ID 를 획득하지 못함 "
                         f"(Status: {response.status_code})."
                     )
-                logger.info(f"[NCOF] --- [구독요청] ---> [{target.upper()}]")
+                logger.info(f"[NCOF] --- [SUBSCRIPTION] ---> [{target.upper()}]")
                 return external_sub_id
         except (httpx.RequestError, json.JSONDecodeError) as e:
             logger.warning(
@@ -208,7 +208,7 @@ class SubscriptionHandler:
             return
 
         if response.status_code in (204, 200):
-            logger.info(f"[NCOF] --- [제어명령] ---> [{nf_type.upper()}]")
+            logger.info(f"[NCOF] --- [NOTIFICATION] ---> [{nf_type.upper()}]")
             logger.info("\n%s", pretty_repr(ncof_control_event, expand_all=True))
 
             # if self._relation_manager is not None:
@@ -262,7 +262,11 @@ class SubscriptionHandler:
         """
         self.is_running = True
         logger.info(
-            f"[{self.subscription_id}] 구독 핸들러 시작. 외부 NF 구독 절차 실행."
+            f"[{self.subscription_id}] Subscription handler starts - Triggering subscriptions for input data collection"
+        )
+
+        logger.info(
+            f"[{self.subscription_id}] AI/ML model for decision making: rl-agent-20260910"
         )
 
         for sub_info in self._stale_external_subscriptions:
