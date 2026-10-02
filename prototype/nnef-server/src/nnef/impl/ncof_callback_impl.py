@@ -44,6 +44,7 @@ class NCOFEventNotificationImpl(
         if event_notif is None:
             return None
 
+        previous_cell_power_state = NCOFEventNotificationImpl.cell_power_state
         # cell_power_state = None
         # event_notif.cell_power_ctrl_opt_infos[0].cell_power_ctrl_infos[0].cell_power_param_sets[0].spatial_validity.g_ran_node_ids[0].g_nb_id.g_nb_value
         try:
@@ -63,5 +64,9 @@ class NCOFEventNotificationImpl(
             NCOFEventNotificationImpl.cell_power_state = None
 
         # logger.info(f"CELL_POWER_STATE: {NCOFEventNotificationImpl.cell_power_state} 로 설정 하겠음")
-        logger.info(f"RICF drives to change the power state of gNB 2: From ACTIVE to {NCOFEventNotificationImpl.cell_power_state} ")
+        logger.info(
+            "RICF drives to change the power state of gNB 2: "
+            f"From {previous_cell_power_state} to "
+            f"{NCOFEventNotificationImpl.cell_power_state}"
+        )
         return None
