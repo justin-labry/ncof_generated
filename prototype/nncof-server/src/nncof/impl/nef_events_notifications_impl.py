@@ -69,7 +69,7 @@ class NefEventsNotificationsApiImpl(
             )
 
 def printKPI(notif_data: NefEventExposureNotif):
-    logger.info("[KPI]")
+    # logger.info("[KPI]")
     event_notif_1 = notif_data.event_notifs[0]
 
     try:

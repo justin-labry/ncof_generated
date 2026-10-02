@@ -64,7 +64,7 @@ class UpfEventExposureNotificationCallbackReceiverApiImpl(
             )
 
 def printKPI(notif_data: NotificationData):
-    logger.info("[KPI]")
+    # logger.info("[KPI]")
     for notif_item in notif_data.notification_items:
         if notif_item is None:
             continue
