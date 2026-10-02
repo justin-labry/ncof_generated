@@ -101,24 +101,26 @@ def simulate_notification_data(
         if item.event_type == "QOS_MONITORING" and item.qos_monitoring_measurement:
             qos = item.qos_monitoring_measurement
 
+            # 공인시험 KPI 설정
             qos.dl_packet_delay = _vary_int(qos.dl_packet_delay, -1, 2)
             qos.ul_packet_delay = _vary_int(qos.ul_packet_delay, -1, 2)
+            qos.dl_max_packet_delay = _vary_int(qos.dl_max_packet_delay, -2, 3)
+            qos.ul_max_packet_delay = _vary_int(qos.ul_max_packet_delay, -2, 3)
+            qos.dl_ave_throughput = _vary_metric_str(qos.dl_ave_throughput, factor=0.05)
+            qos.ul_ave_throughput = _vary_metric_str(qos.ul_ave_throughput, factor=0.05)
+            qos.packet_loss_rate = _vary_int(qos.packet_loss_rate, -1, 2, max_val=1000)
+            qos.jitter = _vary_float(qos.jitter, 0.0, 1.5)
+
             qos.rtr_packet_delay = _vary_int(qos.rtr_packet_delay, -2, 3)
 
             qos.dl_min_packet_delay = _vary_int(qos.dl_min_packet_delay, -1, 1)
             qos.ul_min_packet_delay = _vary_int(qos.ul_min_packet_delay, -1, 1)
             qos.rtr_min_packet_delay = _vary_int(qos.rtr_min_packet_delay, -1, 2)
 
-            qos.dl_max_packet_delay = _vary_int(qos.dl_max_packet_delay, -2, 3)
-            qos.ul_max_packet_delay = _vary_int(qos.ul_max_packet_delay, -2, 3)
             qos.rtr_max_packet_delay = _vary_int(qos.rtr_max_packet_delay, -3, 4)
 
-            qos.packet_loss_rate = _vary_int(qos.packet_loss_rate, -1, 2, max_val=1000)
 
-            qos.jitter = _vary_float(qos.jitter, 0.0, 1.5)
 
-            qos.dl_ave_throughput = _vary_metric_str(qos.dl_ave_throughput, factor=0.05)
-            qos.ul_ave_throughput = _vary_metric_str(qos.ul_ave_throughput, factor=0.05)
             qos.dl_available_bitrate = _vary_metric_str(
                 qos.dl_available_bitrate, factor=0.05
             )

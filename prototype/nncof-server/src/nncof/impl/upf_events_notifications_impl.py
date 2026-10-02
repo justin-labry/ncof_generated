@@ -71,6 +71,7 @@ def printKPI(notif_data: NotificationData):
 
         if notif_item.qos_monitoring_measurement is not None:
             ue_ipv4_addr = notif_item.ue_ipv4_addr
+
             dl_packet_delay = notif_item.qos_monitoring_measurement.dl_packet_delay # type: ignore
             ul_packet_delay = notif_item.qos_monitoring_measurement.ul_packet_delay # type: ignore
             dl_max_packet_delay = notif_item.qos_monitoring_measurement.dl_max_packet_delay # type: ignore

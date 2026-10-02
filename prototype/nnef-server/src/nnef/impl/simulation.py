@@ -123,28 +123,31 @@ async def periodic_notification_sender(sub_id: str, interval_seconds: int):
 
 def _randomize_perf_data(pd) -> None:
     pd.pdb = random.randint(5, 50)
-    pd.pdb_dl = random.randint(3, 30)
     pd.max_pdb_ul = random.randint(10, 100)
     pd.max_pdb_dl = random.randint(10, 100)
 
-    pd.plr = random.randint(0, 50)  # 0.0% ~ 5.0%
+    # 공인시험 KPI 설정 시작
+    pd.delay_ul = random.randint(1, 20)
+    pd.pdb_dl = random.randint(3, 30)
+    pd.thrput_dl = f"{random.randint(50, 300)} Mbps"
+    pd.thrput_ul = f"{random.randint(10, 100)} Mbps"
     pd.plr_dl = random.randint(0, 30)
+    pd.jitter = round(random.uniform(0.0, 10.0), 1)
+    # 공인시험 KPI 설정 끝
+
+    pd.plr = random.randint(0, 50)  # 0.0% ~ 5.0%
     pd.max_plr_ul = random.randint(0, 100)
     pd.max_plr_dl = random.randint(0, 100)
 
-    pd.thrput_ul = f"{random.randint(10, 100)} Mbps"
     pd.max_thrput_ul = f"{random.randint(100, 500)} Mbps"
     pd.min_thrput_ul = f"{random.randint(5, 50)} Mbps"
-    pd.thrput_dl = f"{random.randint(50, 300)} Mbps"
     pd.max_thrput_dl = f"{random.randint(300, 1000)} Mbps"
     pd.min_thrput_dl = f"{random.randint(20, 200)} Mbps"
 
     pd.min_rtt = random.randint(1, 20)
     pd.max_rtt = random.randint(10, 100)
-    pd.delay_ul = random.randint(1, 20)
     pd.min_delay_ul = random.randint(1, 10)
     pd.max_delay_ul = random.randint(10, 50)
-    pd.jitter = round(random.uniform(0.0, 10.0), 1)
 
 
 def _randomize_dispersion_data(dc) -> None:
@@ -158,6 +161,7 @@ def _randomize_dispersion_data(dc) -> None:
 def _randomize_rf_signal_data(rs_data) -> None:
     if rs_data.ref_signal_measurements:
         for m in rs_data.ref_signal_measurements:
+            # 공인시험 KPI 설정
             m.rsrp = f"{random.randint(60, 100)}dBm"
             m.rsrq = f"{random.randint(-20, -5)}dB"
             m.sinr = f"{random.randint(5, 25)}dB"
@@ -166,8 +170,8 @@ def _randomize_rf_signal_data(rs_data) -> None:
 
 
 def _randomize_power_energy_cons_data(pec_data) -> None:
-    pec_data.duration = random.randint(30, 300)
     pec_data.power = f"{random.randint(5, 50)}mW"
+    pec_data.duration = random.randint(30, 300)
     pec_data.min_power = f"{random.randint(0, 10)}mW"
     pec_data.peak_power = f"{random.randint(30, 100)}mW"
     pec_data.energy = f"{round(random.uniform(0.5, 5.0), 1)}J"

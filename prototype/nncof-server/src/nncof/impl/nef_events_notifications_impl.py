@@ -77,11 +77,9 @@ def printKPI(notif_data: NefEventExposureNotif):
 
             for perf_data_info in event_notif_1.perf_data_infos:
                 ue_ip_addr = perf_data_info.ue_ip_addr
-                perf_data = perf_data_info.perf_data.pdb_dl  # type: ignore
-                delay_ul = perf_data_info.perf_data.delay_ul  # type: ignore
 
-                pdb = perf_data_info.perf_data.pdb_dl  # type: ignore
-                delay = perf_data_info.perf_data.delay_ul  # type: ignore
+                pdb_dl = perf_data_info.perf_data.pdb_dl  # type: ignore
+                delay_ul = perf_data_info.perf_data.delay_ul  # type: ignore
                 thrput_dl = perf_data_info.perf_data.thrput_dl  # type: ignore
                 thrput_ul = perf_data_info.perf_data.thrput_ul # type: ignore
                 plr_dl = perf_data_info.perf_data.plr_dl # type: ignore
@@ -90,10 +88,10 @@ def printKPI(notif_data: NefEventExposureNotif):
                 if ue_ip_addr is not None:
                     logger.info(f"Input data related to QoS flow {ue_ip_addr.ipv4_addr}:8554")
                 logger.info(f"""
-                    - DL average packet delay of UE <---> gNB: {perf_data}
+                    - DL average packet delay of UE <---> gNB: {pdb_dl}
                     - UL average packet delay of UE <---> gNB: {delay_ul}
-                    - DL average packet delay of UE <---> DN: {pdb}
-                    - UL average packet delay of UE <---> DN: {delay}
+                    - DL average packet delay of UE <---> DN: {pdb_dl}
+                    - UL average packet delay of UE <---> DN: {delay_ul}
                     - DL average throughput of UE <---> DN: {thrput_dl}
                     - UL average throughput of UE <---> DN: {thrput_ul}
                     - DL average packet loss rate of UE <---> DN: {plr_dl}
