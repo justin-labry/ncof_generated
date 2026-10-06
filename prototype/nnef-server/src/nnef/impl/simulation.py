@@ -1,7 +1,7 @@
 from typing import Dict
 import asyncio
+import os
 import random
-from typing import Dict
 import uuid
 from datetime import datetime, timezone
 import logging
@@ -24,6 +24,45 @@ from .ncof_callback_impl import NCOFEventNotificationImpl
 logger = logging.getLogger(__name__)
 
 subscriptions: Dict[str, dict] = {}
+
+
+# ------------------------------------------------------------------------------
+# 재현 가능한 시뮬레이션 (SIM_SEED)
+# ------------------------------------------------------------------------------
+# SIM_SEED 가 설정되어 있으면(prototype/ncof_setting.conf) 구독마다 독립된
+# random.Random 을 만들어 쓴다. 전역 random.seed() 하나로는 다음 이유로 재현이
+# 보장되지 않기 때문이다.
+#   - 구독별 asyncio task 가 같은 전역 스트림을 공유하므로, 어느 구독이 먼저
+#     값을 꺼내는지가 구독 도착 시각·rep_period·notify() 지연에 따라 바뀐다.
+#   - 다른 모듈/라이브러리가 전역 random 을 호출하면 스트림이 밀린다.
+# 시드 키에는 실행마다 바뀌는 값(sub_id=uuid4, notifId=생성 시각 포함)을 쓰지 않고
+# "템플릿 파일 + 이벤트 종류 + 같은 키의 n번째 구독" 을 쓴다. 따라서 같은 구독
+# 시나리오를 새 프로세스에서 다시 돌리면 구독별로 동일한 값 시퀀스가 나온다.
+# SIM_SEED 가 비어 있으면 기존처럼 전역 random 모듈을 그대로 쓴다.
+_seed_counters: Dict[str, int] = {}
+
+
+def _sim_seed() -> str | None:
+    return os.getenv("SIM_SEED", "").strip() or None
+
+
+def _make_rng(key: str):
+    seed = _sim_seed()
+    if seed is None:
+        return random
+    n = _seed_counters.get(key, 0)
+    _seed_counters[key] = n + 1
+    # 문자열 시드는 PYTHONHASHSEED 와 무관하게 결정적이다(sha512 기반).
+    rng = random.Random(f"{seed}|{key}|{n}")
+    logger.info(f"[SIM_SEED={seed}] rng key: {key}#{n}")
+    return rng
+
+
+def _rng_key(template_file: str, subsc: NefEventExposureSubsc) -> str:
+    events = ",".join(
+        str(getattr(e, "event", "")) for e in (subsc.events_subs or []) if e is not None
+    )
+    return f"nnef|{template_file}|{events}"
 
 
 # 3GPP TR 38.864 V18.1.0 — BS Category 1, Set 1 상대전력 (deep sleep=1 기준, Table 5.1-3)
@@ -91,7 +130,7 @@ async def periodic_notification_sender(sub_id: str, interval_seconds: int):
         # logger.info(
         #     f"cell_power_state changed: {NCOFEventNotificationImpl.cell_power_state}"
         # )
-        simulation_notification_data(event_notification)
+        simulation_notification_data(event_notification, sub.get("rng", random))
 
         # 13p_d 전력 피드백: NCOF가 제어하는 gNB#2(000002)만 명령한 2-state
         # (ACTIVE/DEEP_SLEEP)를 에코하고, gNB#1(000001) 등 나머지 셀은 항상
@@ -121,67 +160,68 @@ async def periodic_notification_sender(sub_id: str, interval_seconds: int):
         )
 
 
-def _randomize_perf_data(pd) -> None:
-    pd.pdb = random.randint(5, 50)
-    pd.max_pdb_ul = random.randint(10, 100)
-    pd.max_pdb_dl = random.randint(10, 100)
+def _randomize_perf_data(pd, rng=random) -> None:
+    pd.pdb = rng.randint(5, 50)
+    pd.max_pdb_ul = rng.randint(10, 100)
+    pd.max_pdb_dl = rng.randint(10, 100)
 
     # 공인시험 KPI 설정 시작
-    pd.delay_ul = random.randint(1, 20)
-    pd.pdb_dl = random.randint(3, 30)
-    pd.thrput_dl = f"{random.randint(50, 300)} Mbps"
-    pd.thrput_ul = f"{random.randint(10, 100)} Mbps"
-    pd.plr_dl = random.randint(0, 30)
-    pd.jitter = round(random.uniform(0.0, 10.0), 1)
+    pd.delay_ul = rng.randint(1, 20)
+    pd.pdb_dl = rng.randint(3, 30)
+    pd.thrput_dl = f"{rng.randint(50, 300)} Mbps"
+    pd.thrput_ul = f"{rng.randint(10, 100)} Mbps"
+    pd.plr_dl = rng.randint(0, 30)
+    pd.jitter = round(rng.uniform(0.0, 10.0), 1)
     # 공인시험 KPI 설정 끝
 
-    pd.plr = random.randint(0, 50)  # 0.0% ~ 5.0%
-    pd.max_plr_ul = random.randint(0, 100)
-    pd.max_plr_dl = random.randint(0, 100)
+    pd.plr = rng.randint(0, 50)  # 0.0% ~ 5.0%
+    pd.max_plr_ul = rng.randint(0, 100)
+    pd.max_plr_dl = rng.randint(0, 100)
 
-    pd.max_thrput_ul = f"{random.randint(100, 500)} Mbps"
-    pd.min_thrput_ul = f"{random.randint(5, 50)} Mbps"
-    pd.max_thrput_dl = f"{random.randint(300, 1000)} Mbps"
-    pd.min_thrput_dl = f"{random.randint(20, 200)} Mbps"
+    pd.max_thrput_ul = f"{rng.randint(100, 500)} Mbps"
+    pd.min_thrput_ul = f"{rng.randint(5, 50)} Mbps"
+    pd.max_thrput_dl = f"{rng.randint(300, 1000)} Mbps"
+    pd.min_thrput_dl = f"{rng.randint(20, 200)} Mbps"
 
-    pd.min_rtt = random.randint(1, 20)
-    pd.max_rtt = random.randint(10, 100)
-    pd.min_delay_ul = random.randint(1, 10)
-    pd.max_delay_ul = random.randint(10, 50)
+    pd.min_rtt = rng.randint(1, 20)
+    pd.max_rtt = rng.randint(10, 100)
+    pd.min_delay_ul = rng.randint(1, 10)
+    pd.max_delay_ul = rng.randint(10, 50)
 
 
-def _randomize_dispersion_data(dc) -> None:
+def _randomize_dispersion_data(dc, rng=random) -> None:
     if dc.data_usage is not None:
-        dc.data_usage.duration = random.randint(30, 300)
-        dc.data_usage.total_volume = random.randint(5_000_000_000, 50_000_000_000)
-        dc.data_usage.downlink_volume = random.randint(3_000_000_000, 40_000_000_000)
-        dc.data_usage.uplink_volume = random.randint(1_000_000_000, 10_000_000_000)
+        dc.data_usage.duration = rng.randint(30, 300)
+        dc.data_usage.total_volume = rng.randint(5_000_000_000, 50_000_000_000)
+        dc.data_usage.downlink_volume = rng.randint(3_000_000_000, 40_000_000_000)
+        dc.data_usage.uplink_volume = rng.randint(1_000_000_000, 10_000_000_000)
 
 
-def _randomize_rf_signal_data(rs_data) -> None:
+def _randomize_rf_signal_data(rs_data, rng=random) -> None:
     if rs_data.ref_signal_measurements:
         for m in rs_data.ref_signal_measurements:
             # 공인시험 KPI 설정
-            m.rsrp = f"{random.randint(60, 100)}dBm"
-            m.rsrq = f"{random.randint(-20, -5)}dB"
-            m.sinr = f"{random.randint(5, 25)}dB"
-            m.bler = round(random.uniform(0.9, 1.0), 3)
-            m.connectivity = random.choice(["EXCELLENT", "GOOD", "MEDIUM", "WEAK"])
+            m.rsrp = f"{rng.randint(60, 100)}dBm"
+            m.rsrq = f"{rng.randint(-20, -5)}dB"
+            m.sinr = f"{rng.randint(5, 25)}dB"
+            m.bler = round(rng.uniform(0.9, 1.0), 3)
+            m.connectivity = rng.choice(["EXCELLENT", "GOOD", "MEDIUM", "WEAK"])
 
 
-def _randomize_power_energy_cons_data(pec_data) -> None:
-    pec_data.power = f"{random.randint(5, 50)}mW"
-    pec_data.duration = random.randint(30, 300)
-    pec_data.min_power = f"{random.randint(0, 10)}mW"
-    pec_data.peak_power = f"{random.randint(30, 100)}mW"
-    pec_data.energy = f"{round(random.uniform(0.5, 5.0), 1)}J"
-    pec_data.power_state = random.choice(
+def _randomize_power_energy_cons_data(pec_data, rng=random) -> None:
+    pec_data.power = f"{rng.randint(5, 50)}mW"
+    pec_data.duration = rng.randint(30, 300)
+    pec_data.min_power = f"{rng.randint(0, 10)}mW"
+    pec_data.peak_power = f"{rng.randint(30, 100)}mW"
+    pec_data.energy = f"{round(rng.uniform(0.5, 5.0), 1)}J"
+    pec_data.power_state = rng.choice(
         ["ACTIVE", "ACTIVE_UL", "ACTIVE_DL", "MICRO_SLEEP", "LIGHT_SLEEP", "DEEP_SLEEP"]
     )
 
 
 def simulation_notification_data(
     noti_data: NefEventExposureNotif,
+    rng=random,
 ) -> NefEventExposureNotif:
     """
     실제 값이 변화하는 것처럼 데이터를 시뮬레이션 한다.
@@ -193,6 +233,9 @@ def simulation_notification_data(
                                 (rsrp, rsrq, sinr, bler, connectivity) 랜덤화
     - _POWER_ENERGY_CONSUMPTION : powerEnergyConsInfos[*].powerEnergyConsData
                                 (power, energy, powerState 등) 랜덤화
+
+    rng: 난수 생성기. 기본값은 전역 random 모듈(기존 동작)이며, 재현 모드에서는
+         구독별 random.Random 인스턴스가 넘어온다(_make_rng 참조).
     """
     now = datetime.now(timezone.utc)
 
@@ -202,17 +245,17 @@ def simulation_notification_data(
         if event_notif.event == "PERF_DATA" and event_notif.perf_data_infos:
             for perf_info in event_notif.perf_data_infos:
                 perf_info.time_stamp = now
-                _randomize_perf_data(perf_info.perf_data)
+                _randomize_perf_data(perf_info.perf_data, rng)
 
         elif event_notif.event == "DISPERSION" and event_notif.dispersion_infos:
             for disp_info in event_notif.dispersion_infos:
                 disp_info.time_stamp = now
-                _randomize_dispersion_data(disp_info)
+                _randomize_dispersion_data(disp_info, rng)
 
         elif event_notif.event == "_RF_SIGNAL" and event_notif.rf_signal_infos:
             for rf_info in event_notif.rf_signal_infos:
                 if rf_info.rf_signal_data:
-                    _randomize_rf_signal_data(rf_info.rf_signal_data)
+                    _randomize_rf_signal_data(rf_info.rf_signal_data, rng)
 
         elif (
             event_notif.event == "_POWER_ENERGY_CONSUMPTION"
@@ -220,7 +263,9 @@ def simulation_notification_data(
         ):
             for pec_info in event_notif.power_energy_consumption_infos:
                 if pec_info.power_energy_cons_data:
-                    _randomize_power_energy_cons_data(pec_info.power_energy_cons_data)
+                    _randomize_power_energy_cons_data(
+                        pec_info.power_energy_cons_data, rng
+                    )
 
     return noti_data
 
@@ -239,6 +284,7 @@ async def handle_subcription_request(
     subscriptions[sub_id] = {
         "event_subscription": nef_event_exposure_subsc,
         "event_notification": nef_event_notification,
+        "rng": _make_rng(_rng_key(template_file, nef_event_exposure_subsc)),
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
 

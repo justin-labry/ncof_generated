@@ -5,6 +5,7 @@ from rich.pretty import pretty_repr
 from typing import Dict
 import uuid
 import asyncio
+import random
 
 from datetime import datetime, timezone
 
@@ -12,7 +13,12 @@ from nupf.models.notification_data import NotificationData
 
 from nsmf.apis.subscriptions_collection_api_base import BaseSubscriptionsCollectionApi
 from nsmf.models.nsmf_event_exposure import NsmfEventExposure
-from nsmf.impl.simulation import simulate_notification_data
+from nsmf.impl.simulation import (
+    simulate_notification_data,
+    make_rng,
+    sim_seed,
+    dl_throughput_high_at,
+)
 from . import utils
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -56,6 +62,9 @@ class NCOFEventsSubscriptionsCollectionApiImpl(BaseSubscriptionsCollectionApi):
         _subscriptions[sub_id] = {
             "event_subscription": nsmf_event_exposure,
             "event_notification": notification_data,
+            # SIM_SEED 재현 모드: 구독별 난수 생성기 + 통지 주기 카운터
+            "rng": make_rng(f"nsmf|{sample_file}"),
+            "tick": 0,
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -103,7 +112,20 @@ async def _periodic_notification_sender(sub_id: str, interval_seconds: int):
         # (예전에는 여기서 예외가 나면 태스크가 조용히 죽고, NCOF 는 갱신되지 않는
         #  마지막 데이터를 계속 읽어 분석 결과가 고정됐다.)
         try:
-            notification_data = simulate_notification_data(sub_id, event_notification)
+            # 재현 모드(SIM_SEED)에서는 DL throughput High/Low 를 벽시계 토글 대신
+            # "구독 후 몇 번째 통지인가"로 정한다. 기본 모드는 None → 기존 전역 토글.
+            subscription_info["tick"] = subscription_info.get("tick", 0) + 1
+            dl_high = (
+                dl_throughput_high_at(subscription_info["tick"], interval_seconds)
+                if sim_seed() is not None
+                else None
+            )
+            notification_data = simulate_notification_data(
+                sub_id,
+                event_notification,
+                rng=subscription_info.get("rng", random),
+                dl_throughput_high=dl_high,
+            )
 
             logger.info(f"[UPF] --- [NOTIFICATION] ---> [NCOF]")
             logger.info("\n%s", pretty_repr(notification_data, expand_all=True))

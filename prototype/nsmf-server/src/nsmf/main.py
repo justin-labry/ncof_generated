@@ -24,12 +24,17 @@ from nsmf.apis.subscriptions_collection_api import (
 )
 
 from nsmf.impl import utils
-from nsmf.impl.simulation import start_dl_throughput_toggle
+from nsmf.impl.simulation import (
+    start_dl_throughput_toggle,
+    DL_TOGGLE_INTERVAL_SECONDS,
+)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    asyncio.create_task(start_dl_throughput_toggle(interval_seconds=6))
+    asyncio.create_task(
+        start_dl_throughput_toggle(interval_seconds=DL_TOGGLE_INTERVAL_SECONDS)
+    )
     yield
 
 

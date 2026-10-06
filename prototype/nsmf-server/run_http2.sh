@@ -1,7 +1,10 @@
 #!/bin/bash
 # 설정 단일 출처: prototype/ncof_setting.conf (CLI 환경변수가 파일값보다 우선)
 _cli_tls="${NCOF_TLS-}"
+# SIM_SEED 는 CLI 값(빈 값 포함)이 있으면 파일값보다 우선
+_cli_sim_seed_set="${SIM_SEED+x}"; _cli_sim_seed="${SIM_SEED-}"
 set -a; . "$(dirname "$0")/../ncof_setting.conf"; set +a
+[ -n "$_cli_sim_seed_set" ] && export SIM_SEED="$_cli_sim_seed"
 [ -n "$_cli_tls" ] && export NCOF_TLS="$_cli_tls"
 export PORT=${PORT:-$SMF_PORT}
 # 기본 h2c(평문 HTTP/2). NCOF_TLS=1 이면 HTTP/2 over TLS.
