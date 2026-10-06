@@ -44,6 +44,7 @@ from nncof.core import utils
 from nncof.core.lenient_ingest import install_lenient_ingest
 from nncof.core.subscription_manager import SubscriptionManager
 from nncof.core.utils import system_info
+from nncof.core.validation_reject_log import install_validation_reject_log
 
 load_dotenv()
 
@@ -145,6 +146,8 @@ app.include_router(WebApiRouter)
 
 # TEMP(두두원 연동 진단) — NCOF_LENIENT_INGEST=1 일 때만 통지 본문을 수리해 통과시킨다.
 install_lenient_ingest(app)
+# 본문 검증 거절(422)을 로그·원장에 남긴다 — 상시. 기본 처리기는 아무것도 안 남긴다.
+install_validation_reject_log(app)
 
 # 정적 파일 서비스 설정
 # src/nncof/static 디렉토리를 루트(/)로 마운트한다. Vite 빌드 결과물(/assets/*)이 정상 서빙되도록 함.
