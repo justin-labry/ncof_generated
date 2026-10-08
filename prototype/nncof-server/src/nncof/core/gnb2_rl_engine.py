@@ -81,7 +81,8 @@ class Gnb2RLEngine(Gnb2RuleEngine):
         except KeyError as e:
             raise ValueError(f"policy requires unknown obs feature: {e}") from e
 
-    def _decide(self, metric: float) -> str:
+    def _decide(self, metric: float, prev_metric: float | None = None) -> str:
+        # prev_metric(룰 trend 모드용)은 쓰지 않는다 — 정책은 자기 직전 판정 값(_prev_metric)을 관측으로 받는다
         obs = self._build_obs(metric)
         self._prev_metric = metric
         logits = _mlp_forward(

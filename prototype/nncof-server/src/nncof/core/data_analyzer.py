@@ -21,7 +21,7 @@ from .decide_wlan_gnb2_rule import (
     build_15f_cell_power,
     extract_wlan_dl_mbps,
 )
-from .decision_config import current_decision_config
+from .decision_config import current_decision_config, wlan_sub_rep_period
 from .gnb2_rl_engine import create_decision_engine
 from .gnb2_rule_engine import Gnb2RuleEngine
 from .websocket_manager import broadcast_web_message
@@ -40,6 +40,9 @@ _shared_engine: Gnb2RuleEngine | None = None
 _active_analyzers: list["DataAnalyzer"] = []
 # shield 로 띄운 fan-out 은 참조가 사라지면 수거될 수 있어 끝날 때까지 들고 있는다.
 _inflight_fanouts: set[asyncio.Future] = set()
+# trend 판정의 비교 기준 — 12p_c 스트림(notifId)별로 지난 판정 때 본 (timeStamp, Mbps). 공유 엔진과 수명을 같이한다.
+# "바로 앞 10초 샘플" 이 아니라 "지난 판정 때 값" 과 비교해야 판정 틱(상향 repPeriod) 사이에 쌓인 변화가 빠지지 않는다.
+_trend_refs: dict[str, tuple[datetime, float]] = {}
 
 # 판정 입력으로 쓰는 하위 구독 이벤트 — 12p_c(WLAN) 스트림. SubscriptionHandler 가 그 SMF 하위 구독의 notifId 를 알려 준다.
 WLAN_SOURCE_EVENT = "WLAN_PERFORMANCE"
@@ -176,6 +179,7 @@ class DataAnalyzer:
             _active_analyzers.remove(self)
             if not _active_analyzers:
                 _shared_engine = None
+                _trend_refs.clear()
 
     async def _notify_analyzing(self):
         await broadcast_web_message(
@@ -211,6 +215,14 @@ class DataAnalyzer:
             else 60
         )
         mon_dur = self.subscription.evt_req.mon_dur
+
+        # 판정 틱은 상향 repPeriod 를 따른다 — 두두원이 다시 구독하면(청소 후 재기동 등) 60 으로 돌아온다
+        wlan_period = wlan_sub_rep_period()
+        if wlan_period and (period > 2 * wlan_period or wlan_period > _STALE_FACTOR * period):
+            logger.warning(
+                f"[{self.subscription_id}] 판정 틱 {period}초(상향 repPeriod)와 WLAN 하위 {wlan_period}초가 맞지 않음 — "
+                f"틱이 2배 넘게 길면 추세 반응이 늦고, WLAN 이 틱×{_STALE_FACTOR} 를 넘으면 매 틱 판정 보류"
+            )
 
         try:
             while self.is_running:
@@ -279,25 +291,21 @@ class DataAnalyzer:
                 latest = ts
         return latest
 
-    def _get_wlan_performance_data(self) -> tuple[NotificationData, datetime] | None:
-        """
-        판정 입력(UPF USER_DATA_USAGE_MEASURES)과 그 timeStamp 를 조회한다.
+    def _wlan_samples(self) -> list[tuple[str, NotificationData, datetime]]:
+        """판정 입력 후보 (notifId, 통지, timeStamp) 전부 — 활성 구독 전부의 store 에서.
 
         - 판정은 프로세스 공유이므로 활성 구독 전부의 store 에서 고른다.
         - **WLAN_PERFORMANCE 하위 구독(12p_c) 스트림만** 쓴다. 한 구독의 두 UPF 스트림(8_ SERVICE_EXPERIENCE 와
           12p_c WLAN) 중 "가장 늦게 온 것" 을 고르던 예전 방식은 도착 순서에 따라 의미가 다른 합계(9/30 실망 8_ ≈104 Mbps
           vs 12p_c ≈285 Mbps)를 번갈아 써서, 8_ 이상값(12458.99595 Mbps)으로 ACTIVE 오판을 냈다.
         - WLAN 스트림이 설정된 구독이 하나도 없을 때만 예전처럼 아무 UDUM 이나 쓴다(하위 호환).
-        - 그중 timeStamp 가 가장 최신인 것을 반환한다. 저장 순서상 첫 번째 것을 고르면, 그 스트림의
-          주기 통지가 끊겼을 때 갱신되지 않는 값을 계속 읽어 분석 결과가 고정된다.
         """
         pool = list(_active_analyzers)
         if self not in pool:
             pool.append(self)
         wlan_only = any(a._wlan_stream_ids for a in pool)
 
-        newest: NotificationData | None = None
-        newest_ts: datetime | None = None
+        samples: list[tuple[str, NotificationData, datetime]] = []
         for a in pool:
             for notif_id, notif in a.notif_data_store.get_all().items():
                 if wlan_only and notif_id not in a._wlan_stream_ids:
@@ -305,11 +313,46 @@ class DataAnalyzer:
                 ts = self._udum_timestamp(notif)
                 if ts is None:
                     continue
-                if newest_ts is None or ts > newest_ts:
-                    newest, newest_ts = notif, ts
-        if newest is None or newest_ts is None:
+                samples.append((notif_id, notif, ts))
+        return samples
+
+    def _get_wlan_performance_data(self) -> tuple[NotificationData, datetime, str] | None:
+        """
+        판정 입력(UPF USER_DATA_USAGE_MEASURES)과 그 timeStamp·notifId 를 조회한다(후보는 _wlan_samples).
+
+        timeStamp 가 가장 최신인 것을 반환한다. 저장 순서상 첫 번째 것을 고르면, 그 스트림의
+        주기 통지가 끊겼을 때 갱신되지 않는 값을 계속 읽어 분석 결과가 고정된다.
+        """
+        newest: tuple[str, NotificationData, datetime] | None = None
+        for sample in self._wlan_samples():
+            if newest is None or sample[2] > newest[2]:
+                newest = sample
+        if newest is None:
             return None
-        return newest, newest_ts
+        notif_id, notif, ts = newest
+        return notif, ts, notif_id
+
+    @staticmethod
+    def _trend_reference(notif_id: str, sample_ts: datetime, max_gap_sec: float) -> tuple[float, datetime] | None:
+        """같은 스트림을 지난 판정 때 본 (값, timeStamp). 없거나 max_gap_sec 넘게 떨어져 있으면(끊긴 뒤) None.
+        지난 판정 뒤 새 샘플이 없으면 같은 샘플이 돌아온다(Δ 0 → 상태 유지)."""
+        ref = _trend_refs.get(notif_id)
+        if ref is None:
+            return None
+        ref_ts, ref_value = ref
+        if ref_ts > sample_ts or (sample_ts - ref_ts).total_seconds() > max_gap_sec:
+            return None
+        return ref_value, ref_ts
+
+    def _snapshot_trend_refs(self) -> None:
+        """판정한 틱마다 모든 12p_c 스트림의 최신 (timeStamp, 값)을 다음 판정의 비교 기준으로 남긴다.
+        PCF·RICF 트리 중 어느 스트림이 다음 틱의 최신이 되어도 자기 스트림의 지난 판정 값과 비교하게 한다."""
+        refs = {
+            notif_id: (ts, extract_wlan_dl_mbps(notif.to_dict()))
+            for notif_id, notif, ts in self._wlan_samples()
+        }
+        _trend_refs.clear()
+        _trend_refs.update(refs)
 
     async def _analyze_and_generate(self, nf_type: str) -> None:
         """리더 틱이면 판정해 공유 엔진에 반영하고, 그 상태를 아직 받지 못한 활성 구독 전부
@@ -332,17 +375,31 @@ class DataAnalyzer:
                     f"({age:.0f}초 전, 허용 {_STALE_FACTOR * rep_period}초) — 판정 보류"
                 )
             else:
-                wlan_perf_data, sample_ts = sample
+                wlan_perf_data, sample_ts, stream_id = sample
                 logger.info(f"RLlib 입력 데이터 추출:")
                 try:
-                    engine.apply_config(current_decision_config())
+                    config = current_decision_config()
+                    engine.apply_config(config)
                     metric = extract_wlan_dl_mbps(wlan_perf_data.to_dict())
+                    prev = self._trend_reference(stream_id, sample_ts, _STALE_FACTOR * rep_period)
                     logger.info(
                         f"입력 샘플 timeStamp {sample_ts.astimezone().isoformat(timespec='seconds')}({age:.0f}초 전)"
                     )
                     logger.info(f"분석 메트릭 WLAN_DL_MBPS:{metric}")
+                    if config.mode == "trend":
+                        if engine.last_emitted_state is None:
+                            logger.info(f"추세 입력: 첫 판정 — TH {config.th_mbps} 기준 판정")
+                        elif prev is None:
+                            logger.info(f"추세 입력: 지난 판정 값 없음(끊긴 뒤) — TH {config.th_mbps} 기준 판정")
+                        else:
+                            logger.info(
+                                f"추세 입력: 지난 판정 {prev[0]} → 현재 {metric} Mbps (Δ {metric - prev[0]:+.1f}, "
+                                f"지난 판정 샘플 {prev[1].astimezone().isoformat(timespec='seconds')}, "
+                                f"TH {config.th_mbps} · DEADBAND {config.trend_deadband_mbps})"
+                            )
                     logger.info("AI 분석 시작")
-                    engine.update_state(metric, decision_iso)
+                    engine.update_state(metric, decision_iso, prev[0] if prev else None)
+                    self._snapshot_trend_refs()
                     logger.info("AI 분석 완료")
                 except Exception as e:  # noqa: BLE001
                     logger.warning(f"[{self.subscription_id}] 분석 중 오류 발생: {e}")

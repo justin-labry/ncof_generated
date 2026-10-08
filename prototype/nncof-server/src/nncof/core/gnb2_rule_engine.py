@@ -22,6 +22,8 @@ class Gnb2RuleEngine:
         self.th_mbps = th_mbps
         self.hyst_mbps = hyst_mbps  # 0 = 히스테리시스 비활성 (기본)
         self.min_dwell_sec = min_dwell_sec  # 0 = 가드 비활성 (기본)
+        self.mode = "threshold"  # "trend" = 임계 이상에서 직전 샘플 대비 추세로 판정
+        self.trend_deadband_mbps = 0.0
         self.last_emitted_state = None  # emit-on-change 추적용
         self.last_change_at = None  # minimum-dwell guard용
 
@@ -30,26 +32,49 @@ class Gnb2RuleEngine:
         self.th_mbps = config.th_mbps
         self.hyst_mbps = config.hyst_mbps
         self.min_dwell_sec = config.min_dwell_sec
+        self.mode = config.mode
+        self.trend_deadband_mbps = config.trend_deadband_mbps
 
-    def _decide(self, metric: float) -> str:
+    def _decide(self, metric: float, prev_metric: float | None = None) -> str:
         """
         WLAN metric → gNB2 상태 판정. RL 엔진은 이 메서드만 오버라이드한다.
         (emit-on-change / dwell guard / 15f·14_e 생성은 공통 로직 공유)
 
         히스테리시스: ACTIVE 에서는 metric < th - hyst 일 때만 DEEP_SLEEP 으로 내려간다.
         12p_c 는 매 주기 수 Mbps 씩 흔들리므로(9/30 실측 282~292) 임계를 그 대역에 두면 매 틱 뒤집힌다.
+
+        trend 모드: 임계 미만은 위와 같이 DEEP_SLEEP. 임계 이상이면 지난 판정 때 본 값(prev_metric)과 비교해
+        오르면 ACTIVE, 내리면 DEEP_SLEEP, 차이가 데드밴드 이하면 현재 상태 유지.
+        다음은 임계 규칙 그대로(임계 이상 = ACTIVE): 첫 판정, 지난 판정 값이 없을 때(끊긴 뒤), 지난 판정 값이 임계 미만이었을 때(아래에서 넘어옴).
         """
         if self.hyst_mbps and self.last_emitted_state == "ACTIVE":
-            return decide_gnb2_state(metric, self.th_mbps - self.hyst_mbps)
-        return decide_gnb2_state(metric, self.th_mbps)
+            state = decide_gnb2_state(metric, self.th_mbps - self.hyst_mbps)
+        else:
+            state = decide_gnb2_state(metric, self.th_mbps)
+        if (
+            self.mode != "trend"
+            or state != "ACTIVE"
+            or self.last_emitted_state is None
+            or prev_metric is None
+            or prev_metric < self.th_mbps
+        ):
+            return state
 
-    def update_state(self, metric: float, decision_iso: str) -> str:
+        delta = metric - prev_metric
+        if delta > self.trend_deadband_mbps:
+            return "ACTIVE"
+        if delta < -self.trend_deadband_mbps:
+            return "DEEP_SLEEP"
+        return self.last_emitted_state
+
+    def update_state(self, metric: float, decision_iso: str, prev_metric: float | None = None) -> str:
         """
         metric 으로 판정해 확정된 현재 gNB2 상태를 반환한다.
         판정이 바뀌어도 minimum-dwell guard 에 걸리면 직전 상태를 유지한다.
         (15f·14_e 생성 없이 상태만 필요한 DataAnalyzer 의 fan-out 경로가 쓴다)
+        prev_metric 은 trend 모드에서만 쓰는, 같은 12p_c 스트림을 지난 판정 때 본 값이다.
         """
-        new_state = self._decide(metric)
+        new_state = self._decide(metric, prev_metric)
 
         if new_state == self.last_emitted_state:
             return new_state

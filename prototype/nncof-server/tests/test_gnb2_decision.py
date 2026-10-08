@@ -21,8 +21,10 @@ _UDUM_TEMPLATE = (
 )
 _T0 = datetime(2026, 10, 1, 3, 0, tzinfo=timezone.utc)
 
-# 테스트용 UPF 샘플: correlationId → WLAN_DL_MBPS
+# 테스트용 UPF 샘플: correlationId → WLAN_DL_MBPS (가장 최근 값)
 _METRICS: dict[str, float] = {}
+# 같은 스트림의 직전·현재 샘플을 구별하기 위한 (correlationId, timeStamp) → WLAN_DL_MBPS
+_METRICS_AT: dict[tuple[str, str], float] = {}
 # 테스트 시계 — 기본은 "가장 최근에 넣은 샘플 시각"(= 신선한 샘플)
 _NOW = [_T0]
 
@@ -32,19 +34,25 @@ def _isolate(monkeypatch, tmp_path):
     monkeypatch.setattr(data_analyzer, "_shared_engine", None)
     monkeypatch.setattr(data_analyzer, "_active_analyzers", [])
     monkeypatch.setattr(data_analyzer, "_inflight_fanouts", set())
+    monkeypatch.setattr(data_analyzer, "_trend_refs", {})
     monkeypatch.setattr(decision_config, "_cache", decision_config.Gnb2DecisionConfig())
     monkeypatch.setattr(decision_config, "_cache_key", None)
-    for key in ("GNB2_TH_MBPS", "GNB2_HYST_MBPS", "GNB2_MIN_DWELL_SEC"):
+    for key in decision_config._KEYS + ("WLAN_SUB_REP_PERIOD_SEC",):
         monkeypatch.delenv(key, raising=False)
     conf = tmp_path / "ncof_setting.conf"
     conf.write_text("GNB2_TH_MBPS=500\n", encoding="utf-8")
     monkeypatch.setenv("NCOF_SETTING_FILE", str(conf))
     _METRICS.clear()
+    _METRICS_AT.clear()
     _NOW[0] = _T0
     monkeypatch.setattr(data_analyzer, "_utcnow", lambda: _NOW[0])
 
     def fake_extract(d: dict) -> float:
-        return _METRICS[d.get("correlationId") or d.get("correlation_id")]
+        corr = d.get("correlationId") or d.get("correlation_id")
+        items = d.get("notificationItems") or d.get("notification_items") or []
+        ts = items[0].get("timeStamp") or items[0].get("time_stamp") if items else None
+        key = (corr, ts.isoformat() if isinstance(ts, datetime) else str(ts))
+        return _METRICS_AT.get(key, _METRICS[corr])
 
     monkeypatch.setattr(data_analyzer, "extract_wlan_dl_mbps", fake_extract)
     return conf
@@ -83,6 +91,7 @@ def _upf(analyzer: DataAnalyzer, corr_id: str, mbps: float, age_sec: int, wlan: 
         item.time_stamp = _T0 + timedelta(seconds=age_sec)
     analyzer.notif_data_store.add_data("upf", corr_id, notif)
     _METRICS[corr_id] = mbps
+    _METRICS_AT[(corr_id, (_T0 + timedelta(seconds=age_sec)).isoformat())] = mbps
     _NOW[0] = max(_NOW[0], _T0 + timedelta(seconds=age_sec))
     if wlan:
         analyzer.set_wlan_stream_ids(analyzer._wlan_stream_ids | {corr_id})
@@ -341,3 +350,184 @@ def test_config_error_inside_leader_tick_does_not_raise(monkeypatch):
     monkeypatch.setattr(data_analyzer, "current_decision_config", boom)
     _tick(pcf)  # 예외가 틱 밖으로 나가 판정 루프를 끝내면 안 된다
     assert sent == []
+
+
+# --- trend 모드 (10/08): 임계 이상이면 지난 판정 때 본 값 대비 오르면 ACTIVE, 내리면 DEEP_SLEEP ---
+# 12p_c 하위 구독은 10초, 판정 틱은 상향 repPeriod 20초 — 틱 사이에 샘플이 2개씩 쌓인다.
+
+
+def _run_trend(pcf, ticks, stream="wlan-p", analyzer=None):
+    """ticks: [([(시각 초, Mbps), ...], 기대 상태), ...] — 샘플들을 넣은 뒤 리더 틱을 한 번 돈다."""
+    for samples, expect in ticks:
+        for sec, mbps in samples:
+            _upf(analyzer or pcf, stream, mbps, sec, wlan=True)
+        _tick(pcf)
+        assert pcf.decision_engine.last_emitted_state == expect, (samples, expect)
+
+
+def _trend_conf(conf, extra=""):
+    _set_conf(conf, "GNB2_TH_MBPS=300\nGNB2_DECISION_MODE=trend\n" + extra)
+
+
+def test_trend_compares_with_value_seen_at_last_decision(_isolate):
+    _trend_conf(_isolate)
+    sent, pcf, ricf = _pair()
+    _run_trend(
+        pcf,
+        [
+            ([(0, 310.0), (10, 320.0)], "ACTIVE"),  # 첫 판정 — TH 기준
+            ([(20, 360.0), (30, 350.0)], "ACTIVE"),  # 지난 판정 320 → 350 상승(10초 전 360 대비로는 하강)
+            ([(40, 340.0), (50, 330.0)], "DEEP_SLEEP"),  # 350 → 330 하강, 아직 TH 이상
+            ([(60, 340.0), (70, 345.0)], "ACTIVE"),  # 330 → 345 상승
+            ([(80, 260.0), (90, 250.0)], "DEEP_SLEEP"),  # TH 미만
+        ],
+    )
+
+
+def test_first_decision_is_threshold_even_if_two_samples_arrived(_isolate):
+    # 재기동 직후 첫 틱 전에 12p_c 가 2개 온다(10초 하위·20초 틱) — 처음에는 TH 이상이면 그냥 ACTIVE
+    _trend_conf(_isolate)
+    sent, pcf, ricf = _pair()
+    _run_trend(pcf, [([(0, 340.0), (10, 320.0)], "ACTIVE"), ([(20, 305.0), (30, 300.0)], "DEEP_SLEEP")])
+
+
+def test_rise_between_ticks_is_not_lost(_isolate):
+    # 바로 앞 10초 샘플과만 비교하면 280,280 | 360,360 의 상승(틱 사이 쌍)이 빠져 DEEP_SLEEP 에 갇혔다
+    _trend_conf(_isolate, "GNB2_TREND_DEADBAND_MBPS=10\n")
+    sent, pcf, ricf = _pair()
+    _run_trend(
+        pcf,
+        [
+            ([(0, 280.0), (10, 280.0)], "DEEP_SLEEP"),
+            ([(20, 360.0), (30, 360.0)], "ACTIVE"),
+            ([(40, 360.0), (50, 360.0)], "ACTIVE"),
+        ],
+    )
+
+
+def test_crossing_threshold_from_below_is_active_even_within_deadband(_isolate):
+    _trend_conf(_isolate, "GNB2_TREND_DEADBAND_MBPS=10\n")
+    sent, pcf, ricf = _pair()
+    _run_trend(
+        pcf,
+        [([(0, 250.0)], "DEEP_SLEEP"), ([(20, 295.0)], "DEEP_SLEEP"), ([(40, 303.0)], "ACTIVE")],
+    )
+
+
+def test_slow_ramp_accumulates_over_the_tick(_isolate):
+    # 10초마다 +8 — 샘플 쌍으로는 데드밴드 10 을 못 넘지만 판정 틱(20초) 사이 +16 은 넘는다
+    _trend_conf(_isolate, "GNB2_TREND_DEADBAND_MBPS=10\n")
+    sent, pcf, ricf = _pair()
+    _run_trend(
+        pcf,
+        [
+            ([(0, 320.0), (10, 328.0)], "ACTIVE"),
+            ([(20, 336.0), (30, 344.0)], "ACTIVE"),
+            ([(40, 336.0), (50, 328.0)], "DEEP_SLEEP"),  # 344 → 328 = -16
+            ([(60, 336.0), (70, 344.0)], "ACTIVE"),  # 328 → 344 = +16
+        ],
+    )
+
+
+def test_flat_within_deadband_or_no_new_sample_keeps_state(_isolate):
+    _trend_conf(_isolate, "GNB2_TREND_DEADBAND_MBPS=10\n")
+    sent, pcf, ricf = _pair()
+    _run_trend(
+        pcf,
+        [
+            ([(0, 330.0)], "ACTIVE"),
+            ([(20, 315.0)], "DEEP_SLEEP"),  # -15
+            ([(40, 322.0)], "DEEP_SLEEP"),  # +7 ≤ 10 → 유지
+            ([], "DEEP_SLEEP"),  # 새 샘플 없음(같은 샘플) → Δ 0 → 유지
+            ([(60, 340.0)], "ACTIVE"),  # 322 → 340 = +18
+        ],
+    )
+
+
+def test_trend_reference_is_per_stream(_isolate):
+    # 최신 샘플이 RICF 트리 스트림으로 바뀌어도 그 스트림의 지난 판정 값과 비교한다
+    _trend_conf(_isolate)
+    sent, pcf, ricf = _pair()
+    _upf(pcf, "wlan-p", 330.0, 0, wlan=True)
+    _upf(ricf, "wlan-r", 400.0, 1, wlan=True)
+    _tick(pcf)  # 최신 = wlan-r 400 → 첫 판정 ACTIVE. 기준: wlan-p 330, wlan-r 400
+    assert pcf.decision_engine.last_emitted_state == "ACTIVE"
+    _upf(ricf, "wlan-r", 360.0, 20, wlan=True)
+    _upf(pcf, "wlan-p", 350.0, 21, wlan=True)  # 최신 = wlan-p 350 — 기준은 wlan-p 330(상승), wlan-r 400 이 아니다
+    _tick(pcf)
+    assert pcf.decision_engine.last_emitted_state == "ACTIVE"
+
+
+def test_reference_older_than_allowance_is_ignored(_isolate):
+    # 끊긴 뒤 첫 판정은 '처음' 과 같다 — 허용 나이(상향 repPeriod 20 × 3 = 60초)보다 먼 기준과 비교하지 않는다
+    _trend_conf(_isolate)
+    sent, pcf, ricf = _pair()
+    _run_trend(pcf, [([(0, 330.0)], "ACTIVE"), ([(20, 320.0)], "DEEP_SLEEP")])
+    _run_trend(pcf, [([(81, 310.0)], "ACTIVE")])  # 기준 320@20 과 61초 — 기준 없음 → TH 이상 ACTIVE
+
+
+def test_engine_reset_clears_trend_reference(_isolate):
+    _trend_conf(_isolate)
+    sent, pcf, ricf = _pair()
+    _run_trend(pcf, [([(0, 330.0)], "ACTIVE")])
+    assert data_analyzer._trend_refs
+    for a in (pcf, ricf):
+        a._leave_active_analyzers()
+    assert data_analyzer._trend_refs == {}
+
+
+def test_trend_mode_is_read_without_restart_and_threshold_is_default(_isolate, caplog):
+    sent, pcf, ricf = _pair()
+    _set_conf(_isolate, "GNB2_TH_MBPS=300\n")
+    _run_trend(pcf, [([(0, 320.0)], "ACTIVE"), ([(20, 310.0)], "ACTIVE")])  # threshold — 하강해도 TH 이상이면 ACTIVE
+    _set_conf(_isolate, "GNB2_TH_MBPS=300\nGNB2_DECISION_MODE=TREND\n")
+    with caplog.at_level("WARNING"):
+        _run_trend(pcf, [([(40, 305.0)], "DEEP_SLEEP")])  # 기준 310(threshold 때도 남겨 둔다) → 하강
+    assert "MODE threshold → trend" in caplog.text
+
+
+def test_invalid_trend_settings_keep_previous(_isolate):
+    conf = _isolate
+    _set_conf(conf, "GNB2_TH_MBPS=300\nGNB2_DECISION_MODE=trend\nGNB2_TREND_DEADBAND_MBPS=5\n")
+    assert decision_config.current_decision_config().mode == "trend"
+    _set_conf(conf, "GNB2_TH_MBPS=300\nGNB2_DECISION_MODE=slope\nGNB2_TREND_DEADBAND_MBPS=5\n")
+    assert decision_config.current_decision_config().mode == "trend"
+    _set_conf(conf, "GNB2_TH_MBPS=300\nGNB2_DECISION_MODE=trend\nGNB2_TREND_DEADBAND_MBPS=-1\n")
+    assert decision_config.current_decision_config().trend_deadband_mbps == 5.0
+
+
+def _wlan_and_other_periods(name: str):
+    payload = json.loads((_CLIENT_DIR / name).read_text(encoding="utf-8"))
+    sub = NncofEventsSubscription.from_dict(payload)
+    requests = build_subscription_requests("sub-x", sub)
+    wlan = [r["subscription"].to_dict() for r in requests if r.get("source_event") == "WLAN_PERFORMANCE"]
+    other = [r["subscription"].to_dict() for r in requests if r.get("source_event") != "WLAN_PERFORMANCE"]
+    return sub.evt_req.rep_period, wlan, other
+
+
+def _periods(body: dict) -> set:
+    """하위 본문에서 두두원 Get_Ncof_Rep_Period 가 읽는 자리들의 repPeriod."""
+    found = set()
+    if body.get("repPeriod") is not None:
+        found.add(body["repPeriod"])
+    if (body.get("eventsRepInfo") or {}).get("repPeriod") is not None:
+        found.add(body["eventsRepInfo"]["repPeriod"])
+    for s in body.get("eventsSubs") or []:
+        if (s.get("eventRepInfo") or {}).get("repPeriod") is not None:
+            found.add(s["eventRepInfo"]["repPeriod"])
+    return found
+
+
+def test_wlan_sub_rep_period_overrides_only_wlan_stream(_isolate):
+    _set_conf(_isolate, "GNB2_TH_MBPS=300\nWLAN_SUB_REP_PERIOD_SEC=10\n")
+    for name in ("subscription_pcf_to_ncof.json", "subscription_ricf_to_ncof.json"):
+        upstream, wlan, other = _wlan_and_other_periods(name)
+        assert [_periods(b) for b in wlan] == [{10}]
+        assert other and all(_periods(b) <= {upstream} for b in other), name
+
+
+def test_wlan_sub_rep_period_unset_or_invalid_follows_upstream(_isolate):
+    for text in ("GNB2_TH_MBPS=300\n", "WLAN_SUB_REP_PERIOD_SEC=\n", "WLAN_SUB_REP_PERIOD_SEC=0\n", "WLAN_SUB_REP_PERIOD_SEC=ten\n"):
+        _set_conf(_isolate, text)
+        upstream, wlan, other = _wlan_and_other_periods("subscription_pcf_to_ncof.json")
+        assert [_periods(b) for b in wlan] == [{upstream}], text

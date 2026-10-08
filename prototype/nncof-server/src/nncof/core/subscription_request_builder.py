@@ -28,6 +28,7 @@ from nnef.models.reporting_information import ReportingInformation
 from nnef.models.nef_event_exposure_subsc import NefEventExposureSubsc, NefEventSubs
 from nnef.models.network_area_info import NetworkAreaInfo as NefNetworkAreaInfo
 
+from .decision_config import wlan_sub_rep_period
 from .supi_mapping import get_mapping_by_supi
 from datetime import datetime, timezone, timedelta
 
@@ -656,6 +657,16 @@ def _handle_ricf_wlan_performance(
         event_subscription,
         nsmf_subscription,
     )
+
+    # 판정 입력(12p_c) 스트림만 상향 주기와 따로 줄 수 있다 — 두두원은 이 repPeriod 를 송신 주기이자
+    # 12p_c 평균 창(udptp_traffic 최근 N초 AVG)으로 쓴다. 다른 하위 구독은 상향 repPeriod 를 그대로 따른다.
+    wlan_period = wlan_sub_rep_period()
+    if wlan_period is not None:
+        logger.info(
+            f"WLAN_PERFORMANCE 하위 구독 repPeriod {wlan_period}초 "
+            f"(상향 {nsmf_subscription.rep_period}초 대신 — WLAN_SUB_REP_PERIOD_SEC)"
+        )
+        nsmf_subscription.rep_period = wlan_period
 
     return [{"target": "smf", "subscription": nsmf_subscription}]
 
