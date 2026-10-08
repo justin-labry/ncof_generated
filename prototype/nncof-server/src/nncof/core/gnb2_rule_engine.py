@@ -22,7 +22,7 @@ class Gnb2RuleEngine:
         self.th_mbps = th_mbps
         self.hyst_mbps = hyst_mbps  # 0 = 히스테리시스 비활성 (기본)
         self.min_dwell_sec = min_dwell_sec  # 0 = 가드 비활성 (기본)
-        self.mode = "threshold"  # "trend" = 임계 이상에서 직전 샘플 대비 추세로 판정
+        self.mode = "threshold"  # "trend" = 임계 이상에서 같은 12p_c 스트림의 지난 판정 때 값 대비 추세로 판정
         self.trend_deadband_mbps = 0.0
         self.last_emitted_state = None  # emit-on-change 추적용
         self.last_change_at = None  # minimum-dwell guard용
