@@ -42,7 +42,7 @@ must stay ACTIVE. Low WLAN throughput means there is headroom on the
 Wi-Fi path, so gNB2 can sleep safely. This matches the spare-capacity
 logic of ``tools/decide_cell_power.py`` rule R4.
 
-QoS mapping per output policy set (driven by the new gNB2 state):
+QoS mapping per output policy set (driven by the new gNB2 state; threshold/trend 모드 — level 모드는 아래 「Level mode」):
 
     | ratType | spatialValidity | DEEP_SLEEP        | ACTIVE             |
     |---------|-----------------|-------------------|--------------------|
@@ -63,8 +63,14 @@ lbt = (int)(gNB2*100/(gNB2+WLAN)) 를 10% 단위로 올려 ATSSS 하향 분배 1
 정상일 때 뒤 슬롯에 덮어써져 비율에 끼지 않지만, 두두원은 4개가 다 차야 UDP 를 보내므로 개수·순서는 그대로 둔다.
 
 Level mode (``GNB2_DECISION_MODE=level``): 12p_c 값을 경계(``GNB2_LEVEL_BOUNDS_MBPS``)로 단계에 넣고,
-단계별 gNB2 몫(``GNB2_LEVEL_GNB2_PCT``, 10% 격자)으로 총합(``GNB2_SPLIT_TOTAL_MBPS``)을 나눈다 —
-NR gNB2 set = 총합×몫, 두 WLAN set = 나머지. 단계 0 만 DEEP_SLEEP(gNB2 0)이고 셀 상태(15f)도 단계에서 나온다.
+단계별 몫(10% 격자)으로 총합(``GNB2_SPLIT_TOTAL_MBPS``)을 쌍마다 나눈다 — 쌍은 appId 로 묶는다:
+노트북2 쌍(client-2: NR gNB2 set + WLAN set) = ``GNB2_LEVEL_GNB2_PCT``, 노트북1 쌍(client-1: NR gNB1 set + WLAN set)
+= ``GNB2_LEVEL_GNB1_PCT``. 단계 0 만 DEEP_SLEEP(gNB2 0)이고 셀 상태(15f)도 단계에서 나온다(gNB1 은 잠들지 않는다).
+``GNB2_LEVEL_GNB1_PCT`` 가 없고 기본 몫이 경계 개수나 총합과 안 맞으면 노트북1 쌍 분배는 꺼진다(gNB1 set 그대로 · WLAN set 둘 다 노트북2 몫).
+⚠️ 두두원 UPF(CUPB_SbiComm.c:43-106)는 4 슬롯을 돌며 TN/NTN 한 쌍에 덮어쓰고 마지막 TN 컨텍스트 하나에만
+비율을 적용한다 — 지금 빌드에서는 정상(…102 · …104 세션이 있을 때)이면 노트북1 쌍(슬롯 0·1) 값이 슬롯 2·3 에 덮여
+UPF 에 반영되지 않는다(2026-10-19 소스 확인). 노트북1 쌍 적용에는 UPF 쌍별 처리와 atsss_list 의 …101/…103 쌍 등록이
+함께 필요하다(등록 여부 미확인).
 
 Run::
 
@@ -101,7 +107,7 @@ from typing import Any
 TH_MBPS = 500.0  # >= : ACTIVE (WLAN saturated, can't offload), else: DEEP_SLEEP
 
 GNB2_VALUE = "000002"  # which gNB the rule controls
-GNB1_VALUE = "000001"  # primary gNB; never affected by this rule
+GNB1_VALUE = "000001"  # primary gNB; untouched in threshold/trend — level 모드에서는 GNB2_LEVEL_GNB1_PCT 로 노트북1 쌍을 나눈다
 
 GBR_HIGH_MBPS = (
     1000.0  # "fully on" gbr/mbr (3GPP-on-gNB2 when ACTIVE; WLAN when DEEP_SLEEP)
@@ -371,23 +377,27 @@ def apply_qos_policy(
     sub_id: str,
     corr_id: str | None,
     split: tuple[int, int] | None = None,
+    gnb1_split: tuple[int, int] | None = None,
 ) -> list[dict]:
     """14_e 템플릿 사본에 이번 판정의 신원·시각을 찍고 qosParamSet.gbrDl/mbrDl 을 규칙대로 뒤집는다.
 
-    split(level 모드): (NR gNB2 set, WLAN set) gbr/mbr Mbps. 주면 아래 상수 대신 이 값을 쓴다 —
-    두 WLAN set 은 같은 값, gNB1 set 은 그대로. DEEP_SLEEP 이면 split 과 상관없이 gNB2 0 · WLAN 합계.
+    split(level 모드): (NR gNB2 set, 노트북2 WLAN set) gbr/mbr Mbps. 주면 아래 상수 대신 이 값을 쓴다.
+    DEEP_SLEEP 이면 split 과 상관없이 gNB2 0 · 노트북2 WLAN set 은 합계.
+    gnb1_split(level 모드): (NR gNB1 set, 그 쌍의 WLAN set). WLAN set 은 appId 가 같은 NR set 의 gNB 로 쌍을 찾는다.
+    gnb1_split 이 없으면(threshold/trend, 또는 gNB1 쌍 분배 끔) gNB1 set 은 그대로 두고 모든 WLAN set 에 split 의
+    WLAN 값을 준다(예전 동작).
 
     템플릿에는 subscriptionId·notifCorrId·resourceUri 와 29곳의 타임스탬프가 2026-03-01 고정값으로
     박혀 있다. 이전 구현은 gbr/mbr 만 뒤집고 그 봉투를 그대로 내보내, PCF 가 받는 제어 명령이
     실제 구독 id 도 현재 시각도 아닌 값을 달고 나갔다. build_15f_cell_power() 와 동일하게
     호출자가 준 sub_id/corr_id/decision_iso 로 전부 덮어쓴다.
 
-    Rules:
+    Rules (split 이 없을 때 — threshold/trend):
         - WLAN set:         gbr/mbr = HIGH    if DEEP_SLEEP   (Wi-Fi absorbs all)
                             gbr/mbr = PARTIAL if ACTIVE       (NR takes ~50%, Wi-Fi keeps half)
         - NR + gNB2 set:    gbr/mbr = OFF     if DEEP_SLEEP   (cell physically off)
                             gbr/mbr = HIGH    if ACTIVE       (NR full capacity)
-        - NR + gNB1 set:    untouched (this rule never touches the primary cell)
+        - NR + gNB1 set:    untouched (level 모드에서는 gnb1_split 이 있을 때만 바뀐다)
     """
     start, stop = _time_window(decision_iso)
     out = copy.deepcopy(template)
@@ -407,25 +417,45 @@ def apply_qos_policy(
                 for assist in info.get("qosPolAssistInfo", []):
                     assist["tsStart"] = start
                     assist["tsDuration"] = int(SUB_DURATION.total_seconds())
-                    for ordinal, ps in enumerate(
-                        assist.get("qosPolAssistSets", []), start=1
-                    ):
+                    sets = assist.get("qosPolAssistSets", [])
+                    owners = _pair_owners(sets)
+                    for ordinal, ps in enumerate(sets, start=1):
                         _stamp_one_set(ps, start, stop, ordinal)
-                        _flip_one_set(ps, state, split)
+                        _flip_one_set(ps, state, split, gnb1_split, owners.get(ps.get("appId")))
     return out
 
 
-def _flip_one_set(policy_set: dict, state: str, split: tuple[int, int] | None = None) -> None:
+def _pair_owners(sets: list[dict]) -> dict[str, str]:
+    """appId → 같은 appId 를 가진 NR set 의 gNBValue — WLAN set 이 어느 노트북(쌍)에 속하는지 찾는 데 쓴다."""
+    owners: dict[str, str] = {}
+    for ps in sets:
+        if _is_wlan_set(ps) or not ps.get("appId"):
+            continue
+        for gnb in (GNB1_VALUE, GNB2_VALUE):
+            if _is_on_gnb(ps, gnb):
+                owners.setdefault(ps["appId"], gnb)
+    return owners
+
+
+def _flip_one_set(
+    policy_set: dict,
+    state: str,
+    split: tuple[int, int] | None = None,
+    gnb1_split: tuple[int, int] | None = None,
+    owner_gnb: str | None = None,
+) -> None:
     if split is not None:
         gnb2, wlan = split
         if state == "DEEP_SLEEP":
             gnb2, wlan = 0, gnb2 + wlan  # DEEP_SLEEP 이면 gNB2 0 — 셀이 꺼진 쪽으로 몫을 주지 않는다
         if _is_wlan_set(policy_set):
-            gbr = float(wlan)
+            gbr = float(gnb1_split[1] if gnb1_split is not None and owner_gnb == GNB1_VALUE else wlan)
         elif _is_on_gnb(policy_set, GNB2_VALUE):
             gbr = float(gnb2)
+        elif gnb1_split is not None and _is_on_gnb(policy_set, GNB1_VALUE):
+            gbr = float(gnb1_split[0])
         else:
-            return  # gNB1 set 은 그대로
+            return  # gNB1 set(gnb1_split 이 없을 때)은 그대로
     elif _is_wlan_set(policy_set):
         # DEEP_SLEEP: WLAN absorbs everything (HIGH).
         # ACTIVE:    WLAN keeps ~50% (PARTIAL); NR takes the other half.

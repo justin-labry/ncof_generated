@@ -25,7 +25,11 @@ class Gnb2DecisionConfig:
     - trend_deadband_mbps: trend 에서 |현재 - 지난 판정 값| 이 이 값 이하면 "변화 없음"으로 보고 현재 상태를 유지한다
     - level_bounds_mbps: level 단계 경계(오름차순). 첫 값 미만이 단계 0(DEEP_SLEEP)
     - level_gnb2_pct: 단계별 gNB2 몫(%) — 개수는 경계+1, 첫 값은 0, 나머지는 10 의 배수(비감소)
-    - split_total_mbps: gNB2 set + 노트북2 WLAN set 의 gbr/mbr 합. 두두원 UPF 는 이 둘의 mbr 비만 10% 단위로 쓴다
+    - level_gnb1_pct: 단계별 gNB1(노트북1 쌍 — gNB1 set + WLAN client-1 set) 몫(%) — 개수는 경계+1, 10 의 배수(비감소).
+      gNB1 은 잠들지 않으므로 단계 0 에도 0 이 아니어도 된다. 빈 값 = gNB1 쌍 분배 끔(키가 없고 기본값이 경계 개수나
+      총합과 안 맞을 때)
+    - split_total_mbps: 쌍(노트북1 · 노트북2)마다 gNB set + WLAN set 의 gbr/mbr 합. 두두원 UPF 는 지금 노트북2 쌍
+      (gNB2 set · 노트북2 WLAN set)의 mbr 비만 10% 단위로 쓴다
     """
 
     th_mbps: float = 500.0
@@ -35,6 +39,7 @@ class Gnb2DecisionConfig:
     trend_deadband_mbps: float = 0.0
     level_bounds_mbps: tuple[float, ...] = (172.0, 305.0, 338.0)
     level_gnb2_pct: tuple[int, ...] = (0, 50, 70, 90)
+    level_gnb1_pct: tuple[int, ...] = (30, 50, 70, 90)
     split_total_mbps: int = 1000
 
 
@@ -61,6 +66,7 @@ _KEYS = (
     "GNB2_TREND_DEADBAND_MBPS",
     "GNB2_LEVEL_BOUNDS_MBPS",
     "GNB2_LEVEL_GNB2_PCT",
+    "GNB2_LEVEL_GNB1_PCT",
     "GNB2_SPLIT_TOTAL_MBPS",
 )
 
@@ -112,33 +118,54 @@ def _parse(
     try:
         bounds = floats("GNB2_LEVEL_BOUNDS_MBPS", _DEFAULT.level_bounds_mbps)
         pcts_f = floats("GNB2_LEVEL_GNB2_PCT", _DEFAULT.level_gnb2_pct)
+        gnb1_f = floats("GNB2_LEVEL_GNB1_PCT", _DEFAULT.level_gnb1_pct)
         total_f = float(pick("GNB2_SPLIT_TOTAL_MBPS") or _DEFAULT.split_total_mbps)
         level_error = _level_error(bounds, pcts_f, total_f)
+        # 키가 없는데 기본 gNB1 몫(4단계 · 총합 1000 기준)이 이 경계 개수나 총합과 안 맞으면
+        # 설정 전체를 막지 않고 gNB1 쌍 분배만 끈다(gNB1 set 그대로) — 그 이유를 경고에 남긴다
+        gnb1_off = None
+        if pick("GNB2_LEVEL_GNB1_PCT") is None and not level_error:
+            gnb1_off = _gnb1_level_error(bounds, gnb1_f, total_f)
+            if gnb1_off:
+                gnb1_f = ()
+        level_error = level_error or _gnb1_level_error(bounds, gnb1_f, total_f)
     except ValueError as e:
-        bounds, pcts_f, total_f = (), (), 0.0
+        bounds, pcts_f, gnb1_f, total_f = (), (), (), 0.0
+        gnb1_off = None
         level_error = f"숫자가 아님: {e}"
     if level_error:
         if mode == "level":
             logger.warning(
                 f"판정 설정 단계 오류({level_error}) — 직전 설정 유지: "
-                f"BOUNDS={bounds} PCT={pcts_f} TOTAL={total_f}"
+                f"BOUNDS={bounds} PCT={pcts_f} GNB1_PCT={gnb1_f} TOTAL={total_f}"
             )
             return previous
         logger.warning(
             f"판정 설정 단계 오류({level_error}) — level 모드가 아니라 단계 값만 직전 값({_levels_text(previous)})을 둔다"
         )
-        bounds, pcts_f, total_f = (
+        bounds, pcts_f, gnb1_f, total_f = (
             previous.level_bounds_mbps,
             previous.level_gnb2_pct,
+            previous.level_gnb1_pct,
             float(previous.split_total_mbps),
         )
     pcts = tuple(int(p) for p in pcts_f)
+    gnb1_pcts = tuple(int(p) for p in gnb1_f)
     if mode == "level":
-        # 두두원 UPF 는 gNB2 10%(DL_DISTRIBUTION_10) 를 atsss_support_10_pro 설정에 따라 0% 로 바꾼다.
-        # 100% 는 노트북2 WLAN set 이 0 이 되어 client-2 하향이 전부 gNB2 다리로 간다.
-        risky = [p for p in pcts if p in (10, 100)]
-        if risky:
-            logger.warning(f"판정 설정 단계 주의: gNB2 몫 {risky}% — 10% 는 UPF 가 0% 로 볼 수 있고 100% 는 WLAN set 0")
+        # 두두원 UPF 는 3GPP 10%(DL_DISTRIBUTION_10) 를 atsss_support_10_pro 설정에 따라 0% 로 바꾼다.
+        # 100% 는 그 쌍의 WLAN set 이 0 이 되어 하향이 전부 3GPP 다리로 간다.
+        for name, values in (("gNB2", pcts), ("gNB1", gnb1_pcts)):
+            risky = [p for p in values if p in (10, 100)]
+            if risky:
+                logger.warning(
+                    f"판정 설정 단계 주의: {name} 몫 {risky}% — 10% 는 UPF 가 0% 로 볼 수 있고 100% 는 WLAN set 0"
+                )
+        if gnb1_off:
+            default = "/".join(str(p) for p in _DEFAULT.level_gnb1_pct)
+            logger.warning(
+                f"판정 설정 단계 주의: GNB2_LEVEL_GNB1_PCT 가 없고 기본 gNB1 몫({default}%)을 이 설정에 쓸 수 없다"
+                f"({gnb1_off}) — gNB1 쌍 분배를 끈다(gNB1 set 그대로)"
+            )
     return Gnb2DecisionConfig(
         th_mbps=th,
         hyst_mbps=hyst,
@@ -147,6 +174,7 @@ def _parse(
         trend_deadband_mbps=band,
         level_bounds_mbps=bounds,
         level_gnb2_pct=pcts,
+        level_gnb1_pct=gnb1_pcts,
         split_total_mbps=int(total_f),
     )
 
@@ -179,10 +207,29 @@ def _level_error(bounds: tuple[float, ...], pcts: tuple[float, ...], total: floa
     return None
 
 
+def _gnb1_level_error(bounds: tuple[float, ...], pcts: tuple[float, ...], total: float) -> str | None:
+    """gNB1 쌍 몫의 형식 오류 — gNB2 몫과 같은 격자 규칙이되 단계 0 이 0 일 필요는 없다(gNB1 은 잠들지 않는다).
+    빈 값은 오류가 아니라 gNB1 쌍 분배 끔이다."""
+    if not pcts:
+        return None
+    if not all(math.isfinite(v) for v in pcts):
+        return "gNB1 몫이 숫자가 아님(inf/nan)"
+    if len(pcts) != len(bounds) + 1:
+        return "gNB1 몫 개수 = 경계 개수 + 1"
+    if any(p != int(p) or int(p) % 10 or not 0 <= p <= 100 for p in pcts):
+        return "gNB1 몫은 0~100 의 10 의 배수"
+    if any(lo > hi for lo, hi in zip(pcts, pcts[1:])):
+        return "gNB1 몫은 비감소"
+    if any(int(total) * int(p) % 100 for p in pcts):
+        return "총합×gNB1 몫/100 이 정수"
+    return None
+
+
 def _levels_text(cfg: Gnb2DecisionConfig) -> str:
     bounds = "/".join(f"{b:g}" for b in cfg.level_bounds_mbps)
     pcts = "/".join(str(p) for p in cfg.level_gnb2_pct)
-    return f"경계 {bounds} Mbps · gNB2 {pcts}% · 총 {cfg.split_total_mbps} Mbps"
+    gnb1 = "/".join(str(p) for p in cfg.level_gnb1_pct) + "%" if cfg.level_gnb1_pct else "끔"
+    return f"경계 {bounds} Mbps · gNB2 {pcts}% · gNB1 {gnb1} · 총 {cfg.split_total_mbps} Mbps"
 
 
 def current_decision_config() -> Gnb2DecisionConfig:

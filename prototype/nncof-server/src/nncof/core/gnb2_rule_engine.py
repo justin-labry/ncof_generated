@@ -26,15 +26,17 @@ class Gnb2RuleEngine:
         self.min_dwell_sec = min_dwell_sec  # 0 = 가드 비활성 (기본)
         self.mode = "threshold"  # "trend" = 임계 이상에서 같은 12p_c 스트림의 지난 판정 때 값 대비 추세로 판정
         self.trend_deadband_mbps = 0.0
-        # level 모드 — 경계로 단계를 정하고 단계별 gNB2 몫으로 split_total 을 나눈다(decision_config 참조)
+        # level 모드 — 경계로 단계를 정하고 단계별 gNB2 · gNB1 몫으로 쌍마다 split_total 을 나눈다(decision_config 참조)
         self.level_bounds_mbps: tuple[float, ...] = (172.0, 305.0, 338.0)
         self.level_gnb2_pct: tuple[int, ...] = (0, 50, 70, 90)
+        self.level_gnb1_pct: tuple[int, ...] = (30, 50, 70, 90)
         self.split_total_mbps = 1000
         self.last_emitted_state = None  # emit-on-change 추적용
         self.last_change_at = None  # minimum-dwell guard용
-        # level 모드에서 지금 상태와 함께 내보낼 단계 · (NR gNB2, WLAN) gbr/mbr. 그 밖의 모드는 None
+        # level 모드에서 지금 상태와 함께 내보낼 단계 · (NR gNB2, WLAN) · (NR gNB1, WLAN) gbr/mbr. 그 밖의 모드는 None
         self.last_emitted_level: int | None = None
         self.last_emitted_split: tuple[int, int] | None = None
+        self.last_emitted_gnb1_split: tuple[int, int] | None = None
 
     def apply_config(self, config) -> None:
         """판정 설정(decision_config.Gnb2DecisionConfig)을 반영한다 — 연동 중 임계 조정용."""
@@ -45,6 +47,7 @@ class Gnb2RuleEngine:
         self.trend_deadband_mbps = config.trend_deadband_mbps
         self.level_bounds_mbps = config.level_bounds_mbps
         self.level_gnb2_pct = config.level_gnb2_pct
+        self.level_gnb1_pct = config.level_gnb1_pct
         self.split_total_mbps = config.split_total_mbps
 
     def _decide(self, metric: float, prev_metric: float | None = None) -> str:
@@ -112,6 +115,7 @@ class Gnb2RuleEngine:
         if self.mode != "level" or state is None:
             self.last_emitted_level = None
             self.last_emitted_split = None
+            self.last_emitted_gnb1_split = None
             return
         level = level_index(metric, self.level_bounds_mbps)
         if state == "DEEP_SLEEP":
@@ -120,6 +124,10 @@ class Gnb2RuleEngine:
             level = 1  # dwell(또는 RL 판정)이 ACTIVE 를 붙잡고 있을 때 — ACTIVE 중 가장 낮은 단계
         self.last_emitted_level = level
         self.last_emitted_split = split_for_pct(self.level_gnb2_pct[level], self.split_total_mbps)
+        # gNB1 은 잠들지 않는다 — 노트북1 쌍은 같은 단계의 gNB1 몫(단계 0 에도 0 이 아닐 수 있다). 몫이 비면 끔(gNB1 set 그대로)
+        self.last_emitted_gnb1_split = (
+            split_for_pct(self.level_gnb1_pct[level], self.split_total_mbps) if self.level_gnb1_pct else None
+        )
 
     def generate_notification(
         self,
@@ -153,7 +161,8 @@ class Gnb2RuleEngine:
                 new_state, decision_iso, sub_id, corr_id
             ),
             "qos_policy_14e": apply_qos_policy(
-                qos_template, new_state, decision_iso, sub_id, corr_id, self.last_emitted_split
+                qos_template, new_state, decision_iso, sub_id, corr_id,
+                self.last_emitted_split, self.last_emitted_gnb1_split,
             ),
         }
 
