@@ -108,9 +108,23 @@ def _cell_state(event: list[dict]) -> str:
     ]
 
 
-def _nr_gnb2_off(event: list[dict]) -> bool:
+def _qos_sets(event: list[dict]) -> list[dict]:
     info = event[0]["eventNotifications"][0]["qosPolAssistInfos"][0]
-    return "0.0 Mbps" in [s["qosParamSet"]["gbrDl"] for s in info["qosPolAssistInfo"][0]["qosPolAssistSets"]]
+    return info["qosPolAssistInfo"][0]["qosPolAssistSets"]
+
+
+def _gbr_by_slot(event: list[dict]) -> list[tuple[str, str]]:
+    """두두원 슬롯 순서(UE1 gNB1, UE2 WLAN client-1, UE3 gNB2, UE4 WLAN client-2)의 (gbrDl, mbrDl)."""
+    return [(s["qosParamSet"]["gbrDl"], s["qosParamSet"]["mbrDl"]) for s in _qos_sets(event)]
+
+
+def _nr_gnb2_off(event: list[dict]) -> bool:
+    gnb2 = [
+        s
+        for s in _qos_sets(event)
+        if any(g["gNbId"]["gNBValue"] == "000002" for g in s["spatialValidity"].get("gRanNodeIds", []) if "gNbId" in g)
+    ]
+    return [s["qosParamSet"]["gbrDl"] for s in gnb2] == ["0.0 Mbps"]
 
 
 def _pair():
@@ -531,3 +545,246 @@ def test_wlan_sub_rep_period_unset_or_invalid_follows_upstream(_isolate):
         _set_conf(_isolate, text)
         upstream, wlan, other = _wlan_and_other_periods("subscription_pcf_to_ncof.json")
         assert [_periods(b) for b in wlan] == [{upstream}], text
+
+
+# --- level 모드 (10/19): 12p_c 를 경계로 단계에 넣고, 단계별 gNB2 몫으로 gNB2 set + 노트북2 WLAN set 합(1000)을 나눈다 ---
+# 두두원 UPF 는 set 3(gNB2) 과 set 4(WLAN client-2) 의 mbr 비만 10% 단위로 쓴다(CUPB_SbiComm.c:96-97).
+# 기본 경계 172/305/338 Mbps · gNB2 몫 0/50/70/90% — 10/17 ~ 10/19 실측 틱 값(≈151, 327, 347 · 최고 ≈370)의 빈 구간.
+
+from nncof.core.decide_wlan_gnb2_rule import apply_qos_policy, level_index, split_for_pct
+
+_QOS_TEMPLATE = Path(data_analyzer.__file__).parent / "14_e_NncofEventsSubscriptionNotification_from NCOF_to_PCF_v1.0.json"
+_UNTOUCHED = ("5.0 Mbps", "10.0 Mbps")  # 템플릿 값 — gNB1 set 은 어떤 모드에서도 그대로
+
+
+def _slots(gnb2: float, wlan: float) -> list[tuple[str, str]]:
+    g, w = f"{float(gnb2)} Mbps", f"{float(wlan)} Mbps"
+    return [_UNTOUCHED, (w, w), (g, g), (w, w)]
+
+
+def _level_conf(conf, extra=""):
+    _set_conf(conf, "GNB2_TH_MBPS=300\nGNB2_DECISION_MODE=level\n" + extra)
+
+
+def _tick_sends(pcf, sec, mbps):
+    """샘플 하나를 넣고 리더 틱을 돈 뒤 이번 틱에 나간 [(nf, 이벤트)]."""
+    sent_before = len(pcf._sent)
+    _upf(pcf, "wlan-p", mbps, sec, wlan=True)
+    _tick(pcf)
+    return [(nf, ev) for _, nf, ev in pcf._sent[sent_before:]]
+
+
+def _level_pair():
+    sent, pcf, ricf = _pair()
+    pcf._sent = sent
+    return sent, pcf, ricf
+
+
+def test_level_index_and_split_are_pure_and_grid_aligned():
+    bounds = (172.0, 305.0, 338.0)
+    assert [level_index(x, bounds) for x in (123.0, 171.9, 172.0, 304.9, 305.0, 337.9, 338.0, 375.0)] == [
+        0, 0, 1, 1, 2, 2, 3, 3,
+    ]
+    assert [split_for_pct(p, 1000) for p in (0, 50, 70, 90)] == [(0, 1000), (500, 500), (700, 300), (900, 100)]
+    for p in range(0, 101, 10):  # UPF: (int)(g*100/(g+w)) 가 몫 그대로 나와야 10% 격자에 1:1
+        g, w = split_for_pct(p, 1000)
+        assert g + w == 1000 and int(g * 100 / (g + w)) == p
+
+
+def test_apply_qos_policy_split_fills_gnb2_and_both_wlan_sets_only():
+    template = json.loads(_QOS_TEMPLATE.read_text(encoding="utf-8"))
+    iso = "2026-10-19T20:00:00+09:00"
+
+    active = apply_qos_policy(template, "ACTIVE", iso, "sub", "corr", (700, 300))
+    assert _gbr_by_slot(active) == _slots(700, 300)
+
+    # DEEP_SLEEP 이면 split 과 상관없이 gNB2 0 · WLAN 합계 — 셀이 꺼진 쪽으로 몫을 주지 않는다
+    asleep = apply_qos_policy(template, "DEEP_SLEEP", iso, "sub", "corr", (500, 500))
+    assert _gbr_by_slot(asleep) == _slots(0, 1000)
+
+    # split 없이 부르면 예전 상수 그대로(trend/threshold 모드 회귀 없음)
+    assert _gbr_by_slot(apply_qos_policy(template, "ACTIVE", iso, "sub", "corr")) == _slots(1000, 500)
+    assert _gbr_by_slot(apply_qos_policy(template, "DEEP_SLEEP", iso, "sub", "corr")) == _slots(0, 1000)
+    assert template[0]["eventNotifications"][0]["qosPolAssistInfos"][0]["qosPolAssistInfo"][0][
+        "qosPolAssistSets"
+    ][2]["qosParamSet"]["gbrDl"] == "5.0 Mbps"  # 템플릿 원본은 건드리지 않는다
+
+
+def test_level_cycle_sends_pcf_on_split_change_and_ricf_on_state_change(_isolate, caplog):
+    _level_conf(_isolate)
+    sent, pcf, ricf = _level_pair()
+
+    with caplog.at_level("INFO"):
+        out = _tick_sends(pcf, 0, 151.0)  # 단계 0
+    assert sorted(nf for nf, _ in out) == ["pcf", "ricf"]
+    by_nf = dict(out)
+    assert _cell_state(by_nf["ricf"]) == "DEEP_SLEEP" and _gbr_by_slot(by_nf["pcf"]) == _slots(0, 1000)
+    assert _nr_gnb2_off(by_nf["pcf"])
+    assert "단계 판정: WLAN 151.0 Mbps → 단계 0 DEEP_SLEEP (gNB2:WLAN 0:1000 Mbps, 경계 172/305/338)" in caplog.text
+
+    out = _tick_sends(pcf, 20, 327.0)  # 단계 2 — 상태도 바뀜
+    by_nf = dict(out)
+    assert sorted(by_nf) == ["pcf", "ricf"]
+    assert _cell_state(by_nf["ricf"]) == "ACTIVE" and _gbr_by_slot(by_nf["pcf"]) == _slots(700, 300)
+
+    out = _tick_sends(pcf, 40, 347.0)  # 단계 3 — 상태는 같고 split 만 바뀜 → PCF 만
+    assert [nf for nf, _ in out] == ["pcf"] and _gbr_by_slot(out[0][1]) == _slots(900, 100)
+
+    assert _tick_sends(pcf, 60, 370.0) == []  # 같은 단계 → 안 보냄
+
+    out = _tick_sends(pcf, 80, 185.0)  # 최고(370)의 절반 → 50:50
+    assert [nf for nf, _ in out] == ["pcf"] and _gbr_by_slot(out[0][1]) == _slots(500, 500)
+
+    caplog.clear()  # 아래 로그 단언이 첫 틱(같은 문구)이 아니라 이 틱을 보게
+    out = _tick_sends(pcf, 100, 151.0)
+    assert sorted(nf for nf, _ in out) == ["pcf", "ricf"]
+    assert _gbr_by_slot(dict(out)["pcf"]) == _slots(0, 1000)
+    assert "AI 분석 결과: gNB2 DEEP_SLEEP · gNB2:WLAN 0:1000 Mbps → 구독 2건" in caplog.text
+
+
+def test_level_mode_ignores_threshold_and_trend(_isolate):
+    # TH 300 · trend 였다면 200 은 DEEP_SLEEP, 360 → 340 하강도 DEEP_SLEEP 이다
+    _level_conf(_isolate, "GNB2_TREND_DEADBAND_MBPS=10\nGNB2_HYST_MBPS=50\n")
+    sent, pcf, ricf = _level_pair()
+    for sec, mbps, state, level in [(0, 200.0, "ACTIVE", 1), (20, 360.0, "ACTIVE", 3), (40, 340.0, "ACTIVE", 3), (60, 171.0, "DEEP_SLEEP", 0)]:
+        _upf(pcf, "wlan-p", mbps, sec, wlan=True)
+        _tick(pcf)
+        engine = pcf.decision_engine
+        assert (engine.last_emitted_state, engine.last_emitted_level) == (state, level), mbps
+
+
+def test_switching_trend_to_level_resends_pcf_once_without_ricf(_isolate):
+    _set_conf(_isolate, "GNB2_TH_MBPS=300\nGNB2_DECISION_MODE=trend\n")
+    sent, pcf, ricf = _level_pair()
+    out = _tick_sends(pcf, 0, 320.0)
+    assert _gbr_by_slot(dict(out)["pcf"]) == _slots(1000, 500)  # trend — 예전 상수
+    assert pcf.decision_engine.last_emitted_split is None
+
+    _level_conf(_isolate)
+    out = _tick_sends(pcf, 20, 320.0)  # 상태는 ACTIVE 그대로, split 이 생김 → PCF 만 한 번
+    assert [nf for nf, _ in out] == ["pcf"] and _gbr_by_slot(out[0][1]) == _slots(700, 300)
+    assert _tick_sends(pcf, 40, 321.0) == []
+
+    _set_conf(_isolate, "GNB2_TH_MBPS=300\nGNB2_DECISION_MODE=trend\n")  # 되돌리기 — 재기동 없이
+    out = _tick_sends(pcf, 60, 330.0)  # trend: 321 → 330 상승 ACTIVE, split 없음 → PCF 만 예전 상수로
+    assert [nf for nf, _ in out] == ["pcf"] and _gbr_by_slot(out[0][1]) == _slots(1000, 500)
+
+
+def test_failed_pcf_split_delivery_is_retried(_isolate):
+    _level_conf(_isolate)
+    sent: list = []
+    pcf = _analyzer("subscription_pcf_to_ncof.json", sent, result=False)  # PCF 가 2xx 를 안 준다
+    ricf = _analyzer("subscription_ricf_to_ncof.json", sent)
+    _upf(pcf, "wlan-p", 327.0, 0, wlan=True)
+    _tick(pcf)
+    assert pcf._delivered_state is None and pcf._delivered_split is None
+    assert ricf._delivered_state == "ACTIVE"
+    sent.clear()
+
+    _tick(pcf)  # 같은 샘플 — PCF 만 다시
+    assert [nf for _, nf, _ in sent] == ["pcf"] and _gbr_by_slot(sent[0][2]) == _slots(700, 300)
+
+
+def test_dwell_never_breaks_deep_sleep_means_gnb2_zero(_isolate):
+    _level_conf(_isolate, "GNB2_MIN_DWELL_SEC=3600\n")
+    sent, pcf, ricf = _level_pair()
+    out = _tick_sends(pcf, 0, 151.0)
+    assert _gbr_by_slot(dict(out)["pcf"]) == _slots(0, 1000)
+    assert _tick_sends(pcf, 20, 360.0) == []  # dwell 이 DEEP_SLEEP 을 붙잡는 동안 gNB2 몫도 0 그대로
+
+    _set_conf(_isolate, "GNB2_TH_MBPS=300\nGNB2_DECISION_MODE=level\n")
+    out = _tick_sends(pcf, 40, 360.0)
+    assert _gbr_by_slot(dict(out)["pcf"]) == _slots(900, 100)
+    _level_conf(_isolate, "GNB2_MIN_DWELL_SEC=3600\n")
+    out = _tick_sends(pcf, 60, 151.0)  # dwell 이 ACTIVE 를 붙잡으면 ACTIVE 중 가장 낮은 단계(50:50)
+    assert [nf for nf, _ in out] == ["pcf"] and _gbr_by_slot(out[0][1]) == _slots(500, 500)
+    assert pcf.decision_engine.last_emitted_state == "ACTIVE"
+
+
+def test_level_settings_are_hot_reloaded_and_validated(_isolate, caplog):
+    conf = _isolate
+    _level_conf(conf, "GNB2_LEVEL_BOUNDS_MBPS=150, 300\nGNB2_LEVEL_GNB2_PCT=0,60,80\nGNB2_SPLIT_TOTAL_MBPS=500\n")
+    cfg = decision_config.current_decision_config()
+    assert (cfg.mode, cfg.level_bounds_mbps, cfg.level_gnb2_pct, cfg.split_total_mbps) == (
+        "level", (150.0, 300.0), (0, 60, 80), 500,
+    )
+    good = cfg
+    with caplog.at_level("WARNING"):
+        for bad in (
+            "GNB2_LEVEL_BOUNDS_MBPS=150,300\nGNB2_LEVEL_GNB2_PCT=10,60,80\n",  # 단계 0 은 0 이어야
+            "GNB2_LEVEL_BOUNDS_MBPS=150,300\nGNB2_LEVEL_GNB2_PCT=0,60\n",  # 개수
+            "GNB2_LEVEL_BOUNDS_MBPS=150,300\nGNB2_LEVEL_GNB2_PCT=0,55,80\n",  # 10% 격자
+            "GNB2_LEVEL_BOUNDS_MBPS=150,300\nGNB2_LEVEL_GNB2_PCT=0,80,60\n",  # 감소
+            "GNB2_LEVEL_BOUNDS_MBPS=150,300\nGNB2_LEVEL_GNB2_PCT=0,0,60\n",  # 단계 1 이상은 >0
+            "GNB2_LEVEL_BOUNDS_MBPS=300,150\nGNB2_LEVEL_GNB2_PCT=0,60,80\n",  # 경계 순서
+            "GNB2_LEVEL_BOUNDS_MBPS=150,150\nGNB2_LEVEL_GNB2_PCT=0,60,80\n",  # 같은 경계
+            "GNB2_LEVEL_BOUNDS_MBPS=150,abc\nGNB2_LEVEL_GNB2_PCT=0,60,80\n",  # 숫자 아님
+            "GNB2_LEVEL_BOUNDS_MBPS=150,,300\nGNB2_LEVEL_GNB2_PCT=0,60,70,80\n",  # 빈 칸
+            "GNB2_LEVEL_BOUNDS_MBPS=150,300\nGNB2_LEVEL_GNB2_PCT=0,60,80\nGNB2_SPLIT_TOTAL_MBPS=1001\n",  # 600.6 Mbps
+            "GNB2_LEVEL_BOUNDS_MBPS=150,300\nGNB2_LEVEL_GNB2_PCT=0,60,80\nGNB2_SPLIT_TOTAL_MBPS=0\n",
+            "GNB2_LEVEL_BOUNDS_MBPS=150,300\nGNB2_LEVEL_GNB2_PCT=0,60,80\nGNB2_SPLIT_TOTAL_MBPS=100100\n",  # 상한
+            "GNB2_LEVEL_BOUNDS_MBPS=150,inf\nGNB2_LEVEL_GNB2_PCT=0,60,80\n",
+            "GNB2_LEVEL_BOUNDS_MBPS=150,300\nGNB2_LEVEL_GNB2_PCT=0,60,110\n",  # 0~100
+            "GNB2_LEVEL_BOUNDS_MBPS=0,300\nGNB2_LEVEL_GNB2_PCT=0,60,80\n",  # 경계 > 0
+            "GNB2_LEVEL_BOUNDS_MBPS=150,300\nGNB2_LEVEL_GNB2_PCT=0,60,80\nGNB2_SPLIT_TOTAL_MBPS=1000.5\n",  # 정수
+        ):
+            _level_conf(conf, bad)
+            assert decision_config.current_decision_config() == good, bad
+    assert "판정 설정 단계 오류" in caplog.text
+    assert "숫자가 아님: GNB2_LEVEL_BOUNDS_MBPS='150,abc'" in caplog.text  # 어느 키인지 남긴다
+
+    caplog.clear()
+    with caplog.at_level("WARNING"):
+        _level_conf(conf, "GNB2_LEVEL_BOUNDS_MBPS=150,300\nGNB2_LEVEL_GNB2_PCT=0,10,100\n")
+        assert decision_config.current_decision_config().level_gnb2_pct == (0, 10, 100)  # 허용하되 경고
+    assert "gNB2 몫 [10, 100]%" in caplog.text
+    assert "LEVEL 경계 150/300 Mbps · gNB2 0/60/80% · 총 500 Mbps → 경계 150/300 Mbps · gNB2 0/10/100% · 총 1000 Mbps" in caplog.text
+
+
+def test_level_keys_absent_means_recommended_defaults_and_trend_unaffected(_isolate):
+    _set_conf(_isolate, "GNB2_TH_MBPS=300\nGNB2_DECISION_MODE=trend\n")
+    cfg = decision_config.current_decision_config()
+    assert (cfg.level_bounds_mbps, cfg.level_gnb2_pct, cfg.split_total_mbps) == ((172.0, 305.0, 338.0), (0, 50, 70, 90), 1000)
+    sent, pcf, ricf = _level_pair()
+    _tick_sends(pcf, 0, 151.0)
+    assert pcf.decision_engine.last_emitted_level is None and pcf.decision_engine.last_emitted_split is None
+
+
+def test_custom_level_settings_reach_engine_and_14e(_isolate):
+    # 경계·몫·총합을 핫리로드로 바꾸면 판정과 14_e 값이 그대로 따라간다(엔진 기본값과 같은 기본 설정만으로는 안 드러난다)
+    _level_conf(_isolate, "GNB2_LEVEL_BOUNDS_MBPS=150,300\nGNB2_LEVEL_GNB2_PCT=0,60,80\nGNB2_SPLIT_TOTAL_MBPS=500\n")
+    sent, pcf, ricf = _level_pair()
+    out = dict(_tick_sends(pcf, 0, 160.0))  # 기본 경계(172)였다면 DEEP_SLEEP
+    assert _cell_state(out["ricf"]) == "ACTIVE" and _gbr_by_slot(out["pcf"]) == _slots(300, 200)
+    out = _tick_sends(pcf, 20, 320.0)
+    assert [nf for nf, _ in out] == ["pcf"] and _gbr_by_slot(out[0][1]) == _slots(400, 100)
+
+    _level_conf(_isolate, "GNB2_LEVEL_BOUNDS_MBPS=150,300\nGNB2_LEVEL_GNB2_PCT=0,60,70\nGNB2_SPLIT_TOTAL_MBPS=500\n")
+    out = _tick_sends(pcf, 40, 320.0)  # 같은 단계, 몫만 바뀜 → PCF 만 다시
+    assert [nf for nf, _ in out] == ["pcf"] and _gbr_by_slot(out[0][1]) == _slots(350, 150)
+
+
+def test_bad_level_keys_do_not_block_other_modes(_isolate, caplog):
+    conf = _isolate
+    _level_conf(conf)
+    assert decision_config.current_decision_config().mode == "level"
+    with caplog.at_level("WARNING"):
+        # level 운용 중 몫을 잘못 저장한 뒤 trend 로 되돌린다 — 롤백은 받아들여야 한다
+        _set_conf(conf, "GNB2_TH_MBPS=300\nGNB2_DECISION_MODE=trend\nGNB2_LEVEL_GNB2_PCT=0,50,70,95\n")
+        cfg = decision_config.current_decision_config()
+        assert (cfg.mode, cfg.th_mbps, cfg.level_gnb2_pct) == ("trend", 300.0, (0, 50, 70, 90))
+        # trend 에서 쓰지 않는 level 키가 잘못돼 있어도 TH 변경은 반영된다
+        _set_conf(conf, "GNB2_TH_MBPS=250\nGNB2_DECISION_MODE=trend\nGNB2_LEVEL_BOUNDS_MBPS=172,,338\n")
+        cfg = decision_config.current_decision_config()
+        assert (cfg.mode, cfg.th_mbps, cfg.level_bounds_mbps) == ("trend", 250.0, (172.0, 305.0, 338.0))
+        # 그 상태로 level 로 바꾸려 하면 거부(직전 trend 유지)
+        _set_conf(conf, "GNB2_TH_MBPS=250\nGNB2_DECISION_MODE=level\nGNB2_LEVEL_BOUNDS_MBPS=172,,338\n")
+        assert decision_config.current_decision_config().mode == "trend"
+    assert "level 모드가 아니라 단계 값만 직전 값" in caplog.text
+
+
+def test_restart_with_bad_level_keys_keeps_trend_settings(_isolate):
+    # 재기동(직전 설정 = 코드 기본값)이어도 level 키 오류 때문에 threshold·TH 500 으로 떨어지지 않는다
+    _set_conf(_isolate, "GNB2_TH_MBPS=300\nGNB2_DECISION_MODE=trend\nGNB2_LEVEL_GNB2_PCT=0,55,70,90\n")
+    cfg = decision_config.current_decision_config()
+    assert (cfg.mode, cfg.th_mbps, cfg.level_gnb2_pct) == ("trend", 300.0, (0, 50, 70, 90))

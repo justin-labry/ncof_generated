@@ -120,6 +120,8 @@ class DataAnalyzer:
         )
         # 이 구독에 마지막으로 내보낸 gNB2 상태 — 공유 판정 상태와 다를 때만 내보낸다.
         self._delivered_state: str | None = None
+        # level 모드에서 마지막으로 내보낸 (NR gNB2, WLAN) split — PCF 는 상태가 같아도 이것이 바뀌면 다시 보낸다
+        self._delivered_split: tuple[int, int] | None = None
         # 이 구독의 WLAN_PERFORMANCE SMF 하위 구독 notifId(= 12p_c 통지의 correlationId)
         self._wlan_stream_ids: set[str] = set()
         self._qos_template: list[dict] | None = None
@@ -175,6 +177,7 @@ class DataAnalyzer:
         다음 구독이 첫 판정부터 새 엔진으로 시작하게 한다 (예전의 분석기별 엔진 재생성과 같은 효과)."""
         global _shared_engine
         self._delivered_state = None
+        self._delivered_split = None
         if self in _active_analyzers:
             _active_analyzers.remove(self)
             if not _active_analyzers:
@@ -399,6 +402,13 @@ class DataAnalyzer:
                             )
                     logger.info("AI 분석 시작")
                     engine.update_state(metric, decision_iso, prev[0] if prev else None)
+                    if engine.last_emitted_split is not None:
+                        gnb2, wlan = engine.last_emitted_split
+                        bounds = "/".join(f"{b:g}" for b in config.level_bounds_mbps)
+                        logger.info(
+                            f"단계 판정: WLAN {metric} Mbps → 단계 {engine.last_emitted_level} "
+                            f"{engine.last_emitted_state} (gNB2:WLAN {gnb2}:{wlan} Mbps, 경계 {bounds})"
+                        )
                     self._snapshot_trend_refs()
                     logger.info("AI 분석 완료")
                 except Exception as e:  # noqa: BLE001
@@ -412,40 +422,49 @@ class DataAnalyzer:
         state = engine.last_emitted_state
         if state is None:
             return  # 아직 첫 판정 전
-        await self._fan_out(state, decision_iso)
+        await self._fan_out(state, engine.last_emitted_split, decision_iso)
 
-    async def _fan_out(self, state: str, decision_iso: str) -> None:
+    def _needs_delivery(self, state: str, split: tuple[int, int] | None) -> bool:
+        """RICF(15f 셀 상태)는 상태가 바뀔 때만, PCF(14_e gbr/mbr)는 level 모드 split 만 바뀌어도 보낸다."""
+        if self._delivered_state != state:
+            return True
+        return self.get_source_nf_type() == "PCF" and self._delivered_split != split
+
+    async def _fan_out(self, state: str, split: tuple[int, int] | None, decision_iso: str) -> None:
         targets = [
             a
             for a in _active_analyzers
-            if a.is_running and a._delivered_state != state
+            if a.is_running and a._needs_delivery(state, split)
         ]
         if not targets:
-            return  # 모든 구독이 이미 이 상태를 받음 → 통지 안 보냄
+            return  # 모든 구독이 이미 이 상태(와 split)를 받음 → 통지 안 보냄
 
         # await 전에 표시한다 — 전송 중 다른 분석기의 틱이 같은 상태를 중복 발송하지 않도록.
         for a in targets:
             a._delivered_state = state
+            a._delivered_split = split
+        split_text = f" · gNB2:WLAN {split[0]}:{split[1]} Mbps" if split else ""
         logger.info(
-            f"AI 분석 결과: gNB2 {state} → 구독 {len(targets)}건 동시 전송 "
+            f"AI 분석 결과: gNB2 {state}{split_text} → 구독 {len(targets)}건 동시 전송 "
             f"({', '.join(f'{a.get_source_nf_type()}:{a.subscription_id[:8]}' for a in targets)})"
         )
         # 순차 await 이면 RICF 경로의 GUI 연출 대기(0.5s) 등이 PCF 전송을 밀어낸다.
         # shield: 이 틱을 돈 분석기가 전송 도중 stop() 되어도 다른 구독으로 가는 전송은 끝까지 간다.
         fanout = asyncio.gather(
-            *(a._deliver(state, decision_iso) for a in targets),
+            *(a._deliver(state, split, decision_iso) for a in targets),
             return_exceptions=True,
         )
         _inflight_fanouts.add(fanout)
         fanout.add_done_callback(_inflight_fanouts.discard)
         await asyncio.shield(fanout)
 
-    def _forget_delivery(self, state: str) -> None:
+    def _forget_delivery(self, state: str, split: tuple[int, int] | None) -> None:
         """전송이 끝나지 못했으면 표시를 되돌려 다음 틱(리더든 자기 틱이든)에 다시 보내게 한다."""
-        if self.is_running and self._delivered_state == state:
+        if self.is_running and self._delivered_state == state and self._delivered_split == split:
             self._delivered_state = None
+            self._delivered_split = None
 
-    async def _deliver(self, state: str, decision_iso: str) -> None:
+    async def _deliver(self, state: str, split: tuple[int, int] | None, decision_iso: str) -> None:
         """gNB2 상태를 이 구독의 NF 형식(RICF 15f / PCF 14_e)으로 만들어 전송한다."""
         nf_type = self.get_source_nf_type()
         corr_id = self.subscription.notif_corr_id
@@ -473,10 +492,10 @@ class DataAnalyzer:
                 qos_template = self._load_qos_template()
                 if qos_template is None:
                     logger.warning("cannot retrieve qos template...")
-                    self._forget_delivery(state)
+                    self._forget_delivery(state, split)
                     return
                 qos_notif = apply_qos_policy(
-                    qos_template, state, decision_iso, self.subscription_id, corr_id
+                    qos_template, state, decision_iso, self.subscription_id, corr_id, split
                 )
                 self.control_data_store.add_data("pcf", corr_id, qos_notif[0])
 
@@ -506,11 +525,11 @@ class DataAnalyzer:
                 delivered = await self._notify_callback("pcf", qos_notif) is not False
 
         except asyncio.CancelledError:
-            self._forget_delivery(state)
+            self._forget_delivery(state, split)
             raise
         except Exception as e:  # noqa: BLE001
             delivered = False
             logger.warning(f"[{self.subscription_id}] 제어 명령 생성/전송 중 오류 발생: {e}")
 
         if not delivered:
-            self._forget_delivery(state)
+            self._forget_delivery(state, split)

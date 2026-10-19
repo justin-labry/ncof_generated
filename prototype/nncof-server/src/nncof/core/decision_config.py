@@ -20,8 +20,12 @@ class Gnb2DecisionConfig:
     - hyst_mbps: ACTIVE 에서 DEEP_SLEEP 으로는 th_mbps - hyst_mbps 미만일 때만 내려간다(0 = 끔)
     - min_dwell_sec: 상태가 바뀐 뒤 최소 유지 시간(0 = 끔)
     - mode: "threshold"(위 임계 규칙만) | "trend"(임계 이상일 때 같은 12p_c 스트림을 지난 판정 때 본 값 대비
-      오르면 ACTIVE, 내리면 DEEP_SLEEP)
+      오르면 ACTIVE, 내리면 DEEP_SLEEP) | "level"(아래 경계로 단계를 정하고, 단계 0 이면 DEEP_SLEEP · 그 위는 ACTIVE.
+      th·hyst·deadband 는 쓰지 않는다)
     - trend_deadband_mbps: trend 에서 |현재 - 지난 판정 값| 이 이 값 이하면 "변화 없음"으로 보고 현재 상태를 유지한다
+    - level_bounds_mbps: level 단계 경계(오름차순). 첫 값 미만이 단계 0(DEEP_SLEEP)
+    - level_gnb2_pct: 단계별 gNB2 몫(%) — 개수는 경계+1, 첫 값은 0, 나머지는 10 의 배수(비감소)
+    - split_total_mbps: gNB2 set + 노트북2 WLAN set 의 gbr/mbr 합. 두두원 UPF 는 이 둘의 mbr 비만 10% 단위로 쓴다
     """
 
     th_mbps: float = 500.0
@@ -29,10 +33,14 @@ class Gnb2DecisionConfig:
     min_dwell_sec: int = 0
     mode: str = "threshold"
     trend_deadband_mbps: float = 0.0
+    level_bounds_mbps: tuple[float, ...] = (172.0, 305.0, 338.0)
+    level_gnb2_pct: tuple[int, ...] = (0, 50, 70, 90)
+    split_total_mbps: int = 1000
 
 
 _DEFAULT = Gnb2DecisionConfig()
-_MODES = ("threshold", "trend")
+_MODES = ("threshold", "trend", "level")
+_SPLIT_TOTAL_MAX_MBPS = 100_000
 
 # 연동 중 NCOF 재기동 없이 임계를 바꿔 볼 수 있도록, 판정 틱마다 파일 수정 시각을 보고 바뀌었을 때만 다시 읽는다.
 # (재기동은 복원 과도기에 통지가 유실되는 창을 만든다 — HANDOFF §8.1)
@@ -51,6 +59,9 @@ _KEYS = (
     "GNB2_MIN_DWELL_SEC",
     "GNB2_DECISION_MODE",
     "GNB2_TREND_DEADBAND_MBPS",
+    "GNB2_LEVEL_BOUNDS_MBPS",
+    "GNB2_LEVEL_GNB2_PCT",
+    "GNB2_SPLIT_TOTAL_MBPS",
 )
 
 
@@ -72,6 +83,13 @@ def _parse(
         value = raw.get(key) if file_read else os.getenv(key)
         return value.strip() if value and value.strip() else None
 
+    def floats(key: str, default: tuple) -> tuple[float, ...]:
+        text = pick(key)
+        try:
+            return tuple(float(v) for v in text.split(",")) if text else tuple(float(v) for v in default)
+        except ValueError as e:
+            raise ValueError(f"{key}={text!r}") from e
+
     try:
         th = float(pick("GNB2_TH_MBPS") or _DEFAULT.th_mbps)
         hyst = float(pick("GNB2_HYST_MBPS") or _DEFAULT.hyst_mbps)
@@ -90,9 +108,81 @@ def _parse(
             f"TH={th} HYST={hyst} DWELL={dwell} MODE={mode} DEADBAND={band}"
         )
         return previous
+    # level 키는 level 모드에서만 쓰인다 — 다른 모드에서 그 키가 잘못돼도 TH 변경·trend 롤백까지 막지 않는다
+    try:
+        bounds = floats("GNB2_LEVEL_BOUNDS_MBPS", _DEFAULT.level_bounds_mbps)
+        pcts_f = floats("GNB2_LEVEL_GNB2_PCT", _DEFAULT.level_gnb2_pct)
+        total_f = float(pick("GNB2_SPLIT_TOTAL_MBPS") or _DEFAULT.split_total_mbps)
+        level_error = _level_error(bounds, pcts_f, total_f)
+    except ValueError as e:
+        bounds, pcts_f, total_f = (), (), 0.0
+        level_error = f"숫자가 아님: {e}"
+    if level_error:
+        if mode == "level":
+            logger.warning(
+                f"판정 설정 단계 오류({level_error}) — 직전 설정 유지: "
+                f"BOUNDS={bounds} PCT={pcts_f} TOTAL={total_f}"
+            )
+            return previous
+        logger.warning(
+            f"판정 설정 단계 오류({level_error}) — level 모드가 아니라 단계 값만 직전 값({_levels_text(previous)})을 둔다"
+        )
+        bounds, pcts_f, total_f = (
+            previous.level_bounds_mbps,
+            previous.level_gnb2_pct,
+            float(previous.split_total_mbps),
+        )
+    pcts = tuple(int(p) for p in pcts_f)
+    if mode == "level":
+        # 두두원 UPF 는 gNB2 10%(DL_DISTRIBUTION_10) 를 atsss_support_10_pro 설정에 따라 0% 로 바꾼다.
+        # 100% 는 노트북2 WLAN set 이 0 이 되어 client-2 하향이 전부 gNB2 다리로 간다.
+        risky = [p for p in pcts if p in (10, 100)]
+        if risky:
+            logger.warning(f"판정 설정 단계 주의: gNB2 몫 {risky}% — 10% 는 UPF 가 0% 로 볼 수 있고 100% 는 WLAN set 0")
     return Gnb2DecisionConfig(
-        th_mbps=th, hyst_mbps=hyst, min_dwell_sec=dwell, mode=mode, trend_deadband_mbps=band
+        th_mbps=th,
+        hyst_mbps=hyst,
+        min_dwell_sec=dwell,
+        mode=mode,
+        trend_deadband_mbps=band,
+        level_bounds_mbps=bounds,
+        level_gnb2_pct=pcts,
+        split_total_mbps=int(total_f),
     )
+
+
+def _level_error(bounds: tuple[float, ...], pcts: tuple[float, ...], total: float) -> str | None:
+    """level 단계 설정의 형식 오류를 설명하는 문자열, 없으면 None.
+
+    두두원 UPF 는 gNB2 set 과 노트북2 WLAN set 의 mbr 비를 (int)(비율%) 로 버린 뒤 10% 단위로 올려 적용한다.
+    그래서 gNB2 몫이 10 의 배수이고 split 이 정수 Mbps 여야 화면 값과 실제 적용 비율이 같다.
+    """
+    if not all(math.isfinite(v) for v in (*bounds, *pcts, total)):
+        return "숫자가 아님(inf/nan)"
+    if not bounds or any(b <= 0 for b in bounds):
+        return "경계는 하나 이상, 모두 >0"
+    if any(lo >= hi for lo, hi in zip(bounds, bounds[1:])):
+        return "경계는 오름차순(같은 값 불가)"
+    if len(pcts) != len(bounds) + 1:
+        return "gNB2 몫 개수 = 경계 개수 + 1"
+    if any(p != int(p) or int(p) % 10 or not 0 <= p <= 100 for p in pcts):
+        return "gNB2 몫은 0~100 의 10 의 배수"
+    if pcts[0] != 0 or any(p <= 0 for p in pcts[1:]):
+        return "단계 0(DEEP_SLEEP)만 gNB2 몫 0"
+    if any(lo > hi for lo, hi in zip(pcts, pcts[1:])):
+        return "gNB2 몫은 비감소"
+    if total <= 0 or total != int(total) or any(int(total) * int(p) % 100 for p in pcts):
+        return "총합은 양의 정수이고 총합×몫/100 이 정수"
+    if total > _SPLIT_TOTAL_MAX_MBPS:
+        # 아주 큰 float 는 "1e+16 Mbps" 로 찍혀 14_e 모델 검증(^\d+(\.\d+)? …)에서 막힌다
+        return f"총합은 {_SPLIT_TOTAL_MAX_MBPS} Mbps 이하"
+    return None
+
+
+def _levels_text(cfg: Gnb2DecisionConfig) -> str:
+    bounds = "/".join(f"{b:g}" for b in cfg.level_bounds_mbps)
+    pcts = "/".join(str(p) for p in cfg.level_gnb2_pct)
+    return f"경계 {bounds} Mbps · gNB2 {pcts}% · 총 {cfg.split_total_mbps} Mbps"
 
 
 def current_decision_config() -> Gnb2DecisionConfig:
@@ -121,13 +211,14 @@ def current_decision_config() -> Gnb2DecisionConfig:
             f"HYST {_cache.hyst_mbps} → {new.hyst_mbps} Mbps · "
             f"DWELL {_cache.min_dwell_sec} → {new.min_dwell_sec} s · "
             f"MODE {_cache.mode} → {new.mode} · "
-            f"DEADBAND {_cache.trend_deadband_mbps} → {new.trend_deadband_mbps} Mbps ({path})"
+            f"DEADBAND {_cache.trend_deadband_mbps} → {new.trend_deadband_mbps} Mbps · "
+            f"LEVEL {_levels_text(_cache)} → {_levels_text(new)} ({path})"
         )
     elif _cache_key is None:
         logger.info(
             f"판정 설정: TH {new.th_mbps} Mbps · HYST {new.hyst_mbps} Mbps · "
             f"DWELL {new.min_dwell_sec} s · MODE {new.mode} · "
-            f"DEADBAND {new.trend_deadband_mbps} Mbps ({path})"
+            f"DEADBAND {new.trend_deadband_mbps} Mbps · LEVEL {_levels_text(new)} ({path})"
         )
     _cache, _cache_key = new, key
     return new

@@ -55,6 +55,17 @@ other half stays on Wi-Fi. Setting WLAN to 0 (NR 100% absorption) is
 intentionally avoided as unrealistic. Total system capacity therefore
 moves 1000 -> 1500 Mbps between DEEP_SLEEP and ACTIVE.
 
+(2026-10-19 실측 정정) 두두원 UPF(exeCUPB, 14_e 를 받은 SBI 앱이 UDP 로 넘김)는 4개 set 중
+set 3(NR gNB2, UE3) 과 set 4(WLAN client-2, UE4) 의 mbrDl 비만 쓴다 —
+lbt = (int)(gNB2*100/(gNB2+WLAN)) 를 10% 단위로 올려 ATSSS 하향 분배 11단계 중 하나로 적용한다
+(dodo1 ~/delsys/5GCore_Rel19/30_ICUPB/01_src/CUPB_SbiComm.c:96-97). 그래서 위 ACTIVE(1000/500)는
+실제로 66 → **70:30** 으로, DEEP_SLEEP(0/1000)은 0:100 으로 적용된다. set 1(gNB1)·set 2(WLAN client-1)는
+정상일 때 뒤 슬롯에 덮어써져 비율에 끼지 않지만, 두두원은 4개가 다 차야 UDP 를 보내므로 개수·순서는 그대로 둔다.
+
+Level mode (``GNB2_DECISION_MODE=level``): 12p_c 값을 경계(``GNB2_LEVEL_BOUNDS_MBPS``)로 단계에 넣고,
+단계별 gNB2 몫(``GNB2_LEVEL_GNB2_PCT``, 10% 격자)으로 총합(``GNB2_SPLIT_TOTAL_MBPS``)을 나눈다 —
+NR gNB2 set = 총합×몫, 두 WLAN set = 나머지. 단계 0 만 DEEP_SLEEP(gNB2 0)이고 셀 상태(15f)도 단계에서 나온다.
+
 Run::
 
     # One-shot from PoC sample JSONs:
@@ -73,11 +84,13 @@ line (``===15f===`` / ``===14e===``) so they can be piped or split.
 from __future__ import annotations
 
 import argparse
+import bisect
 import copy
 import json
 import re
 import sys
 from datetime import datetime, timedelta
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -216,6 +229,17 @@ def decide_gnb2_state(
     return "ACTIVE" if metric_mbps >= th_mbps else "DEEP_SLEEP"
 
 
+def level_index(metric_mbps: float, bounds_mbps: Sequence[float]) -> int:
+    """level 모드 단계 번호(0 = DEEP_SLEEP). 경계값과 같으면 위 단계 — decide_gnb2_state 의 '>= TH' 와 같은 쪽."""
+    return bisect.bisect_right(bounds_mbps, metric_mbps)
+
+
+def split_for_pct(gnb2_pct: int, total_mbps: int) -> tuple[int, int]:
+    """총합을 gNB2 몫(%)으로 나눈 (NR gNB2 set, WLAN set) gbr/mbr — 합은 항상 total_mbps 라 0/0 이 나오지 않는다."""
+    gnb2 = total_mbps * gnb2_pct // 100
+    return gnb2, total_mbps - gnb2
+
+
 # ---------------------------------------------------------------------------
 # Output builders
 # ---------------------------------------------------------------------------
@@ -346,8 +370,12 @@ def apply_qos_policy(
     decision_iso: str,
     sub_id: str,
     corr_id: str | None,
+    split: tuple[int, int] | None = None,
 ) -> list[dict]:
     """14_e 템플릿 사본에 이번 판정의 신원·시각을 찍고 qosParamSet.gbrDl/mbrDl 을 규칙대로 뒤집는다.
+
+    split(level 모드): (NR gNB2 set, WLAN set) gbr/mbr Mbps. 주면 아래 상수 대신 이 값을 쓴다 —
+    두 WLAN set 은 같은 값, gNB1 set 은 그대로. DEEP_SLEEP 이면 split 과 상관없이 gNB2 0 · WLAN 합계.
 
     템플릿에는 subscriptionId·notifCorrId·resourceUri 와 29곳의 타임스탬프가 2026-03-01 고정값으로
     박혀 있다. 이전 구현은 gbr/mbr 만 뒤집고 그 봉투를 그대로 내보내, PCF 가 받는 제어 명령이
@@ -383,12 +411,22 @@ def apply_qos_policy(
                         assist.get("qosPolAssistSets", []), start=1
                     ):
                         _stamp_one_set(ps, start, stop, ordinal)
-                        _flip_one_set(ps, state)
+                        _flip_one_set(ps, state, split)
     return out
 
 
-def _flip_one_set(policy_set: dict, state: str) -> None:
-    if _is_wlan_set(policy_set):
+def _flip_one_set(policy_set: dict, state: str, split: tuple[int, int] | None = None) -> None:
+    if split is not None:
+        gnb2, wlan = split
+        if state == "DEEP_SLEEP":
+            gnb2, wlan = 0, gnb2 + wlan  # DEEP_SLEEP 이면 gNB2 0 — 셀이 꺼진 쪽으로 몫을 주지 않는다
+        if _is_wlan_set(policy_set):
+            gbr = float(wlan)
+        elif _is_on_gnb(policy_set, GNB2_VALUE):
+            gbr = float(gnb2)
+        else:
+            return  # gNB1 set 은 그대로
+    elif _is_wlan_set(policy_set):
         # DEEP_SLEEP: WLAN absorbs everything (HIGH).
         # ACTIVE:    WLAN keeps ~50% (PARTIAL); NR takes the other half.
         #            Setting WLAN to OFF would mean NR absorbs 100%, which is
