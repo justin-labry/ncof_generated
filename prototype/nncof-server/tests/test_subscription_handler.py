@@ -179,3 +179,131 @@ def test_unsubscription_url_keeps_notif_id_verbatim(monkeypatch):
     ]
     assert "%3A" not in handler._client.deleted_urls[0]
     assert "%2B" not in handler._client.deleted_urls[0]
+
+
+# --- 제어 전송 응답 처리 (순차 제어의 「앞 요청 200 확인」 근거 — 10/27 두두원: 14_e UDP 실패 · 15f 실패는 500) ---
+
+
+class _ControlResponse:
+    def __init__(self, status_code: int, text: str = ""):
+        self.status_code = status_code
+        self.url = "http://dodo1/"
+        self.reason_phrase = "Internal Server Error" if status_code == 500 else "OK"
+        self.text = text
+
+
+class _ControlClient:
+    def __init__(self, outcome):
+        self.outcome = outcome
+        self.posted: list = []
+
+    async def post(self, url: str, json=None):
+        self.posted.append((url, json))
+        if isinstance(self.outcome, Exception):
+            raise self.outcome
+        return self.outcome
+
+
+class _ControlSubscription:
+    notification_uri = "http://dodo1/"
+
+
+def _handler_for_control(outcome) -> SubscriptionHandler:
+    handler = object.__new__(SubscriptionHandler)
+    handler.subscription_id = "ncof-subscription"
+    handler.subscription = _ControlSubscription()
+    handler._client = _ControlClient(outcome)
+    handler._on_state_change = None
+    return handler
+
+
+def test_control_success_returns_without_waiting_for_dashboard(monkeypatch):
+    """200 직후 True — 대시보드 연출(브로드캐스트 · RICF 0.5초 대기)이 막혀 있어도 다음 제어를 붙잡지 않는다."""
+    drawn: list = []
+    never = asyncio.Event()
+
+    async def stuck_broadcast(**kwargs):
+        drawn.append((kwargs["from_node"], kwargs["to_node"]))
+        await never.wait()
+
+    monkeypatch.setattr(subscription_handler, "broadcast_web_message", stuck_broadcast)
+    handler = _handler_for_control(_ControlResponse(200, '{"result":"ok"}'))
+
+    async def run():
+        ok = await asyncio.wait_for(handler._notify_subscriber("ricf", [{"x": 1}]), timeout=1.0)
+        await asyncio.sleep(0)
+        pending = list(subscription_handler._dashboard_tasks)
+        for task in pending:
+            task.cancel()
+        await asyncio.gather(*pending, return_exceptions=True)
+        return ok
+
+    assert asyncio.run(run()) is True
+    assert handler._client.posted == [("http://dodo1/", [{"x": 1}])]
+    assert drawn == [("ncof", "nef")]  # 연출은 따로 돌기 시작했다
+    assert not subscription_handler._dashboard_tasks
+
+
+def test_control_500_is_failure_and_logs_the_body(caplog):
+    handler = _handler_for_control(_ControlResponse(500, '{"error":"internal server error"}'))
+
+    with caplog.at_level("WARNING"):
+        assert asyncio.run(handler._notify_subscriber("pcf", [{"x": 1}])) is False
+    assert "status_code: 500" in caplog.text
+    assert '{"error":"internal server error"}' in caplog.text
+
+
+def test_control_connection_error_or_timeout_is_failure():
+    for error in (
+        subscription_handler.httpx.ConnectError("refused"),
+        subscription_handler.httpx.ReadTimeout("5s"),
+    ):
+        handler = _handler_for_control(error)
+        assert asyncio.run(handler._notify_subscriber("ricf", [{"x": 1}])) is False
+
+
+def test_dashboard_draws_controls_in_the_order_they_were_sent(monkeypatch):
+    """켤 때(15f 200 → 14_e 200) 화면도 NCOF→NEF→RICF 를 다 그린 뒤 NCOF→PCF — 연출은 따로 돌되 순서는 지킨다."""
+    drawn: list = []
+
+    async def rec(**kwargs):
+        drawn.append(f"{kwargs['from_node']}->{kwargs['to_node']}")
+
+    monkeypatch.setattr(subscription_handler, "broadcast_web_message", rec)
+    ricf = _handler_for_control(_ControlResponse(200, '{"result":"ok"}'))
+    pcf = _handler_for_control(_ControlResponse(200, '{"result":"ok"}'))
+
+    async def run():
+        assert await ricf._notify_subscriber("ricf", [{"x": 1}]) is True
+        assert await pcf._notify_subscriber("pcf", [{"x": 2}]) is True  # 0.5초 연출을 기다리지 않고 바로 보낸다
+        await asyncio.gather(*list(subscription_handler._dashboard_tasks))
+
+    asyncio.run(run())
+    assert drawn == ["ncof->nef", "nef->ricf", "ncof->pcf"]
+
+
+def test_state_save_failure_does_not_block_control(caplog):
+    handler = _handler_for_control(_ControlResponse(200, '{"result":"ok"}'))
+
+    async def broken_save():
+        raise OSError("No space left on device")
+
+    handler._on_state_change = broken_save
+
+    async def run():
+        ok = await handler._notify_subscriber("pcf", [{"x": 1}])
+        await asyncio.gather(*list(subscription_handler._dashboard_tasks), return_exceptions=True)
+        return ok
+
+    with caplog.at_level("ERROR"):
+        assert asyncio.run(run()) is True
+    assert handler._client.posted  # 그래도 보냈다
+    assert "제어 전송 전 상태 저장 실패 — 제어는 그대로 보낸다" in caplog.text
+
+
+def test_control_timeout_log_names_the_error_and_target(caplog):
+    handler = _handler_for_control(subscription_handler.httpx.ReadTimeout(""))
+    with caplog.at_level("ERROR"):
+        assert asyncio.run(handler._notify_subscriber("ricf", [{"x": 1}])) is False
+    assert "제어명령 전송 중 오류 발생: ReadTimeout" in caplog.text
+    assert "(http://dodo1/)" in caplog.text

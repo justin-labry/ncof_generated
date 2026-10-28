@@ -34,10 +34,14 @@ def _isolate(monkeypatch, tmp_path):
     monkeypatch.setattr(data_analyzer, "_shared_engine", None)
     monkeypatch.setattr(data_analyzer, "_active_analyzers", [])
     monkeypatch.setattr(data_analyzer, "_inflight_fanouts", set())
+    monkeypatch.setattr(data_analyzer, "_retry_on_leader_tick", False)
+    monkeypatch.setattr(data_analyzer, "_restoring", False)
     monkeypatch.setattr(data_analyzer, "_trend_refs", {})
     monkeypatch.setattr(decision_config, "_cache", decision_config.Gnb2DecisionConfig())
     monkeypatch.setattr(decision_config, "_cache_key", None)
-    for key in decision_config._KEYS + ("WLAN_SUB_REP_PERIOD_SEC",):
+    monkeypatch.setattr(decision_config, "_control_sequential_last", None)
+    monkeypatch.setattr(decision_config, "_control_sequential_raw", None)
+    for key in decision_config._KEYS + ("WLAN_SUB_REP_PERIOD_SEC", "GNB2_CONTROL_SEQUENTIAL"):
         monkeypatch.delenv(key, raising=False)
     conf = tmp_path / "ncof_setting.conf"
     conf.write_text("GNB2_TH_MBPS=500\n", encoding="utf-8")
@@ -82,6 +86,16 @@ def _analyzer(json_name: str, sent: list, result=True) -> DataAnalyzer:
     analyzer.is_running = True
     data_analyzer._active_analyzers.append(analyzer)
     return analyzer
+
+
+def _recorder(analyzer: DataAnalyzer, sent: list, result: bool):
+    """보낸 것을 sent 에 쌓고 result 를 돌려주는 가짜 전송 — 중간에 응답을 바꿀 때 쓴다."""
+
+    async def notify(nf_type: str, event: list[dict]):
+        sent.append((analyzer.subscription_id, nf_type, event))
+        return result
+
+    return notify
 
 
 def _upf(analyzer: DataAnalyzer, corr_id: str, mbps: float, age_sec: int, wlan: bool) -> None:
@@ -134,14 +148,14 @@ def _pair():
     return sent, pcf, ricf
 
 
-def test_leader_tick_sends_same_state_to_both_at_once():
+def test_leader_tick_sends_same_state_to_both():
     sent, pcf, ricf = _pair()
     _upf(pcf, "wlan-p", 285.0, 0, wlan=True)
 
     _tick(pcf)  # pcf 가 먼저 시작 → 리더. 285 < 500 → DEEP_SLEEP
 
     by_nf = {nf: (sub, ev) for sub, nf, ev in sent}
-    assert set(by_nf) == {"pcf", "ricf"}
+    assert [nf for _, nf, _ in sent] == ["pcf", "ricf"]  # 끌 때는 14_e(0:100) 먼저
     assert _cell_state(by_nf["ricf"][1]) == "DEEP_SLEEP"
     assert _nr_gnb2_off(by_nf["pcf"][1])
     assert by_nf["pcf"][1][0]["subscriptionId"] == pcf.subscription_id
@@ -265,18 +279,22 @@ def test_setting_file_wins_over_exported_env(_isolate, monkeypatch):
     assert decision_config.current_decision_config().th_mbps == 250.0
 
 
-def test_failed_delivery_is_retried_on_next_tick():
+def test_failed_delivery_is_retried_from_the_start_on_next_tick():
     sent: list = []
     pcf = _analyzer("subscription_pcf_to_ncof.json", sent)
     ricf = _analyzer("subscription_ricf_to_ncof.json", sent, result=False)  # RICF 가 2xx 를 안 준다
     _upf(pcf, "wlan-p", 285.0, 0, wlan=True)
     _tick(pcf)
-    assert ricf._delivered_state is None and pcf._delivered_state == "DEEP_SLEEP"
+    assert [nf for _, nf, _ in sent] == ["pcf", "ricf"]
+    # 성공한 14_e 도 「안 보냄」 으로 되돌린다 — 다음 틱에 처음부터(10/26 회신)
+    assert ricf._delivered_state is None and pcf._delivered_state is None
     sent.clear()
 
-    _tick(ricf)  # 자기 틱에서 다시 보낸다
+    _tick(ricf)  # 리더가 아닌 틱은 다시 보내지 않는다 — 「다음 판정 주기」(리더 틱)에서
+    assert sent == []
 
-    assert [nf for _, nf, _ in sent] == ["ricf"]
+    _tick(pcf)  # 다음 판정 틱에서 처음부터 같은 순서로 다시 보낸다
+    assert [nf for _, nf, _ in sent] == ["pcf", "ricf"]
 
 
 def test_stopping_the_leader_mid_fanout_does_not_drop_other_delivery():
@@ -305,6 +323,484 @@ def test_stopping_the_leader_mid_fanout_does_not_drop_other_delivery():
     ricf = asyncio.run(run())
     assert "ricf" in [nf for _, nf, _ in sent]
     assert ricf._delivered_state == "DEEP_SLEEP"
+
+
+# --- 순차 제어 (10/26 두두원 회신 · 10/27 두두원 답 — 14_e 는 UDP 송신 성공 시 200, 실패 시 500) ---
+
+
+def test_on_transition_sends_15f_then_14e_and_off_sends_14e_then_15f(caplog):
+    sent, pcf, ricf = _pair()
+    _upf(pcf, "wlan-p", 600.0, 0, wlan=True)
+    with caplog.at_level("INFO"):
+        _tick(pcf)  # 첫 판정이 ACTIVE(재기동 직후와 같다) — 목표 상태 규칙으로 15f 먼저
+    assert [nf for _, nf, _ in sent] == ["ricf", "pcf"]
+    assert _cell_state(sent[0][2]) == "ACTIVE" and not _nr_gnb2_off(sent[1][2])
+    assert "→ 구독 2건 순차 전송 (RICF:" in caplog.text
+    assert "순차 제어 1/2 RICF 성공 응답 확인 → PCF" in caplog.text
+    assert "순차 제어 2/2 PCF 성공 응답 확인 — 완료" in caplog.text
+    sent.clear()
+
+    _upf(pcf, "wlan-p", 285.0, 20, wlan=True)  # OFF — 트래픽(14_e 0:100) 먼저
+    _tick(pcf)
+    assert [nf for _, nf, _ in sent] == ["pcf", "ricf"]
+    assert _nr_gnb2_off(sent[0][2]) and _cell_state(sent[1][2]) == "DEEP_SLEEP"
+    sent.clear()
+
+    _upf(pcf, "wlan-p", 600.0, 40, wlan=True)  # 다시 ON
+    _tick(pcf)
+    assert [nf for _, nf, _ in sent] == ["ricf", "pcf"]
+
+
+def test_first_failure_stops_the_sequence_then_retries_from_the_start(caplog):
+    sent, pcf, ricf = _pair()
+    _upf(pcf, "wlan-p", 285.0, 0, wlan=True)
+    _tick(pcf)  # DEEP_SLEEP 으로 시작
+    sent.clear()
+
+    ricf._notify_callback = _recorder(ricf, sent, False)  # 15f 가 500
+    _upf(pcf, "wlan-p", 600.0, 20, wlan=True)  # ON
+    with caplog.at_level("WARNING"):
+        _tick(pcf)
+    assert [nf for _, nf, _ in sent] == ["ricf"]  # 15f 실패 → 14_e 는 보내지 않는다
+    assert "순차 제어 1/2 RICF 실패 — PCF 는 보내지 않음, 다음 판정 틱에 처음부터 다시 보냄" in caplog.text
+    assert ricf._delivered_state is None and pcf._delivered_state is None
+    sent.clear()
+
+    _tick(ricf)  # 리더가 아닌 틱은 곧바로 되풀이하지 않는다
+    assert sent == []
+    _tick(pcf)  # 다음 판정 틱 — 여전히 500 이면 또 15f 만
+    assert [nf for _, nf, _ in sent] == ["ricf"]
+    sent.clear()
+
+    ricf._notify_callback = _recorder(ricf, sent, True)
+    _tick(pcf)
+    assert [nf for _, nf, _ in sent] == ["ricf", "pcf"]
+    assert ricf._delivered_state == pcf._delivered_state == "ACTIVE"
+    sent.clear()
+    _tick(pcf)
+    assert sent == []  # 다 받았으면 더 안 보낸다
+
+
+def test_next_request_waits_for_the_previous_response_and_other_ticks_do_not_interleave():
+    sent: list = []
+    events: list[str] = []
+    release = asyncio.Event()
+
+    async def run():
+        pcf = _analyzer("subscription_pcf_to_ncof.json", sent)
+        ricf = _analyzer("subscription_ricf_to_ncof.json", sent)
+        _upf(pcf, "wlan-p", 600.0, 0, wlan=True)
+
+        async def slow_ricf(nf_type, event):
+            events.append("ricf 보냄")
+            await release.wait()
+            events.append("ricf 200")
+            sent.append((ricf.subscription_id, nf_type, event))
+            return True
+
+        async def pcf_notify(nf_type, event):
+            events.append("pcf 보냄")
+            sent.append((pcf.subscription_id, nf_type, event))
+            return True
+
+        ricf._notify_callback = slow_ricf
+        pcf._notify_callback = pcf_notify
+        tick = asyncio.create_task(pcf._analyze_and_generate("PCF"))
+        await asyncio.sleep(0.01)
+        assert events == ["ricf 보냄"]  # 15f 응답 전 — 14_e 는 아직
+        await ricf._analyze_and_generate("RICF")  # 응답을 기다리는 동안 다른 분석기의 틱
+        assert events == ["ricf 보냄"]  # 끼어들어 따로 보내지 않는다
+        release.set()
+        await tick
+
+    asyncio.run(run())
+    assert events == ["ricf 보냄", "ricf 200", "pcf 보냄"]
+    assert [nf for _, nf, _ in sent] == ["ricf", "pcf"]
+
+
+def _desc(sent: list) -> list[str]:
+    return [
+        f"ricf:{_cell_state(ev)}" if nf == "ricf" else ("pcf:OFF" if _nr_gnb2_off(ev) else "pcf:ON")
+        for _, nf, ev in sent
+    ]
+
+
+def test_retry_after_failure_happens_once_per_decision_tick():
+    sent: list = []
+    pcf = _analyzer("subscription_pcf_to_ncof.json", sent, result=False)  # 14_e 500 이 이어짐
+    ricf = _analyzer("subscription_ricf_to_ncof.json", sent)
+    _upf(pcf, "wlan-p", 600.0, 0, wlan=True)
+    for _ in range(3):  # 판정 주기 3번 = 리더 틱 3 + RICF 틱 3
+        _tick(pcf)
+        _tick(ricf)
+    assert _desc(sent) == ["ricf:ACTIVE", "pcf:ON"] * 3  # 처음부터 · 판정 주기마다 한 번
+
+
+def test_in_flight_sequence_is_not_interleaved_by_a_new_decision():
+    """늦게 붙은 RICF 의 따라잡기(15f ACTIVE)가 응답을 기다리는 동안 리더가 DEEP_SLEEP 을 판정해도,
+    14_e 0:100 은 그 15f 응답 뒤에 나간다(진행 중 fan-out 이 있으면 건너뜀)."""
+    sent: list = []
+    log: list[str] = []
+    release = asyncio.Event()
+
+    async def run():
+        pcf = _analyzer("subscription_pcf_to_ncof.json", sent)
+        _upf(pcf, "wlan-p", 600.0, 0, wlan=True)
+        await pcf._analyze_and_generate("PCF")  # RICF 없이 ACTIVE — 14_e 만
+        sent.clear()
+        ricf = _analyzer("subscription_ricf_to_ncof.json", sent)
+
+        async def slow_ricf(nf_type, event):
+            log.append(f"ricf:{_cell_state(event)} 보냄")
+            await release.wait()
+            log.append(f"ricf:{_cell_state(event)} 200")
+            sent.append((ricf.subscription_id, nf_type, event))
+            return True
+
+        async def pcf_notify(nf_type, event):
+            log.append(("pcf:OFF" if _nr_gnb2_off(event) else "pcf:ON") + " 보냄")
+            sent.append((pcf.subscription_id, nf_type, event))
+            return True
+
+        ricf._notify_callback = slow_ricf
+        pcf._notify_callback = pcf_notify
+        rtick = asyncio.create_task(ricf._analyze_and_generate("RICF"))  # 따라잡기 15f ACTIVE
+        await asyncio.sleep(0.01)
+        _upf(pcf, "wlan-p", 285.0, 20, wlan=True)
+        await pcf._analyze_and_generate("PCF")  # DEEP_SLEEP 판정 — 진행 중이라 이번 틱은 건너뜀
+        assert log == ["ricf:ACTIVE 보냄"]
+        release.set()
+        await rtick
+        await pcf._analyze_and_generate("PCF")  # 다음 판정 틱에 OFF 쌍
+
+    asyncio.run(run())
+    assert log == ["ricf:ACTIVE 보냄", "ricf:ACTIVE 200", "pcf:OFF 보냄", "ricf:DEEP_SLEEP 보냄", "ricf:DEEP_SLEEP 200"]
+
+
+def test_dead_duplicate_subscription_does_not_block_the_live_ones(caplog):
+    """두두원만 재기동해 상향이 겹치면(고아 트리) 같은 NF 가 둘 — 죽은 하나가 살아 있는 구독의 제어를 막지 않는다."""
+    sent: list = []
+    dead = _analyzer("subscription_pcf_to_ncof.json", sent, result=False)  # 옛 상향(먼저 복원 → 목록 앞 · 리더)
+    dead.subscription_id = "old-pcf-dead"
+    pcf = _analyzer("subscription_pcf_to_ncof.json", sent)
+    pcf.subscription_id = "new-pcf"
+    ricf = _analyzer("subscription_ricf_to_ncof.json", sent)
+    _upf(pcf, "wlan-p", 285.0, 0, wlan=True)
+    with caplog.at_level("WARNING"):
+        _tick(dead)  # OFF: PCF 단계(죽은 것 실패 · 새 것 성공) → RICF 단계
+    assert [(sub, nf) for sub, nf, _ in sent] == [
+        ("old-pcf-dead", "pcf"),
+        ("new-pcf", "pcf"),
+        (ricf.subscription_id, "ricf"),
+    ]
+    assert "PCF 구독 2건(old-pcf-, new-pcf) — 같은 장비에 겹친 상향 구독(고아 트리)인지 확인" in caplog.text
+    assert pcf._delivered_state == ricf._delivered_state == "DEEP_SLEEP" and dead._delivered_state is None
+    sent.clear()
+    _tick(dead)  # 죽은 것만 다시
+    assert [sub for sub, _, _ in sent] == ["old-pcf-dead"]
+
+
+def test_orphan_duplicate_ricf_does_not_block_split_only_14e(_isolate, caplog):
+    """겹친 RICF 중 고아(실패)가 남아도, 다른 RICF 가 이미 ACTIVE 를 받았으면 단계만 바뀌는 14_e 는 나간다."""
+    _level_conf(_isolate)
+    sent: list = []
+    orphan = _analyzer("subscription_ricf_to_ncof.json", sent, result=False)
+    orphan.subscription_id = "old-ricf-orphan"
+    pcf = _analyzer("subscription_pcf_to_ncof.json", sent)
+    ricf = _analyzer("subscription_ricf_to_ncof.json", sent)
+    _upf(pcf, "wlan-p", 327.0, 0, wlan=True)  # 단계 2 ACTIVE
+    _tick(orphan)  # 리더 = 목록 첫 활성(고아)
+    assert [(sub, nf) for sub, nf, _ in sent] == [
+        ("old-ricf-orphan", "ricf"),
+        (ricf.subscription_id, "ricf"),
+        (pcf.subscription_id, "pcf"),
+    ]
+    assert ricf._delivered_state == pcf._delivered_state == "ACTIVE" and orphan._delivered_state is None
+    sent.clear()
+
+    _upf(pcf, "wlan-p", 347.0, 20, wlan=True)  # 단계 3 — 상태는 그대로, split 만
+    with caplog.at_level("WARNING"):
+        _tick(orphan)
+    assert [(sub, nf) for sub, nf, _ in sent] == [("old-ricf-orphan", "ricf"), (pcf.subscription_id, "pcf")]
+    assert "순차 제어 1/2 RICF 겹친 구독만 실패 — 다른 RICF 구독이 이미 ACTIVE 를 받음 → PCF" in caplog.text
+    assert _gbr_by_slot(sent[1][2]) == _lv(3)
+
+
+def test_orphan_duplicate_retry_waits_for_the_leader_tick(_isolate):
+    """겹친 구독 중 고아만 실패하고 단계를 넘긴 뒤에도 고아 재시도는 리더 판정 틱에서만 — 비리더 틱마다 되풀이하지 않는다
+    (E2E v3: 500 고아 RICF 가 다른 구독 틱마다 판정 주기당 3번, 타임아웃 고아는 전송 슬롯을 거의 늘 차지)."""
+    _level_conf(_isolate)
+    sent: list = []
+    pcf = _analyzer("subscription_pcf_to_ncof.json", sent)  # 리더
+    orphan = _analyzer("subscription_ricf_to_ncof.json", sent, result=False)
+    orphan.subscription_id = "old-ricf-orphan"
+    ricf = _analyzer("subscription_ricf_to_ncof.json", sent)
+    _upf(pcf, "wlan-p", 327.0, 0, wlan=True)  # 단계 2 ACTIVE
+    _tick(pcf)
+    assert [(sub, nf) for sub, nf, _ in sent] == [
+        ("old-ricf-orphan", "ricf"),
+        (ricf.subscription_id, "ricf"),
+        (pcf.subscription_id, "pcf"),
+    ]
+    sent.clear()
+    _tick(orphan)  # 비리더 틱 — 고아에 곧바로 다시 보내지 않는다
+    _tick(ricf)
+    assert sent == []
+    _tick(pcf)  # 리더 틱 — 고아만 다시
+    assert [sub for sub, _, _ in sent] == ["old-ricf-orphan"]
+    sent.clear()
+    _tick(orphan)  # 단계 통과(_held_by_peer) 뒤에도 비리더 틱은 그대로 건너뜀
+    assert sent == []
+
+
+def _join(json_name: str, sent: list, sub_id: str, result=True) -> DataAnalyzer:
+    """운영 중 새로 들어온 상향 구독 — 실제 진입점 start() 로 fan-out 대상에 든다(주기 루프는 띄우지 않는다)."""
+    a = _analyzer(json_name, sent, result)
+    data_analyzer._active_analyzers.remove(a)
+    a.subscription_id = sub_id
+    a._periodic_process = lambda: asyncio.sleep(0)
+    asyncio.run(a.start())
+    return a
+
+
+def test_app_restart_new_pcf_gets_14e_only_after_15f():
+    """두두원 앱만 재기동(NCOF 그대로) — 옛 구독 2건이 고아로 남은 채 새 PCF 가 먼저 들어오면(새 RICF 는 4 ~ 6초 뒤)
+    새 PCF 에 14_e 만 단독으로 나가면 안 된다(새 앱은 gNB2 OFF 로 초기화). 옛 RICF 로 15f 를 먼저 다시 보낸다."""
+    sent, old_pcf, old_ricf = _pair()
+    _upf(old_pcf, "wlan-p", 600.0, 0, wlan=True)
+    _tick(old_pcf)  # ACTIVE — 옛 앱에 15f → 14_e
+    sent.clear()
+
+    new_pcf = _join("subscription_pcf_to_ncof.json", sent, "new-pcf")
+    _tick(old_ricf)  # 리더가 아닌 틱도 「아직 못 받은 것」 을 보낸다 — 이때도 순서대로
+    assert [(sub, nf) for sub, nf, _ in sent] == [
+        (old_ricf.subscription_id, "ricf"),
+        (old_pcf.subscription_id, "pcf"),
+        ("new-pcf", "pcf"),
+    ]
+    assert _cell_state(sent[0][2]) == "ACTIVE"
+    sent.clear()
+
+    _join("subscription_ricf_to_ncof.json", sent, "new-ricf")
+    _tick(old_pcf)
+    assert [(sub, nf) for sub, nf, _ in sent] == [
+        (old_ricf.subscription_id, "ricf"),
+        ("new-ricf", "ricf"),
+        (old_pcf.subscription_id, "pcf"),
+        ("new-pcf", "pcf"),
+    ]
+
+
+def test_app_restart_orphan_ricf_rejected_holds_14e_until_new_ricf():
+    """새 앱이 옛 subscriptionId 의 15f 를 거절하면(실패) 14_e 는 새 RICF 가 들어와 15f 200 을 받을 때까지 나가지 않는다."""
+    sent, old_pcf, old_ricf = _pair()
+    _upf(old_pcf, "wlan-p", 600.0, 0, wlan=True)
+    _tick(old_pcf)
+    sent.clear()
+
+    old_ricf._notify_callback = _recorder(old_ricf, sent, False)
+    _join("subscription_pcf_to_ncof.json", sent, "new-pcf")
+    _tick(old_pcf)
+    assert [nf for _, nf, _ in sent] == ["ricf"]  # 15f 실패 → 14_e 안 보냄
+    sent.clear()
+
+    _join("subscription_ricf_to_ncof.json", sent, "new-ricf")
+    _tick(old_pcf)  # 리더 틱 — 처음부터: 옛 RICF 실패 · 새 RICF 200 → 14_e
+    assert [(sub, nf) for sub, nf, _ in sent] == [
+        (old_ricf.subscription_id, "ricf"),
+        ("new-ricf", "ricf"),
+        (old_pcf.subscription_id, "pcf"),
+        ("new-pcf", "pcf"),
+    ]
+
+
+def test_app_restart_pending_split_retry_starts_from_15f(_isolate):
+    """옛 앱이 죽은 뒤 단계만 바뀐 14_e 가 실패해 재시도를 기다리는 중 새 앱이 뜨면(gNB2 OFF), 새 PCF 구독이 붙기 전
+    (하위 구독 · 화면 연출 약 4초) 리더 재시도가 옛 PCF 구독으로 14_e 만 새 앱에 보내면 안 된다 — 15f ACTIVE 부터."""
+    _level_conf(_isolate)
+    sent, old_pcf, old_ricf = _pair()
+    _upf(old_pcf, "wlan-p", 327.0, 0, wlan=True)  # 단계 2 ACTIVE
+    _tick(old_pcf)
+    sent.clear()
+
+    old_pcf._notify_callback = _recorder(old_pcf, sent, False)  # 옛 앱이 죽음
+    old_ricf._notify_callback = _recorder(old_ricf, sent, False)
+    _upf(old_pcf, "wlan-p", 347.0, 20, wlan=True)  # 죽기 전 마지막 샘플 — 단계 3
+    _tick(old_pcf)
+    assert [nf for _, nf, _ in sent] == ["pcf"]  # 단계만 바뀜 → 14_e 만, 실패
+    sent.clear()
+
+    old_pcf._notify_callback = _recorder(old_pcf, sent, True)  # 새 앱이 같은 포트로 뜸, 새 구독은 아직 안 붙음
+    old_ricf._notify_callback = _recorder(old_ricf, sent, True)
+    _tick(old_pcf)
+    assert [nf for _, nf, _ in sent] == ["ricf", "pcf"]
+    assert _cell_state(sent[0][2]) == "ACTIVE" and _gbr_by_slot(sent[1][2]) == _lv(3)
+    sent.clear()
+
+    _join("subscription_pcf_to_ncof.json", sent, "new-pcf")
+    _tick(old_ricf)
+    assert [(sub, nf) for sub, nf, _ in sent] == [
+        (old_ricf.subscription_id, "ricf"),
+        (old_pcf.subscription_id, "pcf"),
+        ("new-pcf", "pcf"),
+    ]
+
+
+def test_new_subscription_in_concurrent_mode_keeps_delivery_records(_isolate):
+    """동시 모드(=0)는 예전 그대로 — 새 구독이 들어와도 남은 구독에 다시 보내지 않는다."""
+    _set_conf(_isolate, "GNB2_TH_MBPS=500\nGNB2_CONTROL_SEQUENTIAL=0\n")
+    sent, old_pcf, old_ricf = _pair()
+    _upf(old_pcf, "wlan-p", 600.0, 0, wlan=True)
+    _tick(old_pcf)
+    sent.clear()
+
+    _join("subscription_pcf_to_ncof.json", sent, "new-pcf")
+    _tick(old_pcf)
+    assert [(sub, nf) for sub, nf, _ in sent] == [("new-pcf", "pcf")]
+
+
+def test_concurrent_mode_clears_the_leader_only_retry(_isolate):
+    """순차 실패 뒤(리더 틱에서만 재시도) 동시 모드로 되돌리면 예전처럼 어느 틱이든 실패한 대상만 다시 보낸다."""
+    sent, pcf, ricf = _pair()
+    ricf._notify_callback = _recorder(ricf, sent, False)
+    _upf(pcf, "wlan-p", 600.0, 0, wlan=True)
+    _tick(pcf)  # 순차: 15f 실패 → 리더 틱에서만 재시도
+    assert data_analyzer._retry_on_leader_tick is True
+    sent.clear()
+    _set_conf(_isolate, "GNB2_TH_MBPS=500\nGNB2_CONTROL_SEQUENTIAL=0\n")
+    _tick(ricf)  # 비리더 틱 — 동시 모드면 막지 않는다
+    assert sorted(nf for _, nf, _ in sent) == ["pcf", "ricf"]
+    assert data_analyzer._retry_on_leader_tick is False
+
+
+def test_target_stopped_mid_sequence_is_skipped():
+    sent: list = []
+    release = asyncio.Event()
+
+    async def run():
+        pcf = _analyzer("subscription_pcf_to_ncof.json", sent)
+        ricf = _analyzer("subscription_ricf_to_ncof.json", sent)
+        _upf(pcf, "wlan-p", 600.0, 0, wlan=True)
+
+        async def slow_ricf(nf_type, event):
+            await release.wait()
+            sent.append((ricf.subscription_id, nf_type, event))
+            return True
+
+        ricf._notify_callback = slow_ricf
+        tick = asyncio.create_task(pcf._analyze_and_generate("PCF"))
+        await asyncio.sleep(0.01)
+        pcf.is_running = False  # 15f 응답 대기 중 PCF 구독 삭제(handler.stop → analyzer.stop)
+        pcf._leave_active_analyzers()
+        tick.cancel()
+        release.set()
+        await asyncio.sleep(0)
+        await asyncio.gather(*list(data_analyzer._inflight_fanouts), return_exceptions=True)
+
+    asyncio.run(run())
+    assert [nf for _, nf, _ in sent] == ["ricf"]  # 지워진 PCF 구독으로는 14_e 를 보내지 않는다
+
+
+def test_hung_step_times_out_and_rolls_back(monkeypatch):
+    monkeypatch.setattr(data_analyzer, "_STEP_TIMEOUT_SEC", 0.05)
+    sent: list = []
+
+    async def run():
+        pcf = _analyzer("subscription_pcf_to_ncof.json", sent)
+        ricf = _analyzer("subscription_ricf_to_ncof.json", sent)
+        _upf(pcf, "wlan-p", 600.0, 0, wlan=True)
+
+        async def hung(nf_type, event):
+            await asyncio.Event().wait()
+
+        ricf._notify_callback = hung
+        await asyncio.wait_for(pcf._analyze_and_generate("PCF"), 1.0)
+        return pcf, ricf
+
+    pcf, ricf = asyncio.run(run())
+    assert sent == []  # 15f 가 끝나지 않았으니 14_e 는 안 나감
+    assert pcf._delivered_state is None and ricf._delivered_state is None
+    assert not any(not f.done() for f in data_analyzer._inflight_fanouts)  # 다음 틱을 막지 않는다
+
+
+def test_cancelled_sequence_rolls_back_every_target():
+    sent: list = []
+
+    async def run():
+        pcf = _analyzer("subscription_pcf_to_ncof.json", sent)
+        ricf = _analyzer("subscription_ricf_to_ncof.json", sent)
+        _upf(pcf, "wlan-p", 600.0, 0, wlan=True)
+
+        async def hung(nf_type, event):
+            await asyncio.Event().wait()
+
+        ricf._notify_callback = hung
+        tick = asyncio.create_task(pcf._analyze_and_generate("PCF"))
+        await asyncio.sleep(0.01)
+        for f in list(data_analyzer._inflight_fanouts):
+            f.cancel()  # 루프 종료 때의 취소
+        await asyncio.gather(tick, return_exceptions=True)
+        return pcf, ricf
+
+    pcf, ricf = asyncio.run(run())
+    assert pcf._delivered_state is None and ricf._delivered_state is None
+
+
+def test_restoring_holds_control_until_every_saved_subscription_is_back():
+    """상태파일 순서로 PCF 만 복원된 채 리더 틱이 ACTIVE 를 판정해도 14_e 단독으로 나가면 안 된다."""
+    sent: list = []
+    pcf = _analyzer("subscription_pcf_to_ncof.json", sent)
+    _upf(pcf, "wlan-p", 600.0, 0, wlan=True)
+    data_analyzer.set_restoring(True)
+    _tick(pcf)
+    assert sent == []
+    ricf = _analyzer("subscription_ricf_to_ncof.json", sent)
+    data_analyzer.set_restoring(False)
+    _tick(ricf)  # 복원이 끝난 뒤 어느 틱이든 — 처음부터 순서대로
+    assert [nf for _, nf, _ in sent] == ["ricf", "pcf"]
+    assert _cell_state(sent[0][2]) == "ACTIVE"
+
+
+def test_on_without_ricf_subscription_warns(caplog):
+    sent: list = []
+    pcf = _analyzer("subscription_pcf_to_ncof.json", sent)
+    _upf(pcf, "wlan-p", 600.0, 0, wlan=True)
+    with caplog.at_level("WARNING"):
+        _tick(pcf)
+    assert [nf for _, nf, _ in sent] == ["pcf"]
+    assert "RICF 구독이 없어 15f ACTIVE 확인 없이 14_e 만 보낸다" in caplog.text
+
+
+def test_sequential_off_by_setting_falls_back_to_concurrent_without_restart(_isolate, caplog):
+    sent, pcf, ricf = _pair()
+    _upf(pcf, "wlan-p", 285.0, 0, wlan=True)
+    _tick(pcf)
+    sent.clear()
+
+    _set_conf(_isolate, "GNB2_TH_MBPS=500\nGNB2_CONTROL_SEQUENTIAL=0\n")
+    ricf._notify_callback = _recorder(ricf, sent, False)
+    _upf(pcf, "wlan-p", 600.0, 20, wlan=True)
+    with caplog.at_level("INFO"):
+        _tick(pcf)
+    # 동시 — 15f 가 실패해도 14_e 는 나가고, 실패한 쪽만 다시 보낸다(예전 동작)
+    assert sorted(nf for _, nf, _ in sent) == ["pcf", "ricf"]
+    assert "→ 구독 2건 동시 전송" in caplog.text
+    assert "제어 순서 설정 변경: 순차 → 동시 전송" in caplog.text
+    assert pcf._delivered_state == "ACTIVE" and ricf._delivered_state is None
+    sent.clear()
+    _tick(ricf)
+    assert [nf for _, nf, _ in sent] == ["ricf"]
+
+
+def test_control_sequential_setting_values(_isolate, caplog):
+    for text, expect in (("", True), ("1", True), ("on", True), ("0", False), ("OFF", False), ("false", False)):
+        _set_conf(_isolate, f"GNB2_CONTROL_SEQUENTIAL={text}\n")
+        assert decision_config.control_sequential() is expect, text
+    with caplog.at_level("WARNING"):
+        _set_conf(_isolate, "GNB2_CONTROL_SEQUENTIAL=maybe\n")
+        assert decision_config.control_sequential() is True  # 잘못된 값 → 순차(기본)
+        assert decision_config.control_sequential() is True
+    assert caplog.text.count("GNB2_CONTROL_SEQUENTIAL 값 오류") == 1  # 같은 값으로 틱마다 반복하지 않는다
 
 
 def test_downstream_requests_are_tagged_with_source_event():
@@ -696,12 +1192,30 @@ def test_failed_pcf_split_delivery_is_retried(_isolate):
     ricf = _analyzer("subscription_ricf_to_ncof.json", sent)
     _upf(pcf, "wlan-p", 327.0, 0, wlan=True)
     _tick(pcf)
+    assert [nf for _, nf, _ in sent] == ["ricf", "pcf"]  # 켤 때는 15f 먼저
     assert pcf._delivered_state is None and pcf._delivered_split is None
-    assert ricf._delivered_state == "ACTIVE"
+    assert ricf._delivered_state is None  # 15f 는 성공했어도 처음부터 다시 보내도록 되돌린다
     sent.clear()
 
-    _tick(pcf)  # 같은 샘플 — PCF 만 다시
-    assert [nf for _, nf, _ in sent] == ["pcf"] and _gbr_by_slot(sent[0][2]) == _lv(2)
+    _tick(pcf)  # 같은 샘플 — 처음부터 15f → 14_e
+    assert [nf for _, nf, _ in sent] == ["ricf", "pcf"] and _gbr_by_slot(sent[1][2]) == _lv(2)
+
+    # 상태는 그대로 ACTIVE 이고 split 만 바뀌면 14_e 만 — 실패해도 14_e 만 다시
+    sent.clear()
+    pcf._notify_callback = _recorder(pcf, sent, True)
+    _tick(pcf)
+    assert [nf for _, nf, _ in sent] == ["ricf", "pcf"]  # 위 실패 때문에 아직 둘 다 못 받음 → 처음부터
+    sent.clear()
+    _upf(pcf, "wlan-p", 347.0, 20, wlan=True)  # 단계 3
+    pcf._notify_callback = _recorder(pcf, sent, False)
+    _tick(pcf)
+    assert [nf for _, nf, _ in sent] == ["pcf"]
+    # 하나도 성공 못 함 — 두두원 앱 재기동일 수 있어 묶음 밖 RICF 기록도 지운다 → 다시 보낼 때는 15f ACTIVE 부터
+    assert ricf._delivered_state is None
+    sent.clear()
+    pcf._notify_callback = _recorder(pcf, sent, True)
+    _tick(pcf)
+    assert [nf for _, nf, _ in sent] == ["ricf", "pcf"] and _gbr_by_slot(sent[1][2]) == _lv(3)
 
 
 def test_dwell_never_breaks_deep_sleep_means_gnb2_zero(_isolate):

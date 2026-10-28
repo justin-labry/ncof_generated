@@ -9,6 +9,7 @@ from fastapi.encoders import jsonable_encoder
 
 from nncof.models.nncof_events_subscription import NncofEventsSubscription
 
+from . import data_analyzer
 from .websocket_manager import broadcast_web_message
 from .subscription_handler import SubscriptionHandler
 from .utils import _normalize_subscription
@@ -485,6 +486,16 @@ class SubscriptionManager:
         # _export_state 가 함께 내보내게 한다.
         self._pending_restore = dict(state["subscriptions"])
 
+        # 다 복원될 때까지 제어를 보내지 않는다 — 먼저 복원된 PCF(리더)의 틱이 RICF 없이 켜기(14_e)를 보내지 않게
+        data_analyzer.set_restoring(True)
+        try:
+            await self._restore_each(state)
+        finally:
+            data_analyzer.set_restoring(False)
+        self._pending_restore.clear()
+        await self.persist_state()
+
+    async def _restore_each(self, state: dict[str, Any]) -> None:
         for subscription_id, saved in state["subscriptions"].items():
             logger.info(f"✔️ [{subscription_id}] 기존구독 복구 시작")
             try:
@@ -530,8 +541,6 @@ class SubscriptionManager:
             finally:
                 # 성공·만료·실패 어느 경우든 이 항목의 처리는 끝났다.
                 self._pending_restore.pop(subscription_id, None)
-        self._pending_restore.clear()
-        await self.persist_state()
 
     async def shutdown(self) -> None:
         """서버 종료 전에 상태를 저장하고 핸들러의 로컬 자원을 해제한다."""

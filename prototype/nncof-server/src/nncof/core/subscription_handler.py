@@ -30,6 +30,21 @@ logger = logging.getLogger(__name__)
 
 _TLS_ENABLED = os.getenv("NCOF_TLS", "").strip().lower() in ("1", "true", "yes", "on")
 
+# 제어 성공 뒤 대시보드 연출(브로드캐스트 · NEF 경유 0.5초 대기)은 제어 순서의 임계 경로 밖에서 돈다 —
+# 순차 제어(15f 200 → 14_e)가 연출을 기다리지 않게. 참조가 사라지면 수거될 수 있어 끝날 때까지 들고 있는다.
+_dashboard_tasks: set[asyncio.Task] = set()
+# 연출은 제어를 보낸 순서대로 하나씩 그린다(ON: NCOF→NEF→RICF 를 다 그린 뒤 NCOF→PCF) — 루프마다 하나
+# (테스트는 asyncio.run 을 여러 번 쓴다). asyncio.Lock 은 기다린 순서대로 넘겨준다.
+_dashboard_lock: tuple[asyncio.AbstractEventLoop, asyncio.Lock] | None = None
+
+
+def _dashboard_serial() -> asyncio.Lock:
+    global _dashboard_lock
+    loop = asyncio.get_running_loop()
+    if _dashboard_lock is None or _dashboard_lock[0] is not loop:
+        _dashboard_lock = (loop, asyncio.Lock())
+    return _dashboard_lock[1]
+
 
 def _httpx_kwargs() -> dict:
     """NCOF_TLS 설정 시 HTTP/2 over TLS(self-signed 허용), 기본은 h2c(평문 HTTP/2).
@@ -223,7 +238,10 @@ class SubscriptionHandler:
     async def _notify_subscriber(self, nf_type: str, ncof_control_event: list[dict]) -> bool:
         """제어 명령을 NF(PCF 또는 RICF)로 전송한다. 상대가 2xx 로 받았으면 True.
         (False 면 DataAnalyzer 가 다음 틱에 같은 상태를 다시 보낸다)"""
-        await self._state_changed()
+        try:
+            await self._state_changed()
+        except Exception as e:  # noqa: BLE001 — 상태 파일 저장(디스크 · 권한)이 실패해도 제어는 보낸다
+            logger.error(f"[{self.subscription_id}] 제어 전송 전 상태 저장 실패 — 제어는 그대로 보낸다: {e}")
         if not self.subscription.notification_uri:
             logger.warning("notification_uri is missing")
             return False
@@ -233,7 +251,11 @@ class SubscriptionHandler:
                 self.subscription.notification_uri, json=ncof_control_event
             )
         except httpx.RequestError as e:
-            logger.error(f"[{self.subscription_id}] 제어명령 전송 중 오류 발생: {e}")
+            # ReadTimeout 등은 str(e) 가 비어 있다 — 종류와 대상을 함께 남겨 타임아웃 · 연결 거부를 가른다
+            logger.error(
+                f"[{self.subscription_id}] 제어명령 전송 중 오류 발생: {type(e).__name__} {e} "
+                f"({self.subscription.notification_uri})"
+            )
             return False
 
         if response.status_code in (204, 200):
@@ -249,31 +271,11 @@ class SubscriptionHandler:
             #         sub_id=self.subscription_id,
             #     )
 
-            _data = jsonable_encoder(ncof_control_event)
-            if nf_type.lower() == "af" or nf_type.lower() == "ricf":
-                await broadcast_web_message(
-                    sub_id=self.subscription_id,
-                    from_node="ncof",
-                    to_node="nef",
-                    msg_type="NOTIFICATION",
-                    data=_data,
-                )
-                await asyncio.sleep(0.5)
-                await broadcast_web_message(
-                    sub_id=self.subscription_id,
-                    from_node="nef",
-                    to_node=nf_type.lower(),
-                    msg_type="NOTIFICATION",
-                    data=_data,
-                )
-            else:
-                await broadcast_web_message(
-                    sub_id=self.subscription_id,
-                    from_node="ncof",
-                    to_node=nf_type.lower(),
-                    msg_type="NOTIFICATION",
-                    data=_data,
-                )
+            task = asyncio.create_task(
+                self._show_control_on_dashboard(nf_type, jsonable_encoder(ncof_control_event))
+            )
+            _dashboard_tasks.add(task)
+            task.add_done_callback(_dashboard_tasks.discard)
             return True
         else:
             logger.warning(
@@ -284,6 +286,38 @@ class SubscriptionHandler:
                 f"  response: {response.text}"
             )
             return False
+
+    async def _show_control_on_dashboard(self, nf_type: str, data: Any) -> None:
+        """보낸 제어를 대시보드에 그린다. RICF · AF 는 NCOF → NEF → NF 로 0.5초 간격을 두고 그린다.
+        제어를 보낸 순서대로 하나씩 그린다 — 화면에서도 약속한 순서(켤 때 RICF 먼저)로 보이게."""
+        async with _dashboard_serial():
+            await self._draw_control(nf_type, data)
+
+    async def _draw_control(self, nf_type: str, data: Any) -> None:
+        if nf_type.lower() in ("af", "ricf"):
+            await broadcast_web_message(
+                sub_id=self.subscription_id,
+                from_node="ncof",
+                to_node="nef",
+                msg_type="NOTIFICATION",
+                data=data,
+            )
+            await asyncio.sleep(0.5)
+            await broadcast_web_message(
+                sub_id=self.subscription_id,
+                from_node="nef",
+                to_node=nf_type.lower(),
+                msg_type="NOTIFICATION",
+                data=data,
+            )
+        else:
+            await broadcast_web_message(
+                sub_id=self.subscription_id,
+                from_node="ncof",
+                to_node=nf_type.lower(),
+                msg_type="NOTIFICATION",
+                data=data,
+            )
 
     async def teardown_stale_external_subscriptions(self) -> None:
         """상태 파일에서 복원된, 이전 실행이 남긴 하위 구독을 해지한다.

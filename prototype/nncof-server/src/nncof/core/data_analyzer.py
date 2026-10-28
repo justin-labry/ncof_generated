@@ -1,6 +1,7 @@
 # 데이터 분석 및 제어 명령 생성을 담당하는 DataAnalyzer 클래스
 
 import asyncio
+import itertools
 import json
 import logging
 from rich.pretty import pretty_repr
@@ -21,7 +22,7 @@ from .decide_wlan_gnb2_rule import (
     build_15f_cell_power,
     extract_wlan_dl_mbps,
 )
-from .decision_config import current_decision_config, wlan_sub_rep_period
+from .decision_config import control_sequential, current_decision_config, wlan_sub_rep_period
 from .gnb2_rl_engine import create_decision_engine
 from .gnb2_rule_engine import Gnb2RuleEngine
 from .websocket_manager import broadcast_web_message
@@ -34,12 +35,25 @@ logger = logging.getLogger(__name__)
 # 한 판정의 두 절반인 15f(cellPowerState → RICF)와 14_e(NR gNB2 GBR → PCF)가 서로 다른 틱·서로 다른 UPF 샘플로
 # 따로 결정된다(9/30 mock 실측: 지연 11~30초, 일치율 26% · 9/30 실망: PCF 에만 ACTIVE 14_e).
 # 그래서 엔진을 하나 공유하고, **판정은 리더(가장 먼저 시작한 활성 구독)의 틱에서만** 한 번 한 뒤
-# 그 상태를 아직 받지 못한 활성 구독 전부에 같은 순간 내보낸다(각 구독의 sub_id/corrId 로 스탬프).
+# 그 상태를 아직 받지 못한 활성 구독 전부에 내보낸다(각 구독의 sub_id/corrId 로 스탬프). 보내는 순서는
+# _control_order 를 따르고 앞 요청의 성공 응답을 받은 뒤 다음을 보낸다(GNB2_CONTROL_SEQUENTIAL=0 이면 예전처럼 동시).
 # 다른 구독의 틱은 판정 없이 "아직 못 받은 상태" 만 전달한다 — 늦게 들어온 구독이 리더 틱을 기다리지 않게.
 _shared_engine: Gnb2RuleEngine | None = None
 _active_analyzers: list["DataAnalyzer"] = []
 # shield 로 띄운 fan-out 은 참조가 사라지면 수거될 수 있어 끝날 때까지 들고 있는다.
 _inflight_fanouts: set[asyncio.Future] = set()
+# 순차 제어가 실패해 「처음부터 다시」 를 기다리는 중 — 재시도는 리더 판정 틱에서만(10/26 회신 「다음 판정 주기」).
+# 다른 구독의 틱이 실패 1초 안에 같은 요청을 되풀이하지 않게 한다.
+_retry_on_leader_tick = False
+# 저장 구독 복원 중에는 내보내지 않는다 — 복원은 상태파일 순서로 한 건씩 돌아, 앞 구독(PCF, 리더)의 틱이 아직 복원되지
+# 않은 구독(RICF)을 빼고 내보내면 켤 때 15f 없이 14_e 만 나간다(E2E: RICF 복원 12초 동안 ACTIVE 14_e 단독).
+_restoring = False
+
+
+def set_restoring(flag: bool) -> None:
+    """SubscriptionManager 가 저장 구독을 복원하는 동안 제어 전송을 멈춘다 — 끝나면 다음 틱에 순서대로 보낸다."""
+    global _restoring
+    _restoring = flag
 # trend 판정의 비교 기준 — 12p_c 스트림(notifId)별로 지난 판정 때 본 (timeStamp, Mbps). 공유 엔진과 수명을 같이한다.
 # "바로 앞 10초 샘플" 이 아니라 "지난 판정 때 값" 과 비교해야 판정 틱(상향 repPeriod) 사이에 쌓인 변화가 빠지지 않는다.
 _trend_refs: dict[str, tuple[datetime, float]] = {}
@@ -68,6 +82,126 @@ def _leader() -> "DataAnalyzer | None":
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+# 순차 제어 한 단계(상태 저장 + POST)의 상한 — httpx 5초 타임아웃이 못 막는 대기(상태 저장 잠금 등)에서
+# 진행 중 fan-out 이 영영 끝나지 않아 모든 제어가 멈추는 것을 막는다.
+_STEP_TIMEOUT_SEC = 20.0
+
+
+def _control_order(state: str) -> tuple[str, ...]:
+    """두두원과 정한 제어 순서(10/26 회신) — gNB2 를 켤 때는 셀부터(15f ACTIVE → 14_e 분산 비율),
+    끌 때는 트래픽부터(14_e 0:100 → 15f DEEP_SLEEP). 직전 상태가 아니라 목표 상태로 정하므로
+    재기동 직후나 실패 뒤 다시 보낼 때도 같은 규칙이다."""
+    return ("RICF", "PCF") if state == "ACTIVE" else ("PCF", "RICF")
+
+
+def _held_by_peer(
+    nf: str,
+    targets: list["DataAnalyzer"],
+    state: str,
+    split: tuple[int, int] | None,
+    gnb1_split: tuple[int, int] | None,
+) -> bool:
+    """이번 묶음 밖의 같은 NF 활성 구독 중 이 상태(PCF 는 split 까지)를 이미 받은 것이 있는가."""
+    return any(
+        b.is_running
+        and b not in targets
+        and b.get_source_nf_type() == nf
+        and not b._needs_delivery(state, split, gnb1_split)
+        for b in _active_analyzers
+    )
+
+
+def _clear_delivery_records() -> list["DataAnalyzer"]:
+    """활성 분석기 전부의 전달 기록을 지운다 — 다음 틱에 목표 상태 순서의 처음부터 모두 다시 보낸다.
+    같은 상태를 두 번 받아도 무해(UPF 같은 비율 · network_status UPDATE). 기록이 있던 분석기를 돌려준다."""
+    cleared = [a for a in _active_analyzers if a._delivered_state is not None]
+    for a in cleared:
+        a._delivered_state = None
+        a._delivered_split = None
+        a._delivered_gnb1_split = None
+    return cleared
+
+
+async def _deliver_in_order(
+    targets: list["DataAnalyzer"],
+    state: str,
+    split: tuple[int, int] | None,
+    gnb1_split: tuple[int, int] | None,
+    decision_iso: str,
+) -> None:
+    """targets(이미 _control_order 로 정렬)를 NF 단계별로 보내고, 앞 단계가 성공 응답(200)을 받아야 다음 단계를 보낸다.
+    한 단계에서 하나도 성공하지 못하면 뒤 단계는 보내지 않고 활성 구독 전부(묶음 밖 포함)의 전달 기록을 지운다 —
+    다음 판정 틱(리더 틱)에 처음부터 다시 보낸다(10/26 회신 「앞 요청이 실패하면 … 다음 판정 주기에 처음부터 다시」).
+    같은 NF 구독이 둘 이상(고아 상향 트리)이면 그중 하나라도 성공하면 단계를 통과하고, 실패한 구독만
+    (_deliver 가 이미 되돌림) 다음 틱에 그 구독만 다시 받는다 — 죽은 구독 하나가 전체 제어를 막지 않게."""
+    global _retry_on_leader_tick
+    order = _control_order(state)
+
+    def nf_of(a: "DataAnalyzer") -> str:
+        nf = a.get_source_nf_type()
+        return nf if nf in order else "?"
+
+    def forget_all() -> None:
+        for b in targets:
+            b._forget_delivery(state, split, gnb1_split)
+
+    phases = [list(g) for _, g in itertools.groupby(targets, key=nf_of)]
+    names = [nf_of(g[0]) for g in phases]
+    for p, group in enumerate(phases):
+        if len(group) > 1:
+            logger.warning(
+                f"순차 제어: {names[p]} 구독 {len(group)}건({', '.join(a.subscription_id[:8] for a in group)}) "
+                f"— 같은 장비에 겹친 상향 구독(고아 트리)인지 확인"
+            )
+        attempted = succeeded = 0
+        for a in group:
+            if not a.is_running:  # 시퀀스 도중 구독 삭제 · 감시 만료 · 서버 종료 — 보내지 않는다
+                logger.info(f"순차 제어: {names[p]}:{a.subscription_id[:8]} 는 그새 멈춤 — 건너뜀")
+                continue
+            attempted += 1
+            try:
+                ok = await asyncio.wait_for(
+                    a._deliver(state, split, gnb1_split, decision_iso), _STEP_TIMEOUT_SEC
+                )
+            except TimeoutError:  # _deliver 는 취소되며 자기 표시를 되돌렸다
+                logger.warning(
+                    f"순차 제어: {names[p]}:{a.subscription_id[:8]} {_STEP_TIMEOUT_SEC:.0f}초 안에 끝나지 않음 — 실패로 본다"
+                )
+                ok = False
+            except asyncio.CancelledError:
+                forget_all()
+                raise
+            succeeded += bool(ok)
+        step = f"{p + 1}/{len(phases)} {names[p]}"
+        if not succeeded and attempted and _held_by_peer(names[p], targets, state, split, gnb1_split):
+            # 이 단계에 남은 것은 같은 NF 의 겹친 구독뿐이고 다른 구독이 이미 이 상태를 받았다(장비에는 가 있다) —
+            # 고아 하나가 단계만 바뀌는 14_e 를 영영 막지 않게 넘어간다(실패한 구독은 _deliver 가 되돌려 다음 틱에 다시).
+            after = f" → {names[p + 1]}" if p + 1 < len(phases) else " — 완료"
+            logger.warning(f"순차 제어 {step} 겹친 구독만 실패 — 다른 {names[p]} 구독이 이미 {state} 를 받음{after}")
+            continue
+        # 하나도 성공 못 함 — 보냈다가 실패했거나, 다 멈춰서 하나도 못 보냈는데 뒤 단계가 남았을 때(확인 없이 다음을 보내지 않는다)
+        if not succeeded and (attempted or p + 1 < len(phases)):
+            rest = names[p + 1:]
+            skipped = f"{'·'.join(rest)} 는 보내지 않음, " if rest else ""
+            logger.warning(f"순차 제어 {step} 실패 — {skipped}다음 판정 틱에 처음부터 다시 보냄")
+            # 이번 묶음만이 아니라 전부 지운다 — 하나도 성공 못 함은 두두원 앱이 내려갔다 다시 뜬 것일 수 있고(새 앱은 gNB2 OFF),
+            # 묶음 밖 구독의 기록도 옛 앱에 보낸 것이다. 그대로 두면 단계만 바뀐 14_e 재시도가 새 PCF 구독이 붙기 전(약 4초)
+            # 옛 PCF 구독으로 15f 없이 새 앱에 닿는다. 다시 보낼 때는 목표 상태 순서의 처음(ON 이면 15f ACTIVE)부터.
+            _clear_delivery_records()
+            _retry_on_leader_tick = True
+            return
+        after = f" → {names[p + 1]}" if p + 1 < len(phases) else " — 완료"
+        if attempted:
+            logger.info(f"순차 제어 {step} 성공 응답 확인{after}")
+        else:  # 마지막 단계 대상이 전부 그새 멈춤 — 보낸 것이 없으니 「성공 응답」 이라 쓰지 않는다
+            logger.info(f"순차 제어 {step} 대상이 모두 멈춰 보내지 않음{after}")
+    # 겹친 구독 중 실패해 되돌린 것이 남았으면(위 _held_by_peer 통과 · 단계 안 일부 실패) 그 재시도도 리더 판정 틱에서만 —
+    # 다른 구독 틱마다 고아에 다시 보내면 판정 주기당 구독 수만큼 시도하고, 타임아웃 고아는 전송 슬롯을 거의 늘 차지한다.
+    _retry_on_leader_tick = any(
+        b.is_running and b._needs_delivery(state, split, gnb1_split) for b in targets
+    )
 
 
 # 판정 입력 샘플의 허용 나이 = repPeriod × 이 값. 두두원은 무트래픽이면 12p_c 를 아예 보내지 않고(9/28 `udptp metric
@@ -164,9 +298,26 @@ class DataAnalyzer:
 
     async def start(self):
         self.is_running = True
-        if self not in _active_analyzers:
-            _active_analyzers.append(self)
+        self._join_active_analyzers()
         self._task = asyncio.create_task(self._periodic_process())
+
+    def _join_active_analyzers(self) -> None:
+        """fan-out 대상에 든다. 순차 모드에서 다른 구독이 이미 있으면 그 구독들의 전달 기록을 지운다 —
+        운영 중 새 상향 구독 = 두두원 앱 재기동(새 앱은 gNB2 를 OFF 로 초기화)이나 재구독인데, 남은 기록은 옛 앱에 보낸 것이다.
+        그대로 두면 옛 RICF 는 「이미 받음」 이라 새 PCF 에만 14_e 가 나가 15f ACTIVE 보다 앞선다(새 RICF 는 4 ~ 6초 뒤에 온다).
+        지우면 다음 틱에 15f(옛 RICF 구독도 같은 :55556 의 새 앱에 닿는다) → 200 → 14_e 순서로 다시 보내고,
+        그 15f 가 실패하면 14_e 는 보내지 않는다."""
+        if self in _active_analyzers:
+            return
+        if control_sequential():
+            stale = _clear_delivery_records()
+            if stale:  # 앞 실패로 이미 지워졌으면 지울 것이 없어 찍지 않는다
+                logger.info(
+                    f"[{self.subscription_id}] 새 상향 구독 — 남은 구독 {len(stale)}건"
+                    f"({', '.join(f'{a.get_source_nf_type()}:{a.subscription_id[:8]}' for a in stale)})의 전달 기록을 지움, "
+                    f"다음 틱에 순서대로 다시 보냄"
+                )
+        _active_analyzers.append(self)
 
     async def stop(self):
         self.is_running = False
@@ -184,7 +335,7 @@ class DataAnalyzer:
     def _leave_active_analyzers(self) -> None:
         """fan-out 대상에서 빠진다. 마지막 분석기가 빠지면 공유 엔진을 버려,
         다음 구독이 첫 판정부터 새 엔진으로 시작하게 한다 (예전의 분석기별 엔진 재생성과 같은 효과)."""
-        global _shared_engine
+        global _shared_engine, _retry_on_leader_tick
         self._delivered_state = None
         self._delivered_split = None
         self._delivered_gnb1_split = None
@@ -192,6 +343,7 @@ class DataAnalyzer:
             _active_analyzers.remove(self)
             if not _active_analyzers:
                 _shared_engine = None
+                _retry_on_leader_tick = False
                 _trend_refs.clear()
 
     async def _notify_analyzing(self):
@@ -369,7 +521,7 @@ class DataAnalyzer:
 
     async def _analyze_and_generate(self, nf_type: str) -> None:
         """리더 틱이면 판정해 공유 엔진에 반영하고, 그 상태를 아직 받지 못한 활성 구독 전부
-        (RICF 15f · PCF 14_e)에 같은 순간 내보낸다. 리더가 아니면 판정 없이 전달만 한다."""
+        (RICF 15f · PCF 14_e)에 _control_order 순서로 내보낸다. 리더가 아니면 판정 없이 전달만 한다."""
         engine = self.decision_engine
         decision_iso = _now_iso_kst()
         leader = _leader()
@@ -451,6 +603,15 @@ class DataAnalyzer:
         gnb1_split: tuple[int, int] | None,
         decision_iso: str,
     ) -> None:
+        global _retry_on_leader_tick
+        if _restoring:
+            return  # 저장 구독 복원 중 — 끝난 뒤 틱에서 순서대로
+        if any(not f.done() for f in _inflight_fanouts):
+            # 앞 전송이 아직 응답을 기다린다 — 그 사이 다른 분석기의 틱이 끼어들면 순서가 섞인다. 끝난 뒤 틱에서 이어 간다.
+            logger.debug(f"[{self.subscription_id}] 앞 제어 전송이 아직 끝나지 않음 — 이번 틱은 건너뜀")
+            return
+        if _retry_on_leader_tick and _leader() is not self and control_sequential():
+            return  # 실패한 묶음은 리더 판정 틱에서 처음부터 — 다른 구독의 틱이 곧바로 되풀이하지 않게
         targets = [
             a
             for a in _active_analyzers
@@ -459,6 +620,20 @@ class DataAnalyzer:
         if not targets:
             return  # 모든 구독이 이미 이 상태(와 split)를 받음 → 통지 안 보냄
 
+        sequential = control_sequential()
+        if not sequential:
+            _retry_on_leader_tick = False  # 동시 모드 — 예전처럼 어느 틱이든 실패한 대상만 다시
+        if sequential:
+            order = _control_order(state)
+            targets.sort(
+                key=lambda a: order.index(a.get_source_nf_type())
+                if a.get_source_nf_type() in order
+                else len(order)
+            )
+            if state == "ACTIVE" and not any(
+                a.is_running and a.get_source_nf_type() == "RICF" for a in _active_analyzers
+            ):
+                logger.warning("순차 제어: RICF 구독이 없어 15f ACTIVE 확인 없이 14_e 만 보낸다")
         # await 전에 표시한다 — 전송 중 다른 분석기의 틱이 같은 상태를 중복 발송하지 않도록.
         for a in targets:
             a._delivered_state = state
@@ -466,15 +641,19 @@ class DataAnalyzer:
             a._delivered_gnb1_split = gnb1_split
         split_text = f" · {_splits_text(split, gnb1_split)}" if split else ""
         logger.info(
-            f"AI 분석 결과: gNB2 {state}{split_text} → 구독 {len(targets)}건 동시 전송 "
+            f"AI 분석 결과: gNB2 {state}{split_text} → 구독 {len(targets)}건 {'순차' if sequential else '동시'} 전송 "
             f"({', '.join(f'{a.get_source_nf_type()}:{a.subscription_id[:8]}' for a in targets)})"
         )
-        # 순차 await 이면 RICF 경로의 GUI 연출 대기(0.5s) 등이 PCF 전송을 밀어낸다.
         # shield: 이 틱을 돈 분석기가 전송 도중 stop() 되어도 다른 구독으로 가는 전송은 끝까지 간다.
-        fanout = asyncio.gather(
-            *(a._deliver(state, split, gnb1_split, decision_iso) for a in targets),
-            return_exceptions=True,
-        )
+        if sequential:
+            fanout = asyncio.ensure_future(
+                _deliver_in_order(targets, state, split, gnb1_split, decision_iso)
+            )
+        else:
+            fanout = asyncio.gather(
+                *(a._deliver(state, split, gnb1_split, decision_iso) for a in targets),
+                return_exceptions=True,
+            )
         _inflight_fanouts.add(fanout)
         fanout.add_done_callback(_inflight_fanouts.discard)
         await asyncio.shield(fanout)
@@ -499,8 +678,8 @@ class DataAnalyzer:
         split: tuple[int, int] | None,
         gnb1_split: tuple[int, int] | None,
         decision_iso: str,
-    ) -> None:
-        """gNB2 상태를 이 구독의 NF 형식(RICF 15f / PCF 14_e)으로 만들어 전송한다."""
+    ) -> bool:
+        """gNB2 상태를 이 구독의 NF 형식(RICF 15f / PCF 14_e)으로 만들어 전송한다. 상대가 성공 응답을 주면 True."""
         nf_type = self.get_source_nf_type()
         corr_id = self.subscription.notif_corr_id
         delivered = True
@@ -528,7 +707,7 @@ class DataAnalyzer:
                 if qos_template is None:
                     logger.warning("cannot retrieve qos template...")
                     self._forget_delivery(state, split, gnb1_split)
-                    return
+                    return False
                 qos_notif = apply_qos_policy(
                     qos_template, state, decision_iso, self.subscription_id, corr_id, split, gnb1_split
                 )
@@ -568,3 +747,4 @@ class DataAnalyzer:
 
         if not delivered:
             self._forget_delivery(state, split, gnb1_split)
+        return delivered

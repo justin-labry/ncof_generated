@@ -271,6 +271,43 @@ def current_decision_config() -> Gnb2DecisionConfig:
     return new
 
 
+_ON_VALUES = ("1", "true", "yes", "on")
+_OFF_VALUES = ("0", "false", "no", "off")
+_control_sequential_last: bool | None = None
+_control_sequential_raw: str | None = None
+
+
+def control_sequential() -> bool:
+    """제어 순서 — 켜짐(기본)이면 gNB2 를 켤 때 15f ACTIVE → 200 → 14_e, 끌 때 14_e 0:100 → 200 → 15f DEEP_SLEEP 처럼
+    앞 요청의 성공 응답을 받은 뒤 다음을 보낸다(10/26 두두원 회신). GNB2_CONTROL_SEQUENTIAL=0 이면 예전처럼 동시에 보낸다.
+
+    재기동 없이 되돌릴 수 있도록 판정 설정과 같은 파일 · 같은 우선순위(파일이 있으면 파일만)로 보낼 때마다 읽는다.
+    값이 비었거나 잘못되면 순차다.
+    """
+    global _control_sequential_last, _control_sequential_raw
+    path = _setting_file()
+    try:
+        if path and os.path.exists(path):
+            value = dict(dotenv_values(path)).get("GNB2_CONTROL_SEQUENTIAL")
+        else:
+            value = os.getenv("GNB2_CONTROL_SEQUENTIAL")
+    except Exception as e:  # noqa: BLE001 — 제어 전송을 막으면 안 된다
+        logger.warning(f"GNB2_CONTROL_SEQUENTIAL 를 읽지 못함 — 순차 전송: {e} ({path})")
+        value = None
+    text = (value or "").strip().lower()
+    sequential = text not in _OFF_VALUES
+    if text and text not in _ON_VALUES + _OFF_VALUES and text != _control_sequential_raw:
+        logger.warning(f"GNB2_CONTROL_SEQUENTIAL 값 오류({value!r}, 1 또는 0) — 순차 전송")
+    _control_sequential_raw = text
+    if _control_sequential_last is not None and sequential != _control_sequential_last:
+        logger.warning(
+            f"제어 순서 설정 변경: {'순차' if _control_sequential_last else '동시'} → "
+            f"{'순차' if sequential else '동시'} 전송 ({path})"
+        )
+    _control_sequential_last = sequential
+    return sequential
+
+
 def wlan_sub_rep_period() -> int | None:
     """WLAN_PERFORMANCE(12p_c) 하위 구독에 줄 repPeriod(초). 없거나 잘못되면 None(= 상향 repPeriod 를 따른다).
 
