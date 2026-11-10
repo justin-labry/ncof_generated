@@ -30,6 +30,12 @@ class Gnb2DecisionConfig:
       총합과 안 맞을 때)
     - split_total_mbps: 쌍(노트북1 · 노트북2)마다 gNB set + WLAN set 의 gbr/mbr 합. 두두원 UPF 는 지금 노트북2 쌍
       (gNB2 set · 노트북2 WLAN set)의 mbr 비만 10% 단위로 쓴다
+    - decision_tick_sec: 판정 틱(초). 0 = 상향 repPeriod(예전 그대로). 그보다 짧으면 그 간격으로 판정한다(모든 모드)
+    - predict_period_sec: level 모드 선제 판정 — bg 가 되풀이되는 주기(초). 0 = 끔(사후 판정만)
+    - predict_lead_sec: 선제 판정이 내다보는 시간(초) — 이 안에 단계가 오를 것으로 보이면 지금 올린다
+    - predict_match_mbps: 최근 한 주기 샘플이 그 앞 주기와 이 값(평균 오차) 안으로 맞을 때만 예측을 쓴다
+    - down_confirm_samples: level 모드에서 단계를 내릴 때 최근 12p_c 샘플이 이 개수만큼 모두 같은 낮은 단계여야
+      내린다(1 = 곧바로 — 예전 그대로). 오를 때는 곧바로(지금 값이나 예측)
     """
 
     th_mbps: float = 500.0
@@ -41,6 +47,11 @@ class Gnb2DecisionConfig:
     level_gnb2_pct: tuple[int, ...] = (0, 50, 70, 90)
     level_gnb1_pct: tuple[int, ...] = (30, 50, 70, 90)
     split_total_mbps: int = 1000
+    decision_tick_sec: int = 0
+    predict_period_sec: int = 0
+    predict_lead_sec: int = 20
+    predict_match_mbps: float = 30.0
+    down_confirm_samples: int = 1
 
 
 _DEFAULT = Gnb2DecisionConfig()
@@ -68,6 +79,11 @@ _KEYS = (
     "GNB2_LEVEL_GNB2_PCT",
     "GNB2_LEVEL_GNB1_PCT",
     "GNB2_SPLIT_TOTAL_MBPS",
+    "GNB2_DECISION_TICK_SEC",
+    "GNB2_PREDICT_PERIOD_SEC",
+    "GNB2_PREDICT_LEAD_SEC",
+    "GNB2_PREDICT_MATCH_MBPS",
+    "GNB2_DOWN_CONFIRM_SAMPLES",
 )
 
 
@@ -151,6 +167,7 @@ def _parse(
         )
     pcts = tuple(int(p) for p in pcts_f)
     gnb1_pcts = tuple(int(p) for p in gnb1_f)
+    tick, period, lead, match, confirm = _parse_timing(pick, previous)
     if mode == "level":
         # 두두원 UPF 는 3GPP 10%(DL_DISTRIBUTION_10) 를 atsss_support_10_pro 설정에 따라 0% 로 바꾼다.
         # 100% 는 그 쌍의 WLAN set 이 0 이 되어 하향이 전부 3GPP 다리로 간다.
@@ -176,7 +193,65 @@ def _parse(
         level_gnb2_pct=pcts,
         level_gnb1_pct=gnb1_pcts,
         split_total_mbps=int(total_f),
+        decision_tick_sec=tick,
+        predict_period_sec=period,
+        predict_lead_sec=lead,
+        predict_match_mbps=match,
+        down_confirm_samples=confirm,
     )
+
+
+def _parse_timing(pick, previous: Gnb2DecisionConfig) -> tuple[int, int, int, float, int]:
+    """판정 틱 · 선제 판정 · 내림 확인 키. 잘못되면 이 다섯 값만 직전 값을 둔다(임계 · 단계 변경까지 막지 않는다)."""
+    keep = (
+        previous.decision_tick_sec,
+        previous.predict_period_sec,
+        previous.predict_lead_sec,
+        previous.predict_match_mbps,
+        previous.down_confirm_samples,
+    )
+    names = (
+        "GNB2_DECISION_TICK_SEC",
+        "GNB2_PREDICT_PERIOD_SEC",
+        "GNB2_PREDICT_LEAD_SEC",
+        "GNB2_PREDICT_MATCH_MBPS",
+        "GNB2_DOWN_CONFIRM_SAMPLES",
+    )
+    defaults = (
+        _DEFAULT.decision_tick_sec,
+        _DEFAULT.predict_period_sec,
+        _DEFAULT.predict_lead_sec,
+        _DEFAULT.predict_match_mbps,
+        _DEFAULT.down_confirm_samples,
+    )
+    texts = [pick(k) for k in names]
+    try:
+        tick, period, lead, match, confirm = (float(t) if t else float(d) for t, d in zip(texts, defaults))
+        if not all(math.isfinite(v) for v in (tick, period, lead, match, confirm)):
+            raise ValueError("inf/nan")
+    except (ValueError, OverflowError) as e:
+        logger.warning(f"판정 틱 · 선제 설정 값이 숫자가 아님 — 이 값들만 직전 설정 유지: {e}")
+        return keep
+    whole = all(v == int(v) for v in (tick, period, lead, confirm))
+    if not whole or tick < 0 or period < 0 or lead < 1 or match <= 0 or not 1 <= confirm <= 10 or (period and period <= lead):
+        logger.warning(
+            "판정 틱 · 선제 설정 범위 오류(TICK·PERIOD 0 이상 정수, LEAD 1 이상 정수이고 PERIOD 가 있으면 그보다 작게, "
+            "MATCH>0, DOWN_CONFIRM 1~10) — 이 값들만 직전 설정 유지: "
+            + " ".join(f"{n.removeprefix('GNB2_')}={t}" for n, t in zip(names, texts) if t is not None)
+        )
+        return keep
+    return int(tick), int(period), int(lead), match, int(confirm)
+
+
+def _timing_text(cfg: Gnb2DecisionConfig) -> str:
+    tick = f"{cfg.decision_tick_sec} s" if cfg.decision_tick_sec else "상향 repPeriod"
+    if cfg.predict_period_sec:
+        predict = (
+            f"선제 주기 {cfg.predict_period_sec} s · 앞 {cfg.predict_lead_sec} s · 일치 {cfg.predict_match_mbps:g} Mbps"
+        )
+    else:
+        predict = "선제 끔"
+    return f"틱 {tick} · {predict} · 내림 확인 {cfg.down_confirm_samples}"
 
 
 def _level_error(bounds: tuple[float, ...], pcts: tuple[float, ...], total: float) -> str | None:
@@ -259,13 +334,14 @@ def current_decision_config() -> Gnb2DecisionConfig:
             f"DWELL {_cache.min_dwell_sec} → {new.min_dwell_sec} s · "
             f"MODE {_cache.mode} → {new.mode} · "
             f"DEADBAND {_cache.trend_deadband_mbps} → {new.trend_deadband_mbps} Mbps · "
-            f"LEVEL {_levels_text(_cache)} → {_levels_text(new)} ({path})"
+            f"LEVEL {_levels_text(_cache)} → {_levels_text(new)} · "
+            f"{_timing_text(_cache)} → {_timing_text(new)} ({path})"
         )
     elif _cache_key is None:
         logger.info(
             f"판정 설정: TH {new.th_mbps} Mbps · HYST {new.hyst_mbps} Mbps · "
             f"DWELL {new.min_dwell_sec} s · MODE {new.mode} · "
-            f"DEADBAND {new.trend_deadband_mbps} Mbps · LEVEL {_levels_text(new)} ({path})"
+            f"DEADBAND {new.trend_deadband_mbps} Mbps · LEVEL {_levels_text(new)} · {_timing_text(new)} ({path})"
         )
     _cache, _cache_key = new, key
     return new

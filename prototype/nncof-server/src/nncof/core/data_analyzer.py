@@ -4,6 +4,7 @@ import asyncio
 import itertools
 import json
 import logging
+import time
 from rich.pretty import pretty_repr
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
@@ -25,6 +26,7 @@ from .decide_wlan_gnb2_rule import (
 from .decision_config import control_sequential, current_decision_config, wlan_sub_rep_period
 from .gnb2_rl_engine import create_decision_engine
 from .gnb2_rule_engine import Gnb2RuleEngine
+from .level_forecast import Forecast, PeriodicForecaster
 from .websocket_manager import broadcast_web_message
 
 logger = logging.getLogger(__name__)
@@ -57,6 +59,32 @@ def set_restoring(flag: bool) -> None:
 # trend 판정의 비교 기준 — 12p_c 스트림(notifId)별로 지난 판정 때 본 (timeStamp, Mbps). 공유 엔진과 수명을 같이한다.
 # "바로 앞 10초 샘플" 이 아니라 "지난 판정 때 값" 과 비교해야 판정 틱(상향 repPeriod) 사이에 쌓인 변화가 빠지지 않는다.
 _trend_refs: dict[str, tuple[datetime, float]] = {}
+# level 모드 선제 판정의 12p_c 이력 — 활성 구독 전부의 WLAN 스트림을 리더 판정 틱마다 모은다. 공유 엔진과 수명을 같이한다.
+# 판정 틱이 12p_c 주기(WLAN 하위 repPeriod)보다 길면 샘플을 놓친다 — 선제 판정은 GNB2_DECISION_TICK_SEC 를 그 이하로.
+_forecaster = PeriodicForecaster()
+# 판정 틱이 상향 repPeriod 보다 짧을 때, 실패한 같은 묶음을 매 틱 되풀이하지 않게 한다 — 같은 (상태, split) 재시도는
+# 실패 뒤 「repPeriod - 틱」 이 지나야(= 예전 판정 주기 간격). 새 판정(다른 상태 · split)은 기다리지 않는다.
+_retry_key: tuple | None = None
+_retry_armed_at = 0.0
+# 짧은 판정 틱에서 새 상향 구독이 붙은 뒤 이 시간 동안은 제어를 내보내지 않는다 — 두두원 앱은 PCF 구독 뒤 4 ~ 5초에
+# RICF 구독을 보내고, 분석기는 구독 뒤 약 6초에 붙는다(11/04 17:10 실장비: PCF 17:10:11.6 · RICF 17:10:16.0 구독 →
+# RICF 분석기 17:10:22.3). 예전 60초 틱에서는 첫 판정이 늘 그 뒤였지만, 2초 틱은 첫 12p_c(17:10:21.9)에 바로 판정해
+# RICF 없이 14_e(gNB2 10:0)만 나갔다. 마지막 합류 뒤 이만큼 기다려 짝이 붙으면 15f → 14_e 순서로 보낸다.
+_JOIN_GRACE_SEC = 15.0
+_last_join_at = -1e9
+
+
+def _arm_retry(flag: bool, state: str, split, gnb1_split, failed: bool = True) -> None:
+    """리더 틱 재시도 표시. 실제 전송 실패일 때만 같은 묶음 재시도 간격(_retry_key)을 건다 — 전송 중 새 구독이 붙어
+    전달 기록이 지워진 경우(실패 아님)는 다음 틱에 곧바로 처음부터 다시 보내야 한다(11/04 17:10 실장비: 이것까지 막아
+    15f ACTIVE 가 16초 늦었다)."""
+    global _retry_on_leader_tick, _retry_key, _retry_armed_at
+    _retry_on_leader_tick = flag
+    if flag and failed:
+        _retry_key = (state, split, gnb1_split)
+        _retry_armed_at = time.monotonic()
+    else:
+        _retry_key = None
 
 # 판정 입력으로 쓰는 하위 구독 이벤트 — 12p_c(WLAN) 스트림. SubscriptionHandler 가 그 SMF 하위 구독의 notifId 를 알려 준다.
 WLAN_SOURCE_EVENT = "WLAN_PERFORMANCE"
@@ -136,7 +164,6 @@ async def _deliver_in_order(
     다음 판정 틱(리더 틱)에 처음부터 다시 보낸다(10/26 회신 「앞 요청이 실패하면 … 다음 판정 주기에 처음부터 다시」).
     같은 NF 구독이 둘 이상(고아 상향 트리)이면 그중 하나라도 성공하면 단계를 통과하고, 실패한 구독만
     (_deliver 가 이미 되돌림) 다음 틱에 그 구독만 다시 받는다 — 죽은 구독 하나가 전체 제어를 막지 않게."""
-    global _retry_on_leader_tick
     order = _control_order(state)
 
     def nf_of(a: "DataAnalyzer") -> str:
@@ -149,6 +176,7 @@ async def _deliver_in_order(
 
     phases = [list(g) for _, g in itertools.groupby(targets, key=nf_of)]
     names = [nf_of(g[0]) for g in phases]
+    failed_any = False
     for p, group in enumerate(phases):
         if len(group) > 1:
             logger.warning(
@@ -174,6 +202,7 @@ async def _deliver_in_order(
                 forget_all()
                 raise
             succeeded += bool(ok)
+            failed_any = failed_any or not ok
         step = f"{p + 1}/{len(phases)} {names[p]}"
         if not succeeded and attempted and _held_by_peer(names[p], targets, state, split, gnb1_split):
             # 이 단계에 남은 것은 같은 NF 의 겹친 구독뿐이고 다른 구독이 이미 이 상태를 받았다(장비에는 가 있다) —
@@ -190,7 +219,7 @@ async def _deliver_in_order(
             # 묶음 밖 구독의 기록도 옛 앱에 보낸 것이다. 그대로 두면 단계만 바뀐 14_e 재시도가 새 PCF 구독이 붙기 전(약 4초)
             # 옛 PCF 구독으로 15f 없이 새 앱에 닿는다. 다시 보낼 때는 목표 상태 순서의 처음(ON 이면 15f ACTIVE)부터.
             _clear_delivery_records()
-            _retry_on_leader_tick = True
+            _arm_retry(True, state, split, gnb1_split)
             return
         after = f" → {names[p + 1]}" if p + 1 < len(phases) else " — 완료"
         if attempted:
@@ -199,8 +228,12 @@ async def _deliver_in_order(
             logger.info(f"순차 제어 {step} 대상이 모두 멈춰 보내지 않음{after}")
     # 겹친 구독 중 실패해 되돌린 것이 남았으면(위 _held_by_peer 통과 · 단계 안 일부 실패) 그 재시도도 리더 판정 틱에서만 —
     # 다른 구독 틱마다 고아에 다시 보내면 판정 주기당 구독 수만큼 시도하고, 타임아웃 고아는 전송 슬롯을 거의 늘 차지한다.
-    _retry_on_leader_tick = any(
-        b.is_running and b._needs_delivery(state, split, gnb1_split) for b in targets
+    _arm_retry(
+        any(b.is_running and b._needs_delivery(state, split, gnb1_split) for b in targets),
+        state,
+        split,
+        gnb1_split,
+        failed=failed_any,
     )
 
 
@@ -225,6 +258,21 @@ def _now_iso_kst() -> str:
 
 # timeStamp 가 없는 데이터를 "가장 오래된 것"으로 취급하기 위한 하한값
 _MIN_TS = datetime.min.replace(tzinfo=timezone.utc)
+
+
+def _tick_sec(period: float) -> float:
+    """판정 틱 — GNB2_DECISION_TICK_SEC 가 있고 상향 repPeriod 보다 짧으면 그 값, 아니면 repPeriod(예전 그대로)."""
+    try:
+        tick = current_decision_config().decision_tick_sec
+    except Exception as e:  # noqa: BLE001 — 설정을 못 읽어도 판정 루프 · 틱은 예전 간격으로 이어 간다
+        logger.debug(f"판정 틱 설정을 읽지 못함 — 상향 repPeriod: {e}")
+        return period
+    return min(period, tick) if tick > 0 else period
+
+
+def _due(last: float | None, period: float) -> bool:
+    """예전 판정 주기(상향 repPeriod) 간격으로 한 번 — 짧은 틱에서 로그 · GUI 표시가 늘지 않게."""
+    return last is None or time.monotonic() - last >= 0.9 * period
 
 
 class DataAnalyzer:
@@ -268,6 +316,10 @@ class DataAnalyzer:
         # 이 구독의 WLAN_PERFORMANCE SMF 하위 구독 notifId(= 12p_c 통지의 correlationId)
         self._wlan_stream_ids: set[str] = set()
         self._qos_template: list[dict] | None = None
+        # 판정 틱이 짧아도 GUI 「분석 중」 표시 · 판정 보류 경고는 예전 간격(상향 repPeriod)으로만
+        self._last_analyzing_at: float | None = None
+        self._last_hold_warn_at: float | None = None
+        self._last_forecast_reason: str | None = None
         self._qos_template_path = Path(
             qos_template_path
             or Path(__file__).parent
@@ -307,8 +359,15 @@ class DataAnalyzer:
         그대로 두면 옛 RICF 는 「이미 받음」 이라 새 PCF 에만 14_e 가 나가 15f ACTIVE 보다 앞선다(새 RICF 는 4 ~ 6초 뒤에 온다).
         지우면 다음 틱에 15f(옛 RICF 구독도 같은 :55556 의 새 앱에 닿는다) → 200 → 14_e 순서로 다시 보내고,
         그 15f 가 실패하면 14_e 는 보내지 않는다."""
+        global _last_join_at
         if self in _active_analyzers:
             return
+        _last_join_at = time.monotonic()
+        period = self._rep_period()
+        if _tick_sec(period) < period:
+            logger.info(
+                f"[{self.subscription_id}] 새 상향 구독 — 짝 구독(PCF↔RICF)이 붙을 시간 {_JOIN_GRACE_SEC:.0f}초 동안 제어 보류"
+            )
         if control_sequential():
             stale = _clear_delivery_records()
             if stale:  # 앞 실패로 이미 지워졌으면 지울 것이 없어 찍지 않는다
@@ -345,6 +404,7 @@ class DataAnalyzer:
                 _shared_engine = None
                 _retry_on_leader_tick = False
                 _trend_refs.clear()
+                _forecaster.clear()
 
     async def _notify_analyzing(self):
         await broadcast_web_message(
@@ -381,12 +441,14 @@ class DataAnalyzer:
         )
         mon_dur = self.subscription.evt_req.mon_dur
 
-        # 판정 틱은 상향 repPeriod 를 따른다 — 두두원이 다시 구독하면(청소 후 재기동 등) 60 으로 돌아온다
+        # 판정 틱은 상향 repPeriod 를 따른다 — 두두원이 다시 구독하면(청소 후 재기동 등) 60 으로 돌아온다.
+        # GNB2_DECISION_TICK_SEC 가 더 짧으면 그 간격(끊김 판정은 그대로 상향 repPeriod × _STALE_FACTOR)
         wlan_period = wlan_sub_rep_period()
-        if wlan_period and (period > 2 * wlan_period or wlan_period > _STALE_FACTOR * period):
+        tick = _tick_sec(period)
+        if wlan_period and (tick > 2 * wlan_period or wlan_period > _STALE_FACTOR * period):
             logger.warning(
-                f"[{self.subscription_id}] 판정 틱 {period}초(상향 repPeriod)와 WLAN 하위 {wlan_period}초가 맞지 않음 — "
-                f"틱이 2배 넘게 길면 추세 반응이 늦고, WLAN 이 틱×{_STALE_FACTOR} 를 넘으면 매 틱 판정 보류"
+                f"[{self.subscription_id}] 판정 틱 {tick:g}초(상향 repPeriod {period}초)와 WLAN 하위 {wlan_period}초가 맞지 않음 — "
+                f"틱이 2배 넘게 길면 추세 반응이 늦고, WLAN 이 repPeriod×{_STALE_FACTOR} 를 넘으면 매 틱 판정 보류"
             )
 
         try:
@@ -404,10 +466,12 @@ class DataAnalyzer:
                     logger.warning(f"[{self.subscription_id}] 감시 만료")
                     break
 
-                sleep_time = min(period, remain)
+                sleep_time = min(_tick_sec(period), remain)
                 await asyncio.sleep(sleep_time)
 
-                asyncio.create_task(self._notify_analyzing())
+                if _due(self._last_analyzing_at, period):
+                    self._last_analyzing_at = time.monotonic()
+                    asyncio.create_task(self._notify_analyzing())
 
                 nf_type = self.get_source_nf_type()
                 if nf_type is None:
@@ -497,6 +561,44 @@ class DataAnalyzer:
         notif_id, notif, ts = newest
         return notif, ts, notif_id
 
+    def _rep_period(self) -> int:
+        return (self.subscription.evt_req.rep_period if self.subscription.evt_req else None) or 60
+
+    def _record_wlan_history(self) -> bool:
+        """활성 구독 전부의 12p_c 최신 샘플을 선제 판정 이력에 넣는다. 새 샘플이 하나라도 있으면 True."""
+        new = False
+        for notif_id, notif, ts in self._wlan_samples():
+            if _forecaster.seen(notif_id, ts):
+                continue
+            try:
+                mbps = extract_wlan_dl_mbps(notif.to_dict())
+            except Exception as e:  # noqa: BLE001 — 이력 한 건 때문에 판정이 멈추면 안 된다
+                logger.debug(f"12p_c 이력에 넣지 못함({notif_id}): {e}")
+                continue
+            new |= _forecaster.add(notif_id, ts, mbps)
+        return new
+
+    def _forecast(self, config, rep_period: int, log) -> Forecast | None:
+        """level 모드 선제 판정 — 앞으로 GNB2_PREDICT_LEAD_SEC 초 안의 예측 최대. 끄거나 쓸 수 없으면 None/peak None.
+        쓸 수 없는 이유가 바뀔 때만 info 로 남긴다."""
+        if config.mode != "level" or not config.predict_period_sec:
+            self._last_forecast_reason = None
+            return None
+        window = wlan_sub_rep_period() or rep_period
+        fc = _forecaster.forecast(
+            _utcnow(), config.predict_period_sec, config.predict_lead_sec, window, config.predict_match_mbps
+        )
+        if fc.peak_mbps is not None:
+            log(
+                f"선제 예측: 앞 {config.predict_lead_sec}초 최대 {fc.peak_mbps:.0f} Mbps "
+                f"(주기 {config.predict_period_sec}초 전 이력 · 일치 오차 {fc.match_err_mbps:.0f} Mbps)"
+            )
+        kind = fc.reason.split("(")[0]  # 「이력 부족(…)」 의 개수처럼 틱마다 바뀌는 괄호는 빼고 비교
+        if kind != self._last_forecast_reason:
+            logger.info(f"선제 예측 {'사용' if fc.peak_mbps is not None else '안 씀 — ' + fc.reason}")
+            self._last_forecast_reason = kind
+        return fc
+
     @staticmethod
     def _trend_reference(notif_id: str, sample_ts: datetime, max_gap_sec: float) -> tuple[float, datetime] | None:
         """같은 스트림을 지난 판정 때 본 (값, timeStamp). 없거나 max_gap_sec 넘게 떨어져 있으면(끊긴 뒤) None.
@@ -527,30 +629,37 @@ class DataAnalyzer:
         leader = _leader()
 
         if leader is self:
+            new_sample = self._record_wlan_history()
             sample = self._get_wlan_performance_data()
-            rep_period = (self.subscription.evt_req.rep_period if self.subscription.evt_req else None) or 60
+            rep_period = self._rep_period()
             age = (_utcnow() - sample[1]).total_seconds() if sample else None
+            # 짧은 판정 틱이면 새 12p_c 샘플이 온 틱만 판정 과정을 info 로 남긴다(바뀐 판정은 아래에서 늘 info)
+            log = logger.info if new_sample or _tick_sec(rep_period) >= rep_period else logger.debug
             if sample is None:
-                logger.warning(
-                    "fail to retrieve wlan performance data... (판정 입력 12p_c 샘플 없음 — 판정 보류)"
-                )
+                if _due(self._last_hold_warn_at, rep_period):
+                    self._last_hold_warn_at = time.monotonic()
+                    logger.warning(
+                        "fail to retrieve wlan performance data... (판정 입력 12p_c 샘플 없음 — 판정 보류)"
+                    )
             elif age > _STALE_FACTOR * rep_period:
-                logger.warning(
-                    f"판정 입력 12p_c 끊김: 마지막 샘플 {sample[1].astimezone().isoformat(timespec='seconds')}"
-                    f"({age:.0f}초 전, 허용 {_STALE_FACTOR * rep_period}초) — 판정 보류"
-                )
+                if _due(self._last_hold_warn_at, rep_period):
+                    self._last_hold_warn_at = time.monotonic()
+                    logger.warning(
+                        f"판정 입력 12p_c 끊김: 마지막 샘플 {sample[1].astimezone().isoformat(timespec='seconds')}"
+                        f"({age:.0f}초 전, 허용 {_STALE_FACTOR * rep_period}초) — 판정 보류"
+                    )
             else:
                 wlan_perf_data, sample_ts, stream_id = sample
-                logger.info(f"RLlib 입력 데이터 추출:")
+                log(f"RLlib 입력 데이터 추출:")
                 try:
                     config = current_decision_config()
                     engine.apply_config(config)
                     metric = extract_wlan_dl_mbps(wlan_perf_data.to_dict())
                     prev = self._trend_reference(stream_id, sample_ts, _STALE_FACTOR * rep_period)
-                    logger.info(
+                    log(
                         f"입력 샘플 timeStamp {sample_ts.astimezone().isoformat(timespec='seconds')}({age:.0f}초 전)"
                     )
-                    logger.info(f"분석 메트릭 WLAN_DL_MBPS:{metric}")
+                    log(f"분석 메트릭 WLAN_DL_MBPS:{metric}")
                     if config.mode == "trend":
                         if engine.last_emitted_state is None:
                             logger.info(f"추세 입력: 첫 판정 — TH {config.th_mbps} 기준 판정")
@@ -562,17 +671,33 @@ class DataAnalyzer:
                                 f"지난 판정 샘플 {prev[1].astimezone().isoformat(timespec='seconds')}, "
                                 f"TH {config.th_mbps} · DEADBAND {config.trend_deadband_mbps})"
                             )
-                    logger.info("AI 분석 시작")
-                    engine.update_state(metric, decision_iso, prev[0] if prev else None)
+                    log("AI 분석 시작")
+                    forecast = self._forecast(config, rep_period, log)
+                    before = (engine.last_emitted_state, engine.last_emitted_level)
+                    engine.update_state(
+                        metric,
+                        decision_iso,
+                        prev[0] if prev else None,
+                        recent_mbps=(
+                            _forecaster.recent(
+                                config.down_confirm_samples, 0.8 * (wlan_sub_rep_period() or rep_period)
+                            )
+                            if config.mode == "level"
+                            else None
+                        ),
+                        forecast_mbps=forecast.peak_mbps if forecast else None,
+                    )
                     if engine.last_emitted_split is not None:
                         bounds = "/".join(f"{b:g}" for b in config.level_bounds_mbps)
-                        logger.info(
+                        changed = (engine.last_emitted_state, engine.last_emitted_level) != before
+                        note = f" — {engine.last_level_note}" if engine.last_level_note else ""
+                        (logger.info if changed else log)(
                             f"단계 판정: WLAN {metric} Mbps → 단계 {engine.last_emitted_level} "
                             f"{engine.last_emitted_state} ({_splits_text(engine.last_emitted_split, engine.last_emitted_gnb1_split)}"
-                            f", 경계 {bounds})"
+                            f", 경계 {bounds}){note}"
                         )
                     self._snapshot_trend_refs()
-                    logger.info("AI 분석 완료")
+                    log("AI 분석 완료")
                 except Exception as e:  # noqa: BLE001
                     logger.warning(f"[{self.subscription_id}] 분석 중 오류 발생: {e}")
                     return
@@ -606,12 +731,21 @@ class DataAnalyzer:
         global _retry_on_leader_tick
         if _restoring:
             return  # 저장 구독 복원 중 — 끝난 뒤 틱에서 순서대로
+        if time.monotonic() - _last_join_at < _JOIN_GRACE_SEC:
+            period = self._rep_period()
+            if _tick_sec(period) < period and control_sequential():
+                return  # 짧은 판정 틱 — 새 상향 구독이 막 붙었다, 짝이 붙을 때까지(_JOIN_GRACE_SEC)
         if any(not f.done() for f in _inflight_fanouts):
             # 앞 전송이 아직 응답을 기다린다 — 그 사이 다른 분석기의 틱이 끼어들면 순서가 섞인다. 끝난 뒤 틱에서 이어 간다.
             logger.debug(f"[{self.subscription_id}] 앞 제어 전송이 아직 끝나지 않음 — 이번 틱은 건너뜀")
             return
         if _retry_on_leader_tick and _leader() is not self and control_sequential():
             return  # 실패한 묶음은 리더 판정 틱에서 처음부터 — 다른 구독의 틱이 곧바로 되풀이하지 않게
+        if _retry_on_leader_tick and _retry_key == (state, split, gnb1_split) and control_sequential():
+            period = self._rep_period()
+            backoff = period - _tick_sec(period)
+            if time.monotonic() - _retry_armed_at < backoff:
+                return  # 짧은 판정 틱 — 같은 묶음 재시도는 예전 판정 주기 간격으로(새 판정은 곧바로)
         targets = [
             a
             for a in _active_analyzers

@@ -11,6 +11,8 @@ import pytest
 from nncof.core import data_analyzer, decision_config
 from nncof.core.data_analyzer import DataAnalyzer
 from nncof.core.data_store import NotificationDataStore
+from nncof.core.gnb2_rule_engine import Gnb2RuleEngine
+from nncof.core.level_forecast import PeriodicForecaster
 from nncof.core.subscription_request_builder import build_subscription_requests
 from nncof.models.nncof_events_subscription import NncofEventsSubscription
 from nupf.models.notification_data import NotificationData
@@ -37,6 +39,10 @@ def _isolate(monkeypatch, tmp_path):
     monkeypatch.setattr(data_analyzer, "_retry_on_leader_tick", False)
     monkeypatch.setattr(data_analyzer, "_restoring", False)
     monkeypatch.setattr(data_analyzer, "_trend_refs", {})
+    monkeypatch.setattr(data_analyzer, "_forecaster", PeriodicForecaster())
+    monkeypatch.setattr(data_analyzer, "_retry_key", None)
+    monkeypatch.setattr(data_analyzer, "_retry_armed_at", 0.0)
+    monkeypatch.setattr(data_analyzer, "_last_join_at", -1e9)
     monkeypatch.setattr(decision_config, "_cache", decision_config.Gnb2DecisionConfig())
     monkeypatch.setattr(decision_config, "_cache_key", None)
     monkeypatch.setattr(decision_config, "_control_sequential_last", None)
@@ -1485,3 +1491,268 @@ def test_gnb1_share_from_env_when_setting_file_absent(_isolate, monkeypatch):
     assert decision_config.current_decision_config().level_gnb1_pct == (20, 50, 70, 90)
     monkeypatch.setenv("GNB2_LEVEL_GNB1_PCT", "40,50,70,90")
     assert decision_config.current_decision_config().level_gnb1_pct == (40, 50, 70, 90)
+
+
+
+# --- level 선제 판정 (11/04 칠판 시나리오): 오를 때 한 주기 전 12p_c 로 미리, 내릴 때 샘플 확인 뒤 ---
+# bg 70(120초) → 200(40) → 300(40) → 400(40) → 530(60) → 300(40) 을 340초마다. 경계 150/250/350/450 · gNB2 0/30/50/100/100.
+_SCENARIO = [(70, 120), (200, 40), (300, 40), (400, 40), (530, 60), (300, 40)]
+_SCN_BOUNDS = (150.0, 250.0, 350.0, 450.0)
+_SCN_CONF = (
+    "GNB2_LEVEL_BOUNDS_MBPS=150,250,350,450\nGNB2_LEVEL_GNB2_PCT=0,30,50,100,100\n"
+    "GNB2_LEVEL_GNB1_PCT=50,50,50,50,50\nGNB2_DECISION_TICK_SEC=2\nGNB2_PREDICT_PERIOD_SEC=340\n"
+    "GNB2_PREDICT_LEAD_SEC=18\nGNB2_PREDICT_MATCH_MBPS=30\nGNB2_DOWN_CONFIRM_SAMPLES=2\n"
+    "WLAN_SUB_REP_PERIOD_SEC=10\n"  # 12p_c 평균 창 — 없으면 상향 repPeriod(테스트 구독 20초)로 본다
+)
+
+
+def _bg(t: float, period: float = 340.0) -> float:
+    u = t % period
+    for rate, dur in _SCENARIO:
+        if u < dur:
+            return rate
+        u -= dur
+    return _SCENARIO[0][0]
+
+
+def _w10(ts: float, period: float = 340.0) -> float:
+    """두두원 12p_c — 최근 10초 udptp 평균."""
+    return sum(_bg(ts - 10 + k + 0.5, period) for k in range(10)) / 10
+
+
+def _history(until: float, period: float = 340.0, phase: float = 3.0) -> PeriodicForecaster:
+    fc = PeriodicForecaster()
+    ts = phase + 10
+    while ts <= until:
+        fc.add("wlan", _T0 + timedelta(seconds=ts), _w10(ts, period))
+        ts += 10
+    return fc
+
+
+def test_forecaster_sees_next_rise_one_period_ahead():
+    # 세 번째 주기의 70 → 200 계단(800초) — 한 주기 전 이력으로 18초 앞을 본다(일치 확인은 한 주기 반쯤 쌓인 뒤부터)
+    fc = _history(800 - 15)
+    soon = fc.forecast(_T0 + timedelta(seconds=800 - 15), 340, 18, 10, 30)
+    assert soon.reason == "ok" and soon.peak_mbps >= 150
+    early = fc.forecast(_T0 + timedelta(seconds=800 - 30), 340, 18, 10, 30)
+    assert early.reason == "ok" and early.peak_mbps < 150
+    assert _history(460 - 15).forecast(_T0 + timedelta(seconds=460 - 15), 340, 18, 10, 30).reason.startswith("이력 부족")
+
+
+def test_forecaster_needs_a_period_and_a_matching_pattern():
+    fc = _history(200)
+    assert fc.forecast(_T0 + timedelta(seconds=200), 340, 18, 10, 30).peak_mbps is None  # 한 주기도 안 됨
+    other = _history(900, period=380)  # 실제 주기 380 인데 340 으로 내다보면 끈다
+    out = other.forecast(_T0 + timedelta(seconds=900), 340, 18, 10, 30)
+    assert out.peak_mbps is None and out.reason.startswith("패턴 불일치")
+
+
+def test_forecaster_turns_off_at_the_first_mismatched_step():
+    # 세 번째 주기 70 → 200(800초)이 오지 않고 70 그대로(bg 송신기 재기동 · 위상 바뀜) — 한 주기 평균은 아직 괜찮지만 최근 창이 끈다
+    fc = _history(800)
+    for ts in (813, 823, 833):
+        fc.add("wlan", _T0 + timedelta(seconds=ts), 70.0)
+    out = fc.forecast(_T0 + timedelta(seconds=835), 340, 18, 10, 30)
+    assert out.peak_mbps is None and out.reason.startswith("최근 어긋남"), out
+    assert out.match_err_mbps <= 30
+
+
+def _scn_engine(confirm: int = 2) -> Gnb2RuleEngine:
+    engine = Gnb2RuleEngine()
+    engine.apply_config(
+        decision_config.Gnb2DecisionConfig(
+            mode="level",
+            level_bounds_mbps=_SCN_BOUNDS,
+            level_gnb2_pct=(0, 30, 50, 100, 100),
+            level_gnb1_pct=(50,) * 5,
+            down_confirm_samples=confirm,
+        )
+    )
+    return engine
+
+
+def test_level_down_waits_for_confirmation_and_skips_intermediate_level():
+    engine = _scn_engine()
+    iso = "2026-11-04T15:00:00+09:00"
+    engine.update_state(300.0, iso, recent_mbps=[300.0, 300.0])
+    assert engine.last_emitted_level == 2
+    # 300 → 70 계단을 걸친 평균 185 (단계 1) — 곧바로 3:7 로 내리지 않는다
+    engine.update_state(185.0, iso, recent_mbps=[300.0, 185.0])
+    assert (engine.last_emitted_level, engine.last_emitted_state) == (2, "ACTIVE")
+    assert engine.last_level_note.startswith("내림 대기")
+    engine.update_state(70.0, iso, recent_mbps=[185.0, 70.0])
+    assert engine.last_emitted_level == 2  # 아직 한 개
+    engine.update_state(70.0, iso, recent_mbps=[70.0, 70.0])
+    assert (engine.last_emitted_level, engine.last_emitted_state) == (0, "DEEP_SLEEP")  # 5:5 → DEEP_SLEEP 바로
+    assert engine.last_emitted_split == (0, 1000)
+
+
+def test_level_rise_is_immediate_and_forecast_raises_early_and_holds():
+    engine = _scn_engine()
+    iso = "2026-11-04T15:00:00+09:00"
+    engine.update_state(70.0, iso, recent_mbps=[70.0, 70.0])
+    assert engine.last_emitted_state == "DEEP_SLEEP"
+    engine.update_state(70.0, iso, recent_mbps=[70.0, 70.0], forecast_mbps=205.0)  # 18초 안에 200 이 온다
+    assert (engine.last_emitted_level, engine.last_emitted_state) == (1, "ACTIVE")
+    assert engine.last_emitted_split == (300, 700) and engine.last_level_note.startswith("선제")
+    engine.update_state(70.0, iso, recent_mbps=[70.0, 70.0], forecast_mbps=205.0)  # 아직 70 이어도 예측대로 유지
+    assert engine.last_emitted_level == 1 and engine.last_level_note.startswith("선제 유지")
+    engine.update_state(320.0, iso, recent_mbps=[70.0, 320.0])  # 오를 때는 확인 없이 곧바로
+    assert engine.last_emitted_level == 2
+
+
+def test_recent_counts_one_sample_per_window_across_streams():
+    fc = PeriodicForecaster()
+    for stream, off in (("a", 0.0), ("b", 0.3)):  # 같은 위상의 두 스트림
+        for ts, v in ((90, 300.0), (100, 212.0), (110, 100.0)):
+            fc.add(stream, _T0 + timedelta(seconds=ts + off), v)
+    assert fc.recent(2) == [100.0, 100.0]  # 창으로 거르지 않으면 같은 창 두 개
+    assert fc.recent(2, 8.0) == [212.0, 100.0]
+    assert fc.recent(3, 8.0) == [300.0, 212.0, 100.0]
+
+
+def test_two_wlan_streams_do_not_confirm_a_drop_from_one_window(_isolate):
+    """PCF · RICF 쌍마다 WLAN 하위 구독이 있어 같은 창의 12p_c 가 두 번 온다 — 300 → 100 내림에서 3:7 을 거치면 안 된다."""
+    _level_conf(_isolate, _SCN_CONF)
+    sent, pcf, ricf = _level_pair()
+    seen = []
+    for ts, v in ((10, 300.0), (20, 300.0), (30, 212.0), (40, 100.0), (50, 100.0)):
+        _upf(pcf, "wlan-p", v, ts, wlan=True)
+        _upf(ricf, "wlan-r", v, ts, wlan=True)  # 같은 timeStamp 근처(여기선 같은 초)
+        _NOW[0] = _T0 + timedelta(seconds=ts + 1)
+        _tick(pcf)
+        seen.append(pcf.decision_engine.last_emitted_level)
+    assert seen == [2, 2, 2, 2, 0], seen
+
+
+def test_down_confirm_one_or_no_history_is_the_old_behaviour():
+    for engine, recent in ((_scn_engine(confirm=1), [300.0, 185.0]), (_scn_engine(confirm=2), None)):
+        iso = "2026-11-04T15:00:00+09:00"
+        engine.update_state(300.0, iso, recent_mbps=recent)
+        engine.update_state(185.0, iso, recent_mbps=recent)
+        assert engine.last_emitted_level == 1
+
+
+def test_timing_keys_are_parsed_and_bad_ones_keep_only_themselves(_isolate, caplog):
+    _level_conf(_isolate, _SCN_CONF)
+    cfg = decision_config.current_decision_config()
+    assert (cfg.decision_tick_sec, cfg.predict_period_sec, cfg.predict_lead_sec) == (2, 340, 18)
+    assert (cfg.predict_match_mbps, cfg.down_confirm_samples, cfg.level_gnb2_pct) == (30.0, 2, (0, 30, 50, 100, 100))
+    with caplog.at_level("WARNING"):
+        _level_conf(_isolate, _SCN_CONF.replace("GNB2_PREDICT_LEAD_SEC=18", "GNB2_PREDICT_LEAD_SEC=400")
+                    .replace("GNB2_LEVEL_BOUNDS_MBPS=150,250,350,450", "GNB2_LEVEL_BOUNDS_MBPS=160,250,350,450"))
+        cfg = decision_config.current_decision_config()
+    assert "판정 틱 · 선제 설정 범위 오류" in caplog.text
+    assert cfg.predict_lead_sec == 18 and cfg.predict_period_sec == 340  # 이 값들만 직전 그대로
+    assert cfg.level_bounds_mbps[0] == 160.0  # 다른 변경은 들어간다
+
+
+def _run_scenario(pcf, until: float, tick: float = 2.0, phase: float = 3.0, delay: float = 1.2):
+    """12p_c 를 10초마다(timeStamp 뒤 delay 초에 도착) 넣으며 tick 초마다 리더 틱 — [(시각, 단계, 상태)] 변화만."""
+    changes = []
+    next_ts = phase + 10
+    t = 0.0
+    engine = pcf.decision_engine
+    while t <= until:
+        while next_ts + delay <= t:
+            _upf(pcf, "wlan-p", _w10(next_ts), next_ts, wlan=True)
+            next_ts += 10
+        _NOW[0] = _T0 + timedelta(seconds=t)
+        before = (engine.last_emitted_level, engine.last_emitted_state)
+        _tick(pcf)
+        after = (engine.last_emitted_level, engine.last_emitted_state)
+        if after != before:
+            changes.append((t, *after))
+        t += tick
+    return changes
+
+
+def test_leader_raises_10_to_20_s_before_each_rise_and_drops_after(_isolate):
+    _level_conf(_isolate, _SCN_CONF)
+    sent, pcf, ricf = _level_pair()
+    changes = _run_scenario(pcf, 3 * 340 + 40)
+    third = 2 * 340  # 세 번째 주기 — 앞 주기 이력과 일치 확인이 끝난 뒤
+
+    def first_at(level, lo, hi):
+        return next(t for t, lv, _ in changes if lv == level and lo <= t <= hi)
+
+    for step, level in ((120, 1), (160, 2), (200, 3)):  # 70→200 · 200→300 · 300→400(10:0)
+        lead = third + step - first_at(level, third + step - 40, third + step + 30)
+        assert 10 <= lead <= 20, (step, level, lead, changes)
+    # 530 → 300(300초) · 300 → 70(340초): 계단 뒤에, 중간 단계 없이
+    down = [(t - third, lv) for t, lv, _ in changes if third + 300 <= t <= third + 340 + 40]
+    assert [lv for _, lv in down] == [2, 0] and all(dt > 300 for dt, _ in down[:1]) and down[1][0] > 340
+    assert ("ACTIVE", "DEEP_SLEEP") == (changes[-2][2], changes[-1][2]) or changes[-1][2] == "DEEP_SLEEP"
+
+
+def test_short_tick_retries_the_same_failed_delivery_once_per_rep_period(_isolate, monkeypatch):
+    _set_conf(_isolate, "GNB2_TH_MBPS=300\nGNB2_DECISION_TICK_SEC=2\n")
+    clock = [1000.0]
+    monkeypatch.setattr(data_analyzer.time, "monotonic", lambda: clock[0])
+    sent: list = []
+    pcf = _analyzer("subscription_pcf_to_ncof.json", sent)
+    ricf = _analyzer("subscription_ricf_to_ncof.json", sent, result=False)
+    _upf(pcf, "wlan-p", 600.0, 0, wlan=True)
+    _tick(pcf)
+    assert _desc(sent) == ["ricf:ACTIVE"]  # ON: 15f 실패 → 14_e 안 보냄
+    sent.clear()
+    for _ in range(5):  # 2초 틱 — 같은 묶음은 상향 repPeriod(20) - 틱(2) = 18초 안에 다시 안 보낸다
+        clock[0] += 2
+        _tick(pcf)
+    assert sent == []
+    clock[0] += 10  # 실패 뒤 20초
+    _tick(pcf)
+    assert _desc(sent) == ["ricf:ACTIVE"]
+    sent.clear()
+    clock[0] += 2
+    _upf(pcf, "wlan-p", 100.0, 10, wlan=True)  # 새 판정(DEEP_SLEEP)은 기다리지 않는다
+    _tick(pcf)
+    assert _desc(sent)[:1] == ["pcf:OFF"]
+
+
+def test_short_tick_waits_for_the_pair_before_the_first_control(_isolate, monkeypatch):
+    """11/04 17:10 실장비 — 빈 NCOF 에 새 앱이 PCF → (4초) → RICF 순으로 구독, 분석기는 각각 약 6초 뒤에 붙는다.
+    2초 틱이 첫 12p_c 에 바로 판정해 RICF 가 붙기 전에 14_e(ON)만 나갔다. 마지막 합류 뒤 _JOIN_GRACE_SEC 는 보류."""
+    _set_conf(_isolate, "GNB2_TH_MBPS=300\nGNB2_DECISION_TICK_SEC=2\n")
+    clock = [1000.0]
+    monkeypatch.setattr(data_analyzer.time, "monotonic", lambda: clock[0])
+    sent: list = []
+    pcf = _join("subscription_pcf_to_ncof.json", sent, "new-pcf")
+    _upf(pcf, "wlan-p", 600.0, 0, wlan=True)
+    clock[0] += 4
+    _tick(pcf)
+    assert sent == [] and pcf.decision_engine.last_emitted_state == "ACTIVE"  # 판정은 하되 보내지 않는다
+    _join("subscription_ricf_to_ncof.json", sent, "new-ricf")
+    clock[0] += 10
+    _tick(pcf)
+    assert sent == []  # RICF 합류 뒤 아직 15초 안
+    clock[0] += 6
+    _tick(pcf)
+    assert _desc(sent) == ["ricf:ACTIVE", "pcf:ON"]
+
+
+def test_short_tick_resend_after_records_cleared_is_not_backed_off(_isolate, monkeypatch):
+    """전송 중 새 구독이 붙어 전달 기록이 지워진 것은 실패가 아니다 — 같은 묶음 재시도 간격(repPeriod - 틱)을 걸지 않는다."""
+    _set_conf(_isolate, "GNB2_TH_MBPS=300\nGNB2_DECISION_TICK_SEC=2\n")
+    clock = [1000.0]
+    monkeypatch.setattr(data_analyzer.time, "monotonic", lambda: clock[0])
+    sent: list = []
+    pcf = _analyzer("subscription_pcf_to_ncof.json", sent)
+    _analyzer("subscription_ricf_to_ncof.json", sent)
+    cleared = [False]
+
+    async def notify(nf_type, event):
+        sent.append((pcf.subscription_id, nf_type, event))
+        if not cleared[0]:  # 14_e 를 보내는 사이 새 상향 구독이 붙었다(_join_active_analyzers 가 기록을 지움)
+            cleared[0] = True
+            data_analyzer._clear_delivery_records()
+        return True
+
+    pcf._notify_callback = notify
+    _upf(pcf, "wlan-p", 600.0, 0, wlan=True)
+    _tick(pcf)
+    assert _desc(sent) == ["ricf:ACTIVE", "pcf:ON"]
+    sent.clear()
+    clock[0] += 2
+    _tick(pcf)
+    assert _desc(sent) == ["ricf:ACTIVE", "pcf:ON"]  # 다음 틱에 곧바로 처음부터

@@ -1,3 +1,4 @@
+import itertools
 import logging
 from rich.pretty import pretty_repr
 
@@ -31,6 +32,9 @@ class Gnb2RuleEngine:
         self.level_gnb2_pct: tuple[int, ...] = (0, 50, 70, 90)
         self.level_gnb1_pct: tuple[int, ...] = (30, 50, 70, 90)
         self.split_total_mbps = 1000
+        self.down_confirm_samples = 1  # level 모드 내림 확인 샘플 수(1 = 곧바로)
+        # level 모드에서 이번 단계를 정한 까닭(로그용) — 선제 · 사후 · 내림 대기
+        self.last_level_note: str | None = None
         self.last_emitted_state = None  # emit-on-change 추적용
         self.last_change_at = None  # minimum-dwell guard용
         # level 모드에서 지금 상태와 함께 내보낼 단계 · (NR gNB2, WLAN) · (NR gNB1, WLAN) gbr/mbr. 그 밖의 모드는 None
@@ -49,6 +53,7 @@ class Gnb2RuleEngine:
         self.level_gnb2_pct = config.level_gnb2_pct
         self.level_gnb1_pct = config.level_gnb1_pct
         self.split_total_mbps = config.split_total_mbps
+        self.down_confirm_samples = config.down_confirm_samples
 
     def _decide(self, metric: float, prev_metric: float | None = None) -> str:
         """
@@ -86,14 +91,27 @@ class Gnb2RuleEngine:
             return "DEEP_SLEEP"
         return self.last_emitted_state
 
-    def update_state(self, metric: float, decision_iso: str, prev_metric: float | None = None) -> str:
+    def update_state(
+        self,
+        metric: float,
+        decision_iso: str,
+        prev_metric: float | None = None,
+        *,
+        recent_mbps: list[float] | None = None,
+        forecast_mbps: float | None = None,
+    ) -> str:
         """
         metric 으로 판정해 확정된 현재 gNB2 상태를 반환한다.
         판정이 바뀌어도 minimum-dwell guard 에 걸리면 직전 상태를 유지한다.
         (15f·14_e 생성 없이 상태만 필요한 DataAnalyzer 의 fan-out 경로가 쓴다)
         prev_metric 은 trend 모드에서만 쓰는, 같은 12p_c 스트림을 지난 판정 때 본 값이다.
         level 모드면 확정된 상태에 맞는 단계·split 도 last_emitted_level/last_emitted_split 에 남긴다.
+        recent_mbps(최근 12p_c 샘플, 오래된 것 먼저) · forecast_mbps(앞으로 lead 초 안의 예측 최대)는 룰 엔진
+        level 모드에서만 쓴다 — _update_level_mode 참조. _decide 를 바꾼 엔진(RL)은 예전 경로 그대로다.
         """
+        if self.mode == "level" and type(self)._decide is Gnb2RuleEngine._decide:
+            return self._update_level_mode(metric, decision_iso, recent_mbps, forecast_mbps)
+        self.last_level_note = None
         new_state = self._decide(metric, prev_metric)
 
         if new_state != self.last_emitted_state and not self._dwell_holds(decision_iso):
@@ -122,6 +140,69 @@ class Gnb2RuleEngine:
             level = 0
         elif level == 0:
             level = 1  # dwell(또는 RL 판정)이 ACTIVE 를 붙잡고 있을 때 — ACTIVE 중 가장 낮은 단계
+        self._set_level(level)
+
+    def _update_level_mode(
+        self,
+        metric: float,
+        decision_iso: str,
+        recent_mbps: list[float] | None,
+        forecast_mbps: float | None,
+    ) -> str:
+        """level 모드(룰 엔진) — 오를 때는 선제, 내릴 때는 사후.
+
+        - 오름: 지금 값의 단계나 예측 단계(forecast_mbps — 앞으로 lead 초 안의 최대) 중 높은 쪽이 지금 단계보다 높으면 곧바로.
+        - 내림: 지금 값의 단계가 낮아져도 최근 샘플 down_confirm_samples 개(지금 값 포함)가 모두 같은 단계일 때만 그 단계로
+          (예측이 그보다 높으면 예측 단계까지만). 경계를 걸친 평균 샘플 하나로 중간 단계(예: 5:5 → 3:7 → DEEP_SLEEP)를
+          거치지 않게 한다. recent_mbps 가 None 이면 확인 없이 곧바로(예전 그대로).
+        - 단계 0 이면 DEEP_SLEEP, 그 위는 ACTIVE. minimum-dwell 은 상태(셀) 변경에만 건다(예전과 같다).
+        """
+        bounds = self.level_bounds_mbps
+        now_level = level_index(metric, bounds)
+        pred_level = level_index(forecast_mbps, bounds) if forecast_mbps is not None else 0
+        up = max(now_level, pred_level)
+        held = self.last_emitted_level
+        if held is None or up > held:
+            target = up
+            if held is None:
+                note = "첫 판정"
+            elif pred_level > now_level:
+                note = f"선제 — 예측 {forecast_mbps:.0f} Mbps(단계 {pred_level})"
+            else:
+                note = "사후 — 지금 값"
+        elif now_level < held and pred_level >= held:
+            target = held
+            note = f"선제 유지 — 예측 {forecast_mbps:.0f} Mbps(단계 {pred_level})"
+        elif now_level < held:
+            n = max(1, self.down_confirm_samples)
+            # recent_mbps 의 마지막은 보통 지금 값과 같은 샘플이다 — 그 앞까지 n 개(지금 값 포함)가 같은 단계여야 한다
+            window = [] if recent_mbps is None else [*list(recent_mbps)[-n:], metric]
+            if recent_mbps is None or n == 1 or (
+                len(window) > n and {level_index(v, bounds) for v in window} == {now_level}
+            ):
+                target = max(now_level, pred_level)
+                note = "사후 — 내림" + (f"(샘플 {n}개 확인)" if n > 1 else "")
+            else:
+                target = held
+                same = itertools.takewhile(lambda v: level_index(v, bounds) == now_level, reversed(window[:-1]))
+                note = f"내림 대기 — 단계 {now_level} 샘플 {min(sum(1 for _ in same), n)}/{n}"
+        else:
+            target = held
+            note = None
+        state = "DEEP_SLEEP" if target == 0 else "ACTIVE"
+        if state != self.last_emitted_state:
+            if self.last_emitted_state is not None and self._dwell_holds(decision_iso):
+                state = self.last_emitted_state
+                target = 0 if state == "DEEP_SLEEP" else max(target, 1)
+                note = f"최소 유지 시간 — {state} 유지"
+            else:
+                self.last_emitted_state = state
+                self.last_change_at = datetime.fromisoformat(decision_iso)
+        self.last_level_note = note
+        self._set_level(target)
+        return self.last_emitted_state
+
+    def _set_level(self, level: int) -> None:
         self.last_emitted_level = level
         self.last_emitted_split = split_for_pct(self.level_gnb2_pct[level], self.split_total_mbps)
         # gNB1 은 잠들지 않는다 — 노트북1 쌍은 같은 단계의 gNB1 몫(단계 0 에도 0 이 아닐 수 있다). 몫이 비면 끔(gNB1 set 그대로)
