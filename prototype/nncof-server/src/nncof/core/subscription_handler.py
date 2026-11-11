@@ -17,7 +17,7 @@ from nnef.models.nef_event_exposure_subsc import NefEventExposureSubsc
 from nsmf.models.nsmf_event_exposure import NsmfEventExposure
 from nupf.models.notification_data import NotificationData
 
-from .data_analyzer import DataAnalyzer
+from .data_analyzer import WLAN_SOURCE_EVENT, DataAnalyzer
 from .data_store import NotificationDataStore
 from .nrf import nrf
 from .subscription_request_builder import (
@@ -29,6 +29,21 @@ from .websocket_manager import broadcast_web_message
 logger = logging.getLogger(__name__)
 
 _TLS_ENABLED = os.getenv("NCOF_TLS", "").strip().lower() in ("1", "true", "yes", "on")
+
+# 제어 성공 뒤 대시보드 연출(브로드캐스트 · NEF 경유 0.5초 대기)은 제어 순서의 임계 경로 밖에서 돈다 —
+# 순차 제어(15f 200 → 14_e)가 연출을 기다리지 않게. 참조가 사라지면 수거될 수 있어 끝날 때까지 들고 있는다.
+_dashboard_tasks: set[asyncio.Task] = set()
+# 연출은 제어를 보낸 순서대로 하나씩 그린다(ON: NCOF→NEF→RICF 를 다 그린 뒤 NCOF→PCF) — 루프마다 하나
+# (테스트는 asyncio.run 을 여러 번 쓴다). asyncio.Lock 은 기다린 순서대로 넘겨준다.
+_dashboard_lock: tuple[asyncio.AbstractEventLoop, asyncio.Lock] | None = None
+
+
+def _dashboard_serial() -> asyncio.Lock:
+    global _dashboard_lock
+    loop = asyncio.get_running_loop()
+    if _dashboard_lock is None or _dashboard_lock[0] is not loop:
+        _dashboard_lock = (loop, asyncio.Lock())
+    return _dashboard_lock[1]
 
 
 def _httpx_kwargs() -> dict:
@@ -142,6 +157,27 @@ class SubscriptionHandler:
                         f"[{self.subscription_id}] {target.upper()} 로부터 ID 를 획득하지 못함 "
                         f"(Status: {response.status_code})."
                     )
+                    # 상대 NF 가 ID 를 전혀 주지 않으면(두두원 장비: 200 + {"result":"ok"})
+                    # 우리가 보낸 notifId 를 하위 구독 ID 로 삼는다. 이 폴백이 없으면
+                    # external_subscriptions 가 비어 구독 해지가 영구히 불가해진다.
+                    #   - 두두원은 요청 본문의 notifId 를 자기 subscription_id 로 채택하고
+                    #     (ncof_flow_subscription_handlers.cpp:53-54 등 6곳), DELETE 는
+                    #     key/subscription_id/notif_id 중 아무것이나 매칭한다
+                    #     (ncof_flow_subscription_core.cpp:1209) — 이 값으로 해지가 성립한다.
+                    #   - ID 를 제대로 주는 NF(mock SMF/AF/RICF, NCOF 자신)에는 이 가지가
+                    #     도달하지 않는다 — 그들은 성공 경로에서 항상 uuid4 를 헤더에 싣는다.
+                    # 빈 문자열은 None 으로 정규화한다 — 반환 계약이 str | None 이다.
+                    external_sub_id = getattr(req_body, "notif_id", None) or None
+                    if external_sub_id:
+                        logger.info(
+                            f"[{self.subscription_id}] {target.upper()} 하위 구독 ID 로 "
+                            f"요청 본문의 notifId 를 채택: {external_sub_id}"
+                        )
+                    else:
+                        logger.warning(
+                            f"[{self.subscription_id}] {target.upper()} 요청 본문에 notifId 도 "
+                            "없어 하위 구독을 추적할 수 없음 (해지 불가)."
+                        )
                 logger.info(f"[NCOF] --- [구독요청] ---> [{target.upper()}]")
                 return external_sub_id
         except (httpx.RequestError, json.JSONDecodeError) as e:
@@ -164,6 +200,13 @@ class SubscriptionHandler:
             )
             return False
 
+        # external_sub_id 를 percent-encoding 하지 말 것.
+        # notifId 폴백이 채택하는 값에는 ':' 와 '+' 가 들어 있고
+        # (예: NOTIFICATION_upf_2026-09-09T19:17:29.044648+09:00), 둘 다 RFC 3986 의
+        # 경로 세그먼트에 허용되는 문자다. quote() 를 씌우면 FastAPI 계열(mock NF)은
+        # 복호해서 맞추지만, 두두원은 경로 마지막 세그먼트를 원문 그대로 잘라
+        # 보관된 notif_id 와 문자열 비교하므로
+        # (ncof_flow_subscription_core.cpp:1112-1137) '%3A' 가 남아 404 로 조용히 실패한다.
         unsubscription_url = f"{nf_uri}/subscriptions/{external_sub_id}"
 
         try:
@@ -192,20 +235,28 @@ class SubscriptionHandler:
 
         return False
 
-    async def _notify_subscriber(self, nf_type: str, ncof_control_event: list[dict]):
-        """제어 명령을 NF(PCF 또는 RICF)로 전송한다."""
-        await self._state_changed()
+    async def _notify_subscriber(self, nf_type: str, ncof_control_event: list[dict]) -> bool:
+        """제어 명령을 NF(PCF 또는 RICF)로 전송한다. 상대가 2xx 로 받았으면 True.
+        (False 면 DataAnalyzer 가 다음 틱에 같은 상태를 다시 보낸다)"""
+        try:
+            await self._state_changed()
+        except Exception as e:  # noqa: BLE001 — 상태 파일 저장(디스크 · 권한)이 실패해도 제어는 보낸다
+            logger.error(f"[{self.subscription_id}] 제어 전송 전 상태 저장 실패 — 제어는 그대로 보낸다: {e}")
         if not self.subscription.notification_uri:
             logger.warning("notification_uri is missing")
-            return
+            return False
 
         try:
             response = await self._client.post(
                 self.subscription.notification_uri, json=ncof_control_event
             )
         except httpx.RequestError as e:
-            logger.error(f"[{self.subscription_id}] 제어명령 전송 중 오류 발생: {e}")
-            return
+            # ReadTimeout 등은 str(e) 가 비어 있다 — 종류와 대상을 함께 남겨 타임아웃 · 연결 거부를 가른다
+            logger.error(
+                f"[{self.subscription_id}] 제어명령 전송 중 오류 발생: {type(e).__name__} {e} "
+                f"({self.subscription.notification_uri})"
+            )
+            return False
 
         if response.status_code in (204, 200):
             logger.info(f"[NCOF] --- [제어명령] ---> [{nf_type.upper()}]")
@@ -220,31 +271,12 @@ class SubscriptionHandler:
             #         sub_id=self.subscription_id,
             #     )
 
-            _data = jsonable_encoder(ncof_control_event)
-            if nf_type.lower() == "af" or nf_type.lower() == "ricf":
-                await broadcast_web_message(
-                    sub_id=self.subscription_id,
-                    from_node="ncof",
-                    to_node="nef",
-                    msg_type="NOTIFICATION",
-                    data=_data,
-                )
-                await asyncio.sleep(0.5)
-                await broadcast_web_message(
-                    sub_id=self.subscription_id,
-                    from_node="nef",
-                    to_node=nf_type.lower(),
-                    msg_type="NOTIFICATION",
-                    data=_data,
-                )
-            else:
-                await broadcast_web_message(
-                    sub_id=self.subscription_id,
-                    from_node="ncof",
-                    to_node=nf_type.lower(),
-                    msg_type="NOTIFICATION",
-                    data=_data,
-                )
+            task = asyncio.create_task(
+                self._show_control_on_dashboard(nf_type, jsonable_encoder(ncof_control_event))
+            )
+            _dashboard_tasks.add(task)
+            task.add_done_callback(_dashboard_tasks.discard)
+            return True
         else:
             logger.warning(
                 f"[{self.subscription_id}] 제어명령 실패\n"
@@ -253,18 +285,47 @@ class SubscriptionHandler:
                 f"  reason: {response.reason_phrase}\n"
                 f"  response: {response.text}"
             )
+            return False
 
-    async def start(self):
-        """
-        핸들러를 시작한다.
-        1. 데이터 수집을 위한 외부 NF 구독 요청 전송
-        2. 주기적 분석 태스크 시작 (DataAnalyzer 에 위임)
-        """
-        self.is_running = True
-        logger.info(
-            f"[{self.subscription_id}] 구독 핸들러 시작. 외부 NF 구독 절차 실행."
-        )
+    async def _show_control_on_dashboard(self, nf_type: str, data: Any) -> None:
+        """보낸 제어를 대시보드에 그린다. RICF · AF 는 NCOF → NEF → NF 로 0.5초 간격을 두고 그린다.
+        제어를 보낸 순서대로 하나씩 그린다 — 화면에서도 약속한 순서(켤 때 RICF 먼저)로 보이게."""
+        async with _dashboard_serial():
+            await self._draw_control(nf_type, data)
 
+    async def _draw_control(self, nf_type: str, data: Any) -> None:
+        if nf_type.lower() in ("af", "ricf"):
+            await broadcast_web_message(
+                sub_id=self.subscription_id,
+                from_node="ncof",
+                to_node="nef",
+                msg_type="NOTIFICATION",
+                data=data,
+            )
+            await asyncio.sleep(0.5)
+            await broadcast_web_message(
+                sub_id=self.subscription_id,
+                from_node="nef",
+                to_node=nf_type.lower(),
+                msg_type="NOTIFICATION",
+                data=data,
+            )
+        else:
+            await broadcast_web_message(
+                sub_id=self.subscription_id,
+                from_node="ncof",
+                to_node=nf_type.lower(),
+                msg_type="NOTIFICATION",
+                data=data,
+            )
+
+    async def teardown_stale_external_subscriptions(self) -> None:
+        """상태 파일에서 복원된, 이전 실행이 남긴 하위 구독을 해지한다.
+
+        start() 앞에서 호출되지만 별도 진입점으로 둔다 — 만료된 저장 구독처럼
+        복원하지 않고 버리는 경우에도 하위 NF 에 남은 구독은 정리해야 하고,
+        그때는 start() 를 부를 수 없기 때문이다.
+        """
         for sub_info in self._stale_external_subscriptions:
             external_sub_id = sub_info.get("external_sub_id")
             if external_sub_id:
@@ -272,6 +333,22 @@ class SubscriptionHandler:
                     sub_info["target"], external_sub_id
                 )
         self._stale_external_subscriptions.clear()
+
+    async def start(self, stagger_relations: bool = True):
+        """
+        핸들러를 시작한다.
+        1. 데이터 수집을 위한 외부 NF 구독 요청 전송
+        2. 주기적 분석 태스크 시작 (DataAnalyzer 에 위임)
+
+        stagger_relations=False 는 Phase 2 의 GUI 연출 대기를 건너뛴다.
+        복원 경로에서 쓴다 — 구독 1건당 4~6초씩 쌓여 기동 시간을 밀어올리기 때문이다.
+        """
+        self.is_running = True
+        logger.info(
+            f"[{self.subscription_id}] 구독 핸들러 시작. 외부 NF 구독 절차 실행."
+        )
+
+        await self.teardown_stale_external_subscriptions()
 
         subscription_requests = build_subscription_requests(
             self.subscription_id, self.subscription
@@ -294,12 +371,24 @@ class SubscriptionHandler:
                         "target": target,
                         "external_sub_id": external_sub_id,
                         "subscription": subscription,
+                        "source_event": sub_req.get("source_event"),
                     }
                 )
 
+        # 판정 입력은 WLAN_PERFORMANCE SMF 하위 구독(12p_c) 스트림으로 한정한다 — DataAnalyzer._get_wlan_performance_data().
+        # UPF 통지의 correlationId 가 그 하위 구독의 notifId 이고, notif_data_store 의 키다.
+        wlan_stream_ids = {
+            notif_id
+            for sub_req in subscription_requests
+            if sub_req.get("source_event") == WLAN_SOURCE_EVENT
+            and sub_req.get("target") == "smf"
+            and (notif_id := getattr(sub_req.get("subscription"), "notif_id", None))
+        }
+
         # Phase 2: 성공한 구독에 대해 relation 을 지연 시간을 두고 순차적으로 추가 (시각적 효과)
         if self._relation_manager is not None:
-            await asyncio.sleep(1)
+            if stagger_relations:
+                await asyncio.sleep(1)
             for target, subscription, external_sub_id in successful:
                 if target.lower() == "af" or target.lower() == "ricf":
                     await self._relation_manager.add_relation(
@@ -309,7 +398,8 @@ class SubscriptionHandler:
                         data=jsonable_encoder(subscription),
                         sub_id=external_sub_id + "_nef",
                     )
-                    await asyncio.sleep(0.5)
+                    if stagger_relations:
+                        await asyncio.sleep(0.5)
                     await self._relation_manager.add_relation(
                         from_node="nef",
                         to_node=target.lower(),
@@ -326,9 +416,11 @@ class SubscriptionHandler:
                         sub_id=external_sub_id,
                     )
 
-                await asyncio.sleep(0.5)
+                if stagger_relations:
+                    await asyncio.sleep(0.5)
 
         if self.subscription.evt_req and self.subscription.evt_req.rep_period:
+            self._analyzer.set_wlan_stream_ids(wlan_stream_ids)
             await self._analyzer.start()
         await self._state_changed()
 

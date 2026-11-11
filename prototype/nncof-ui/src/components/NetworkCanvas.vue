@@ -595,10 +595,10 @@ const animateMessage = async (msg: Message) => {
   const target = store.nodes.find(n => n.id === msg.to);
   if (!source || !target) return;
 
-  const isFromNcof = (msg.from === 'ncof' || msg.from === 'nef') && msg.type === 'NOTIFICATION';
+  const isControlMessage = (msg.from === 'ncof' || msg.from === 'nef') && msg.type === 'NOTIFICATION' || (msg.from === 'pcf' && msg.to === 'smf') || (msg.from === 'smf' && msg.to === 'upf');
   const color = getMessageColor(msg.type);
-  const strokeColor = isFromNcof ? '#22d3ee' : color;
-  const strokeWidth = isFromNcof ? 4 : 2;
+  const strokeColor = isControlMessage ? '#22d3ee' : color;
+  const strokeWidth = isControlMessage ? 2 : 2;
   const path = calculatePath(source, target);
 
   const pathNode = signalsGroup.append('path')
@@ -750,7 +750,8 @@ const handleReset = async () => {
 
 <template>
   <div ref="canvasContainerRef" class="network-canvas w-full h-full overflow-hidden relative">
-    <svg ref="svgRef" class="w-full h-full select-none"></svg>
+    <div aria-hidden="true" class="network-watermark">6G Core Network</div>
+    <svg ref="svgRef" class="relative w-full h-full select-none"></svg>
     <!-- <div class="absolute bottom-6 left-6 glass-panel rounded-xl p-4 text-[10px] space-y-2 pointer-events-none">
       <div class="font-bold text-slate-500 uppercase tracking-widest mb-2 border-b border-theme-contrast/5 pb-1">Legend</div>
       <div class="flex items-center gap-3"><span class="w-2 h-2 bg-emerald-500 rounded-full"></span> RAN</div>
@@ -758,6 +759,11 @@ const handleReset = async () => {
     </div> -->
 
     <div class="absolute top-2 right-2 z-999 flex items-center gap-2">
+
+      <button @click="handleSave" title="Save Node Layout" class="hover:cursor-pointer p-2.5 rounded-xl border transition-all flex items-center gap-2" :class="btnStyle">
+        <Save v-if="!isSaving" class="w-5 h-5" />
+        <Clock6 v-else class="w-5 h-5 animate-spin" />
+      </button>
       <button
         @click="toggleFullscreen"
         :title="isFullscreen ? 'Exit Fullscreen' : 'View Fullscreen'"
@@ -769,20 +775,31 @@ const handleReset = async () => {
         <Maximize2 v-else class="w-5 h-5" />
       </button>
 
-      <button @click="handleSave" title="Save Node Layout" class="hover:cursor-pointer p-2.5 rounded-xl border transition-all flex items-center gap-2" :class="btnStyle">
-        <Save v-if="!isSaving" class="w-5 h-5" />
-        <Clock6 v-else class="w-5 h-5 animate-spin" />
-      </button>
-
-      <button @click="handleReset" title="Reset Node Layout" class="hover:cursor-pointer p-2.5 rounded-xl border transition-all flex items-center gap-2" :class="isResetting ? 'bg-rose-500/20 border-rose-500/50 text-rose-400' : 'border-theme-contrast/10 text-slate-400 hover:bg-theme-contrast/5'">
+      <!-- <button @click="handleReset" title="Reset Node Layout" class="hover:cursor-pointer p-2.5 rounded-xl border transition-all flex items-center gap-2" :class="isResetting ? 'bg-rose-500/20 border-rose-500/50 text-rose-400' : 'border-theme-contrast/10 text-slate-400 hover:bg-theme-contrast/5'">
         <Clock6 v-if="isResetting" class="w-5 h-5 animate-spin" />
         <Scan v-else class="text-xs font-bold"/>
-      </button>
+      </button> -->
     </div>
   </div>
 </template>
 
 <style>
+.network-watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-contrast);
+  opacity: 0.06;
+  font-size: clamp(1.5rem, 4vw, 4rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
 .network-canvas:fullscreen {
   width: 100%;
   height: 100%;

@@ -1,0 +1,41 @@
+# ─── 런타임 산출물 ───────────────────────────────────────────────
+# NCOF 프로토타입 서버가 기동 중에 쓰는 것들. 절대 커밋하지 말 것.
+#   logs/ 는 실측 13GB 까지 커진다 — 관대 수신 원장(ledger.jsonl)과
+#   수신 원문 덤프(*.raw.json, 수만 개)가 여기 쌓인다.
+#   data/ 는 구독 상태 파일(ncof_state.json). cwd 기준 상대 경로라
+#   기동 디렉터리마다 별개 파일이며 환경에 종속된다.
+prototype/nncof-server/logs/
+prototype/nncof-server/data/
+
+# ─── 파이썬 ─────────────────────────────────────────────────────
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# ─── 편집기·OS ──────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+
+# ─── 백업·임시 ──────────────────────────────────────────────────
+*.bak
+*.bak-*
+*.orig
+*.rej
+
+# ─── 주의: 무시하지 않는 것 ─────────────────────────────────────
+# prototype/device_info.json 은 **추적 중인 파일**이라 여기 적어도 효과가 없다.
+#   커밋된 판본은 localhost mock 포트(:9001/:9002/:9004)를 담고 있고,
+#   두두원 주소(10.254.173.46:55555-55558)는 본 체크아웃의 미커밋 사본에만 있다.
+#   실수로 커밋하지 않으려면 git 에 스테이징하지 않는 것으로 관리하거나,
+#   다음 명령으로 로컬에서 변경을 숨긴다(저장소에는 영향 없음):
+#     git update-index --skip-worktree prototype/device_info.json
+#   되돌리려면 --no-skip-worktree.
+#
+# prototype/docs/dodo1-interop/captured/ 는 **의도적으로 커밋한다** —
+#   두두원 실측 페이로드와 관대 수신 원장 샘플(lenient_ledger_sample.jsonl)이
+#   스키마 대조·회귀 검증의 근거 자료다. 위 *.bak-* 패턴에 걸리지 않는다.

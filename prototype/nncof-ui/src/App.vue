@@ -66,6 +66,16 @@ const handleRunMessage = async (msg: Message) => {
   }
 };
 
+const handleWebSocketMessage = async (msg: Message) => {
+  await handleRunMessage(msg);
+  if (msg.type === "NOTIFICATION" && msg.from === "ncof" && msg.to === "pcf") {
+    // await new Promise((resolve) => setTimeout(resolve, 100));
+    await handleRunMessage({ ...msg, from: "pcf", to: "smf" });
+    // await new Promise((resolve) => setTimeout(resolve, 100));
+    await handleRunMessage({ ...msg, from: "smf", to: "upf" });
+  }
+};
+
 // Initial Data Fetch
 const fetchInitialRelations = async () => {
   try {
@@ -155,7 +165,7 @@ const ws = useWebSocket({
           data: data.data,
         };
 
-        handleRunMessage(newMessage);
+        handleWebSocketMessage(newMessage);
 
         // if (newMessage.to === 'pcf' || newMessage.to === 'ricf') {
         refreshKey.value++;

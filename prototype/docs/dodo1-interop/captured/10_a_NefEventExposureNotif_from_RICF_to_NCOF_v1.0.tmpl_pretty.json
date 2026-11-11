@@ -1,0 +1,104 @@
+{
+    "notifId": "NOTIFICATION_ricf_2026-09-09T19:58:21.914025+09:00",
+    "notifUri": "http://10.254.73.46:55556/",
+    "eventNotifs": [
+        {
+            "event": "PERF_DATA",
+            "perfDataInfos": [
+                {
+                    "timeStamp": "2026-09-09T20:02:21+09:00",
+                    "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-1",
+                    "ueIpAddr": {
+                        "ipv4Addr": "192.168.1.122"
+                    },
+                    "ipTrafficFilter": {
+                        "flowId": 10001,
+                        "flowDescriptions": [
+                            "permit ip from 192.168.1.122 30002 to 192.168.1.182 56000",
+                            "permit ip from 192.168.1.182 56000 to 192.168.1.122 30002"
+                        ],
+                        "tosTC": "0x00"
+                    },
+                    "appLocs": [
+                        "dnai-ue1-gnb1-001"
+                    ],
+                    "asAddr": {
+                        "ipAddr": {
+                            "ipv4Addr": "192.168.1.182"
+                        },
+                        "fqdn": "upf-001.6g-i2p.etri.re.kr"
+                    },
+                    "perfData": {
+                        "pdb": 0.45,
+                        "pdbDl": 0.22,
+                        "maxPdbUl": 0.31,
+                        "maxPdbDl": 0.31,
+                        "plr": 0,
+                        "plrDl": 0,
+                        "maxPlrUl": 0,
+                        "maxPlrDl": 0,
+                        "thrputUl": "-999",
+                        "maxThrputUl": "-999",
+                        "minThrputUl": "-999",
+                        "thrputDl": "-999",
+                        "maxThrputDl": "-999",
+                        "minThrputDl": "-999",
+                        "_minRtt": 0.35,
+                        "_maxRtt": 0.62,
+                        "_delayUl": 0.22,
+                        "_minDelayUl": 0.18,
+                        "_minDelayDl": 0.18,
+                        "_jitter": 0.02
+                    }
+                },
+                {
+                    "timeStamp": "2026-09-09T20:02:21+09:00",
+                    "appId": "https://6g-i2p.etri.re.kr/poc2/app-server/client-2",
+                    "ueIpAddr": {
+                        "ipv4Addr": "192.168.1.123"
+                    },
+                    "ipTrafficFilter": {
+                        "flowId": 10003,
+                        "flowDescriptions": [
+                            "permit ip from 192.168.1.123 30003 to 192.168.1.182 56000",
+                            "permit ip from 192.168.1.182 56000 to 192.168.1.123 30003"
+                        ],
+                        "tosTC": "0x00"
+                    },
+                    "appLocs": [
+                        "dnai-ue2-gnb2-001"
+                    ],
+                    "asAddr": {
+                        "ipAddr": {
+                            "ipv4Addr": "192.168.1.182"
+                        },
+                        "fqdn": "upf-001.6g-i2p.etri.re.kr"
+                    },
+                    "perfData": {
+                        "pdb": 0.38,
+                        "pdbDl": 0.19,
+                        "maxPdbUl": 0.49,
+                        "maxPdbDl": 0.49,
+                        "plr": 0,
+                        "plrDl": 0,
+                        "maxPlrUl": 0,
+                        "maxPlrDl": 0,
+                        "thrputUl": "-999",
+                        "maxThrputUl": "-999",
+                        "minThrputUl": "-999",
+                        "thrputDl": "-999",
+                        "maxThrputDl": "-999",
+                        "minThrputDl": "-999",
+                        "_minRtt": 0.27,
+                        "_maxRtt": 0.98,
+                        "_delayUl": 0.19,
+                        "_minDelayUl": 0.14,
+                        "_minDelayDl": 0.14,
+                        "_jitter": 0.03
+                    }
+                }
+            ],
+            "timeStamp": "2026-09-09T20:02:21+09:00"
+        }
+    ]
+}
