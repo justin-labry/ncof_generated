@@ -750,7 +750,8 @@ const handleReset = async () => {
 
 <template>
   <div ref="canvasContainerRef" class="network-canvas w-full h-full overflow-hidden relative">
-    <svg ref="svgRef" class="w-full h-full select-none"></svg>
+    <div aria-hidden="true" class="network-watermark">6G Core Network</div>
+    <svg ref="svgRef" class="relative w-full h-full select-none"></svg>
     <!-- <div class="absolute bottom-6 left-6 glass-panel rounded-xl p-4 text-[10px] space-y-2 pointer-events-none">
       <div class="font-bold text-slate-500 uppercase tracking-widest mb-2 border-b border-theme-contrast/5 pb-1">Legend</div>
       <div class="flex items-center gap-3"><span class="w-2 h-2 bg-emerald-500 rounded-full"></span> RAN</div>
@@ -783,6 +784,22 @@ const handleReset = async () => {
 </template>
 
 <style>
+.network-watermark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-contrast);
+  opacity: 0.06;
+  font-size: clamp(1.5rem, 4vw, 4rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
 .network-canvas:fullscreen {
   width: 100%;
   height: 100%;
