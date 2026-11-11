@@ -97,6 +97,7 @@ export const useNetworkStore = defineStore("network", () => {
 
     { id: "e-smf-upf", from: "smf", to: "upf", label: "N4" },
     { id: "e-smf-amf", from: "smf", to: "amf", label: "N11" },
+    { id: "e-pcf-smf", from: "pcf", to: "smf", label: "N7" },
 
     { id: "e-ncof-pcf", from: "ncof", to: "pcf", label: "N7" },
     // { id: "e-ncof-af", from: "ncof", to: "af", label: "N5" },

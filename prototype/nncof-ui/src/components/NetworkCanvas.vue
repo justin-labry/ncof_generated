@@ -595,10 +595,10 @@ const animateMessage = async (msg: Message) => {
   const target = store.nodes.find(n => n.id === msg.to);
   if (!source || !target) return;
 
-  const isFromNcof = (msg.from === 'ncof' || msg.from === 'nef') && msg.type === 'NOTIFICATION';
+  const isControlMessage = (msg.from === 'ncof' || msg.from === 'nef') && msg.type === 'NOTIFICATION' || (msg.from === 'pcf' && msg.to === 'smf') || (msg.from === 'smf' && msg.to === 'upf');
   const color = getMessageColor(msg.type);
-  const strokeColor = isFromNcof ? '#22d3ee' : color;
-  const strokeWidth = isFromNcof ? 4 : 2;
+  const strokeColor = isControlMessage ? '#22d3ee' : color;
+  const strokeWidth = isControlMessage ? 2 : 2;
   const path = calculatePath(source, target);
 
   const pathNode = signalsGroup.append('path')
