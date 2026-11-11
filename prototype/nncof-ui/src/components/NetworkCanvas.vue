@@ -759,6 +759,11 @@ const handleReset = async () => {
     </div> -->
 
     <div class="absolute top-2 right-2 z-999 flex items-center gap-2">
+
+      <button @click="handleSave" title="Save Node Layout" class="hover:cursor-pointer p-2.5 rounded-xl border transition-all flex items-center gap-2" :class="btnStyle">
+        <Save v-if="!isSaving" class="w-5 h-5" />
+        <Clock6 v-else class="w-5 h-5 animate-spin" />
+      </button>
       <button
         @click="toggleFullscreen"
         :title="isFullscreen ? 'Exit Fullscreen' : 'View Fullscreen'"
@@ -770,15 +775,10 @@ const handleReset = async () => {
         <Maximize2 v-else class="w-5 h-5" />
       </button>
 
-      <button @click="handleSave" title="Save Node Layout" class="hover:cursor-pointer p-2.5 rounded-xl border transition-all flex items-center gap-2" :class="btnStyle">
-        <Save v-if="!isSaving" class="w-5 h-5" />
-        <Clock6 v-else class="w-5 h-5 animate-spin" />
-      </button>
-
-      <button @click="handleReset" title="Reset Node Layout" class="hover:cursor-pointer p-2.5 rounded-xl border transition-all flex items-center gap-2" :class="isResetting ? 'bg-rose-500/20 border-rose-500/50 text-rose-400' : 'border-theme-contrast/10 text-slate-400 hover:bg-theme-contrast/5'">
+      <!-- <button @click="handleReset" title="Reset Node Layout" class="hover:cursor-pointer p-2.5 rounded-xl border transition-all flex items-center gap-2" :class="isResetting ? 'bg-rose-500/20 border-rose-500/50 text-rose-400' : 'border-theme-contrast/10 text-slate-400 hover:bg-theme-contrast/5'">
         <Clock6 v-if="isResetting" class="w-5 h-5 animate-spin" />
         <Scan v-else class="text-xs font-bold"/>
-      </button>
+      </button> -->
     </div>
   </div>
 </template>
